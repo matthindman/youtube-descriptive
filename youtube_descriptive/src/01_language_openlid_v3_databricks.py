@@ -321,8 +321,8 @@ def truncate_col(col_name: str, max_chars: int):
     return F.substring(F.col(col_name).cast("string"), 1, max_chars)
 
 
-channels_raw = spark.table(channels_full)
-videos_raw = spark.table(videos_full)
+channels_raw = spark.table(channels_full).localCheckpoint(eager=True)
+videos_raw = spark.table(videos_full).localCheckpoint(eager=True)
 
 if CHANNEL_ID_COLUMN not in channels_raw.columns:
     raise ValueError(f"Channel ID column `{CHANNEL_ID_COLUMN}` not found in {channels_full}")
@@ -590,14 +590,16 @@ def openlid_predict_udf(text_series: pd.Series) -> pd.DataFrame:
 predictions = (
     segments
     .withColumn("lid", openlid_predict_udf(F.col("text")))
-    .select("channel_id", "video_id", "segment_id", "segment_type", "text", "lid_model", "lid.*")
-    .withColumn("iso639_3_1", F.split(F.col("label_1"), "_").getItem(0))
-    .withColumn("script_1", F.split(F.col("label_1"), "_").getItem(1))
-    .withColumn("iso639_3_2", F.split(F.col("label_2"), "_").getItem(0))
-    .withColumn("script_2", F.split(F.col("label_2"), "_").getItem(1))
-    .withColumn("iso639_3_3", F.split(F.col("label_3"), "_").getItem(0))
-    .withColumn("script_3", F.split(F.col("label_3"), "_").getItem(1))
-    .withColumn("prediction_timestamp", F.current_timestamp())
+    .select(
+        "channel_id", "video_id", "segment_id", "segment_type", "text", "lid_model", "lid.*",
+        F.split(F.col("lid.label_1"), "_").getItem(0).alias("iso639_3_1"),
+        F.split(F.col("lid.label_1"), "_").getItem(1).alias("script_1"),
+        F.split(F.col("lid.label_2"), "_").getItem(0).alias("iso639_3_2"),
+        F.split(F.col("lid.label_2"), "_").getItem(1).alias("script_2"),
+        F.split(F.col("lid.label_3"), "_").getItem(0).alias("iso639_3_3"),
+        F.split(F.col("lid.label_3"), "_").getItem(1).alias("script_3"),
+        F.current_timestamp().alias("prediction_timestamp"),
+    )
 )
 
 (
@@ -652,27 +654,25 @@ top2_votes = pred.select(
 )
 
 # Exclude noise/unknown labels and labels with missing score.
+# Cached because valid_pred is consumed twice: once for weighted_votes, once for total_scores.
 valid_pred = (
     top1_votes.unionByName(top2_votes)
     .where(F.col("label_1").isNotNull())
     .where(F.col("score").isNotNull())
     .withColumn("label_lower", F.lower(F.col("label_1")))
     .where(~F.col("label_lower").rlike(r"^(zxx|und|noise|null|none|unknown)"))
-    .join(segment_weights, on="segment_type", how="left")
+    .join(F.broadcast(segment_weights), on="segment_type", how="left")
     .withColumn("segment_weight", F.coalesce(F.col("segment_weight"), F.lit(1.0)))
     .withColumn("rank_weight", F.when(F.col("prediction_rank") == 1, F.lit(1.0)).otherwise(F.lit(float(SECONDARY_LABEL_VOTE_WEIGHT))))
     .withColumn(
         "length_weight",
-        F.when(
-            F.lit(bool(USE_LID_LENGTH_WEIGHTING)),
-            F.least(
-                F.lit(2.0),
-                F.greatest(F.lit(0.25), F.log1p(F.coalesce(F.col("clean_text_len"), F.lit(0)).cast("double")) / F.log1p(F.lit(200.0)))
-            )
-        ).otherwise(F.lit(1.0))
+        F.least(
+            F.lit(2.0),
+            F.greatest(F.lit(0.25), F.log1p(F.coalesce(F.col("clean_text_len"), F.lit(0)).cast("double")) / F.log1p(F.lit(200.0)))
+        ) if USE_LID_LENGTH_WEIGHTING else F.lit(1.0)
     )
     .withColumn("weighted_score", F.col("score") * F.col("segment_weight") * F.col("rank_weight") * F.col("length_weight"))
-)
+).cache()
 
 weighted_votes = (
     valid_pred
@@ -728,21 +728,24 @@ pivoted = (
         F.max(F.when(F.col("language_rank") == 2, F.col("weighted_score"))).alias("secondary_language_score"),
         F.max(F.when(F.col("language_rank") == 2, F.col("segment_count"))).alias("secondary_language_segment_count"),
         F.to_json(
-            F.collect_list(
-                F.struct(
-                    "language_rank",
-                    "label_1",
-                    "iso639_3_1",
-                    "script_1",
-                    "weighted_score",
-                    "segment_count",
-                    "vote_count",
-                    "mean_segment_score",
-                    "max_segment_score",
-                    "mean_rank_weight",
-                    "mean_length_weight",
-                    "segment_types",
-                )
+            F.sort_array(
+                F.collect_list(
+                    F.struct(
+                        "language_rank",
+                        "label_1",
+                        "iso639_3_1",
+                        "script_1",
+                        "weighted_score",
+                        "segment_count",
+                        "vote_count",
+                        "mean_segment_score",
+                        "max_segment_score",
+                        "mean_rank_weight",
+                        "mean_length_weight",
+                        "segment_types",
+                    )
+                ),
+                asc=True,
             )
         ).alias("language_votes_json"),
     )
@@ -795,6 +798,7 @@ if source_audit_cols:
 )
 
 print("Wrote channel-level language table to", channel_output_full)
+valid_pred.unpersist()
 
 # COMMAND ----------
 # MAGIC %md
@@ -872,18 +876,21 @@ if UPDATE_SOURCE_DETECTED_LANGUAGE:
     else:
         update_expr = "primary_language_label"
 
-    spark.table(channel_output_full).createOrReplaceTempView("_lid_channel_updates")
+    _view_name = f"_lid_channel_updates_{OUTPUT_CATALOG}_{OUTPUT_SCHEMA}".replace("-", "_")
+    spark.table(channel_output_full).createOrReplaceTempView(_view_name)
+    _channel_id_col_quoted = f"`{CHANNEL_ID_COLUMN.replace('`', '')}`"
     merge_sql = f"""
     MERGE INTO {channels_full} AS t
     USING (
       SELECT channel_id, {update_expr} AS detected_language_update
-      FROM _lid_channel_updates
+      FROM {_view_name}
       WHERE primary_language_label IS NOT NULL
     ) AS s
-    ON t.{CHANNEL_ID_COLUMN} = s.channel_id
+    ON t.{_channel_id_col_quoted} = s.channel_id
     WHEN MATCHED THEN UPDATE SET t.detected_language = s.detected_language_update
     """
     spark.sql(merge_sql)
+    spark.catalog.dropTempView(_view_name)
     print(f"Updated {channels_full}.detected_language from {channel_output_full} using source_update_format={SOURCE_UPDATE_FORMAT}")
 else:
     print("Source table update skipped. Set update_source_detected_language=true to enable MERGE.")
