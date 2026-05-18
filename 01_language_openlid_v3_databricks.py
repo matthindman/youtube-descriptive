@@ -9,9 +9,9 @@
 # MAGIC - `prod_tads.youtube.yt_sl_videos`
 # MAGIC
 # MAGIC **Output tables:**
-# MAGIC - `prod_tads.youtube.yt_lid_openlid_v3_segments`
-# MAGIC - `prod_tads.youtube.yt_lid_openlid_v3_channel_votes`
-# MAGIC - `prod_tads.youtube.yt_lid_openlid_v3_channels`
+# MAGIC - `dev_sean.matt.yt_lid_openlid_v3_segments`
+# MAGIC - `dev_sean.matt.yt_lid_openlid_v3_channel_votes`
+# MAGIC - `dev_sean.matt.yt_lid_openlid_v3_channels`
 
 # COMMAND ----------
 # MAGIC %md
@@ -95,6 +95,8 @@ _create_text_widget("channels_table", "yt_sl_channels")
 _create_text_widget("videos_table", "yt_sl_videos")
 
 # Output table parameters.
+_create_text_widget("output_catalog", "dev_sean")
+_create_text_widget("output_schema", "matt")
 _create_text_widget("output_segment_table", "yt_lid_openlid_v3_segments")
 _create_text_widget("output_votes_table", "yt_lid_openlid_v3_channel_votes")
 _create_text_widget("output_channel_table", "yt_lid_openlid_v3_channels")
@@ -102,8 +104,8 @@ _create_text_widget("output_channel_table", "yt_lid_openlid_v3_channels")
 # Model parameters.
 _create_text_widget("model_repo", "HPLT/OpenLID-v3")
 _create_text_widget("model_filename", "openlid-v3.bin")
-_create_text_widget("model_local_path", "/dbfs/models/openlid_v3/openlid-v3.bin")
-_create_text_widget("download_model_if_missing", "true")
+_create_text_widget("model_local_path", "/Volumes/dev_sean/matt/models/openlid-v3.bin")
+_create_text_widget("download_model_if_missing", "false")
 _create_text_widget("model_distribution_mode", "direct_path")  # direct_path or sparkfiles
 
 # GlotLID fallback. Leave disabled for first cut.
@@ -144,14 +146,16 @@ SCHEMA = _get_widget("schema", "youtube")
 CHANNELS_TABLE = _get_widget("channels_table", "yt_sl_channels")
 VIDEOS_TABLE = _get_widget("videos_table", "yt_sl_videos")
 
+OUTPUT_CATALOG = _get_widget("output_catalog", "dev_sean")
+OUTPUT_SCHEMA = _get_widget("output_schema", "matt")
 OUTPUT_SEGMENT_TABLE = _get_widget("output_segment_table", "yt_lid_openlid_v3_segments")
 OUTPUT_VOTES_TABLE = _get_widget("output_votes_table", "yt_lid_openlid_v3_channel_votes")
 OUTPUT_CHANNEL_TABLE = _get_widget("output_channel_table", "yt_lid_openlid_v3_channels")
 
 MODEL_REPO = _get_widget("model_repo", "HPLT/OpenLID-v3")
 MODEL_FILENAME = _get_widget("model_filename", "openlid-v3.bin")
-MODEL_LOCAL_PATH = _get_widget("model_local_path", "/dbfs/models/openlid_v3/openlid-v3.bin")
-DOWNLOAD_MODEL_IF_MISSING = _get_bool_widget("download_model_if_missing", True)
+MODEL_LOCAL_PATH = _get_widget("model_local_path", "/Volumes/dev_sean/matt/models/openlid-v3.bin")
+DOWNLOAD_MODEL_IF_MISSING = _get_bool_widget("download_model_if_missing", False)
 MODEL_DISTRIBUTION_MODE = _get_widget("model_distribution_mode", "direct_path").strip().lower()
 
 ENABLE_GLOTLID_FALLBACK = _get_bool_widget("enable_glotlid_fallback", False)
@@ -191,15 +195,19 @@ def fqtn(table: str) -> str:
     return f"`{CATALOG}`.`{SCHEMA}`.`{table}`"
 
 
+def fqtn_out(table: str) -> str:
+    return f"`{OUTPUT_CATALOG}`.`{OUTPUT_SCHEMA}`.`{table}`"
+
+
 def local_dir_for(path: str) -> str:
     return os.path.dirname(path.replace("dbfs:/", "/dbfs/"))
 
 
 channels_full = fqtn(CHANNELS_TABLE)
 videos_full = fqtn(VIDEOS_TABLE)
-segment_output_full = fqtn(OUTPUT_SEGMENT_TABLE)
-votes_output_full = fqtn(OUTPUT_VOTES_TABLE)
-channel_output_full = fqtn(OUTPUT_CHANNEL_TABLE)
+segment_output_full = fqtn_out(OUTPUT_SEGMENT_TABLE)
+votes_output_full = fqtn_out(OUTPUT_VOTES_TABLE)
+channel_output_full = fqtn_out(OUTPUT_CHANNEL_TABLE)
 
 print("Source channels table:", channels_full)
 print("Source videos table:", videos_full)
