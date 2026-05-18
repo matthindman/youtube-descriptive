@@ -321,8 +321,9 @@ def truncate_col(col_name: str, max_chars: int):
     return F.substring(F.col(col_name).cast("string"), 1, max_chars)
 
 
-channels_raw = spark.table(channels_full).localCheckpoint(eager=True)
-videos_raw = spark.table(videos_full).localCheckpoint(eager=True)
+spark.sparkContext.setCheckpointDir("dbfs:/tmp/openlid_lid_checkpoints")
+channels_raw = spark.table(channels_full).checkpoint(eager=True)
+videos_raw = spark.table(videos_full).checkpoint(eager=True)
 
 if CHANNEL_ID_COLUMN not in channels_raw.columns:
     raise ValueError(f"Channel ID column `{CHANNEL_ID_COLUMN}` not found in {channels_full}")
