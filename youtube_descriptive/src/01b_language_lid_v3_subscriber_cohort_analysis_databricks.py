@@ -121,8 +121,8 @@ def _first_existing_column(df, candidates: Iterable[str], override: str = "") ->
 # COMMAND ----------
 _create_text_widget("source_catalog", "prod_tads")
 _create_text_widget("source_schema", "youtube")
-_create_text_widget("source_channels_table", "yt_sl_channels")
-_create_text_widget("source_videos_table", "yt_sl_videos")
+_create_text_widget("source_channels_table", "yt_sl_channels_metrics")
+_create_text_widget("source_videos_table", "yt_sl_videos_metrics")
 _create_text_widget("scratch_catalog", "dev_sean")
 _create_text_widget("scratch_schema", "matt")
 
@@ -164,8 +164,8 @@ _create_text_widget("checkpoint_dir_base", "dbfs:/tmp/yt_lid_v3/subscriber_cohor
 # COMMAND ----------
 SOURCE_CATALOG = _get_widget("source_catalog", "prod_tads")
 SOURCE_SCHEMA = _get_widget("source_schema", "youtube")
-SOURCE_CHANNELS_TABLE = _get_widget("source_channels_table", "yt_sl_channels")
-SOURCE_VIDEOS_TABLE = _get_widget("source_videos_table", "yt_sl_videos")
+SOURCE_CHANNELS_TABLE = _get_widget("source_channels_table", "yt_sl_channels_metrics")
+SOURCE_VIDEOS_TABLE = _get_widget("source_videos_table", "yt_sl_videos_metrics")
 SCRATCH_CATALOG = _get_widget("scratch_catalog", "dev_sean")
 SCRATCH_SCHEMA = _get_widget("scratch_schema", "matt")
 
