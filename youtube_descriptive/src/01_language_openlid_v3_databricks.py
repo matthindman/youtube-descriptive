@@ -146,7 +146,7 @@ _create_text_widget("model_distribution_mode", "direct_path")  # direct_path or 
 # GlotLID model parameters.
 _create_text_widget("glotlid_repo", "cis-lmu/glotlid")
 _create_text_widget("glotlid_filename", "model.bin")
-_create_text_widget("glotlid_local_path", "/dbfs/models/glotlid/model.bin")
+_create_text_widget("glotlid_local_path", "/Volumes/dev_sean/matt/models/glotlid.bin")
 
 # Model enable/mode controls (§3). HARD DEFAULT: full GlotLID coverage.
 _create_text_widget("enable_openlid", "true")
@@ -270,7 +270,7 @@ MODEL_DISTRIBUTION_MODE = _get_widget("model_distribution_mode", "direct_path").
 
 GLOTLID_REPO = _get_widget("glotlid_repo", "cis-lmu/glotlid")
 GLOTLID_FILENAME = _get_widget("glotlid_filename", "model.bin")
-GLOTLID_LOCAL_PATH = _get_widget("glotlid_local_path", "/dbfs/models/glotlid/model.bin")
+GLOTLID_LOCAL_PATH = _get_widget("glotlid_local_path", "/Volumes/dev_sean/matt/models/glotlid.bin")
 
 ENABLE_OPENLID = _get_bool_widget("enable_openlid", True)
 ENABLE_GLOTLID = _get_bool_widget("enable_glotlid", True)

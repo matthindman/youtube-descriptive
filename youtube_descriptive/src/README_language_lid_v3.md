@@ -199,8 +199,9 @@ for write-back; review and mixed-language cases remain audit-only.
 ## 14. License and model-binary cautions
 
 - OpenLID-v3 is distributed under GPL-3.0; review license implications before redistributing the binary.
-- The model binaries are downloaded from Hugging Face (`HPLT/OpenLID-v3`, `cis-lmu/glotlid`); for air-gapped
-  clusters upload them and set `download_model_if_missing=false`. The notebook fails clearly if a model is
-  enabled but unavailable.
+- The model binaries are downloaded from Hugging Face (`HPLT/OpenLID-v3`, `cis-lmu/glotlid`) when missing.
+  The production GlotLID default points at the uploaded Databricks Volume binary
+  `/Volumes/dev_sean/matt/models/glotlid.bin`; for air-gapped clusters, upload model binaries and set
+  `download_model_if_missing=false`. The notebook fails clearly if a model is enabled but unavailable.
 - Collapse model outputs to a project-level language taxonomy before publication; do not treat raw
   ISO/script labels (especially high-risk tail labels and macro/near-language clusters) as final.
