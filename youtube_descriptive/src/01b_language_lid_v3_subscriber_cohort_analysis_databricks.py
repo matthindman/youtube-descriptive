@@ -3,14 +3,16 @@
 # MAGIC # Language LID v3 subscriber-cohort analysis driver
 # MAGIC
 # MAGIC This notebook builds two large subscriber-based evaluation cohorts and runs
-# MAGIC `01_language_openlid_v3_databricks` against each cohort with full diagnostics:
+# MAGIC `01_language_openlid_v3_databricks` against each cohort with compact prediction storage and QA diagnostics:
 # MAGIC
 # MAGIC 1. The channels with the highest subscriber counts (`cohort_size=100000` by default).
-# MAGIC 2. A deterministic random sample of the same size with subscribers below the top-cohort cutoff and at
-# MAGIC    least 10,000 total subscribers by default.
+# MAGIC 2. A deterministic random sample of the same size with subscribers at or below the top-cohort cutoff and
+# MAGIC    at least 10,000 total subscribers by default, excluding the exact top-cohort channel IDs.
 # MAGIC
 # MAGIC The source language notebook is left unchanged. This driver writes small cohort source tables, calls the
 # MAGIC v3 LID notebook twice with separate `run_id`s, and writes combined result and summary tables for review.
+# MAGIC Each run creates a timestamped scratch table family by default; set `analysis_run_suffix` to a stable value
+# MAGIC when you intentionally want to overwrite/reuse a previous analysis table family.
 
 # COMMAND ----------
 from datetime import datetime, timezone
@@ -66,6 +68,12 @@ def _fqtn(catalog: str, schema: str, table: str) -> str:
     return f"{catalog}.{schema}.{table}"
 
 
+def _append_path(base: str, *parts: str) -> str:
+    clean_base = base.rstrip("/")
+    clean_parts = [p.strip("/") for p in parts if p]
+    return "/".join([clean_base, *clean_parts])
+
+
 def _quote_identifier(identifier: str) -> str:
     return "`" + identifier.replace("`", "``") + "`"
 
@@ -74,14 +82,21 @@ def _qualified_col(alias: str, column: str):
     return F.col(f"{_quote_identifier(alias)}.{_quote_identifier(column)}")
 
 
-def _overwrite_delta(df, table_full: str) -> None:
-    (
+def _overwrite_delta(df, table_full: str, partition_cols: Optional[Iterable[str]] = None) -> None:
+    writer = (
         df.write
         .format("delta")
         .mode("overwrite")
         .option("overwriteSchema", "true")
-        .saveAsTable(table_full)
     )
+    if partition_cols:
+        writer = writer.partitionBy(*partition_cols)
+    writer.saveAsTable(table_full)
+
+
+def _maybe_display(df) -> None:
+    if ENABLE_DRIVER_DISPLAYS:
+        display(df)
 
 
 def _columns_lower_map(df) -> Dict[str, str]:
@@ -122,10 +137,13 @@ _create_text_widget("analysis_run_suffix", "")  # blank = UTC timestamp
 _create_text_widget("lid_notebook_path", "./01_language_openlid_v3_databricks")
 _create_text_widget("notebook_timeout_seconds", "0")
 _create_text_widget("run_lid_notebooks", "true")
+_create_text_widget("enable_driver_displays", "false")
+_create_text_widget("driver_shuffle_partitions", "800")
 
-# Child LID notebook controls. Defaults favor careful analysis over the most compact production run.
+# Child LID notebook controls. Defaults keep prediction storage compact while
+# enabling heavy QA, validation samples, and ablation summaries for careful analysis.
 _create_text_widget("production_mode", "false")
-_create_text_widget("prediction_output_mode", "long_full")
+_create_text_widget("prediction_output_mode", "compact")
 _create_text_widget("run_heavy_qa", "true")
 _create_text_widget("create_validation_samples", "true")
 _create_text_widget("run_ablation_aggregations", "true")
@@ -141,6 +159,7 @@ _create_text_widget("model_local_path", "/dbfs/models/openlid_v3/openlid-v3.bin"
 _create_text_widget("glotlid_local_path", "/Volumes/dev_sean/matt/models/glotlid.bin")
 _create_text_widget("download_model_if_missing", "true")
 _create_text_widget("model_distribution_mode", "direct_path")
+_create_text_widget("checkpoint_dir_base", "dbfs:/tmp/yt_lid_v3/subscriber_cohort_checkpoints")
 
 # COMMAND ----------
 SOURCE_CATALOG = _get_widget("source_catalog", "prod_tads")
@@ -164,9 +183,11 @@ RUN_SUFFIX = _safe_token(
 LID_NOTEBOOK_PATH = _get_widget("lid_notebook_path", "./01_language_openlid_v3_databricks")
 NOTEBOOK_TIMEOUT_SECONDS = _get_int_widget("notebook_timeout_seconds", 0)
 RUN_LID_NOTEBOOKS = _get_bool_widget("run_lid_notebooks", True)
+ENABLE_DRIVER_DISPLAYS = _get_bool_widget("enable_driver_displays", False)
+DRIVER_SHUFFLE_PARTITIONS = _get_int_widget("driver_shuffle_partitions", 800)
 
 PRODUCTION_MODE = _get_widget("production_mode", "false")
-PREDICTION_OUTPUT_MODE = _get_widget("prediction_output_mode", "long_full")
+PREDICTION_OUTPUT_MODE = _get_widget("prediction_output_mode", "compact")
 RUN_HEAVY_QA = _get_widget("run_heavy_qa", "true")
 CREATE_VALIDATION_SAMPLES = _get_widget("create_validation_samples", "true")
 RUN_ABLATION_AGGREGATIONS = _get_widget("run_ablation_aggregations", "true")
@@ -182,11 +203,14 @@ MODEL_LOCAL_PATH = _get_widget("model_local_path", "/dbfs/models/openlid_v3/open
 GLOTLID_LOCAL_PATH = _get_widget("glotlid_local_path", "/Volumes/dev_sean/matt/models/glotlid.bin")
 DOWNLOAD_MODEL_IF_MISSING = _get_widget("download_model_if_missing", "true")
 MODEL_DISTRIBUTION_MODE = _get_widget("model_distribution_mode", "direct_path")
+CHECKPOINT_DIR_BASE = _get_widget("checkpoint_dir_base", "dbfs:/tmp/yt_lid_v3/subscriber_cohort_checkpoints")
 
 if COHORT_SIZE <= 0:
     raise ValueError("cohort_size must be positive.")
 if RANDOM_LOWER_SUBSCRIBERS < 0:
     raise ValueError("random_lower_subscribers must be nonnegative.")
+if DRIVER_SHUFFLE_PARTITIONS <= 0:
+    raise ValueError("driver_shuffle_partitions must be positive.")
 
 SOURCE_CHANNELS_FULL = _fqtn(SOURCE_CATALOG, SOURCE_SCHEMA, SOURCE_CHANNELS_TABLE)
 SOURCE_VIDEOS_FULL = _fqtn(SOURCE_CATALOG, SOURCE_SCHEMA, SOURCE_VIDEOS_TABLE)
@@ -209,6 +233,8 @@ print("LID output table prefix:", LID_OUTPUT_PREFIX)
 print("Top run_id:", RUN_ID_TOP)
 print("Random-band run_id:", RUN_ID_RANDOM)
 print("LID notebook path:", LID_NOTEBOOK_PATH)
+if NOTEBOOK_TIMEOUT_SECONDS == 0:
+    print("Notebook timeout: disabled (notebook_timeout_seconds=0).")
 
 # COMMAND ----------
 # MAGIC %md
@@ -314,13 +340,12 @@ current_channels = (
         SUBSCRIBER_DIRECT_NUMBER_COL,
         SUBSCRIBER_PARSED_NUMBER_COL,
     )
-    .cache()
 )
 
 channel_universe = current_channels.select(
     F.col("__lid_eval_channel_id").alias("channel_id"),
     F.col("__lid_eval_subscriber_count").alias("subscriber_count"),
-)
+).cache()
 
 usable_channel_count = channel_universe.count()
 print(f"Channels with usable subscriber counts after deterministic dedup: {usable_channel_count:,}")
@@ -352,14 +377,27 @@ top_ids = (
 top_subscriber_cutoff = top_ids.agg(F.min("subscriber_count").alias("cutoff")).first()["cutoff"]
 print(f"Top-{COHORT_SIZE:,} subscriber cutoff: {top_subscriber_cutoff:,}")
 
+n_at_cutoff_total = channel_universe.where(F.col("subscriber_count") == F.lit(top_subscriber_cutoff)).count()
+n_at_cutoff_in_top = top_ids.where(F.col("subscriber_count") == F.lit(top_subscriber_cutoff)).count()
+n_at_cutoff_outside_top = n_at_cutoff_total - n_at_cutoff_in_top
+print(
+    f"Channels exactly at cutoff: total={n_at_cutoff_total:,}, "
+    f"in top cohort={n_at_cutoff_in_top:,}, outside top cohort={n_at_cutoff_outside_top:,}"
+)
+
 random_pool = channel_universe.where(
     (F.col("subscriber_count") >= F.lit(RANDOM_LOWER_SUBSCRIBERS))
-    & (F.col("subscriber_count") < F.lit(top_subscriber_cutoff))
+    & (F.col("subscriber_count") <= F.lit(top_subscriber_cutoff))
+).join(
+    top_ids.select("channel_id"),
+    on="channel_id",
+    how="left_anti",
 )
 random_pool_n = random_pool.count()
 print(
     f"Random-band eligible pool: {random_pool_n:,} channels with "
-    f"{RANDOM_LOWER_SUBSCRIBERS:,} <= subscribers < {top_subscriber_cutoff:,}"
+    f"{RANDOM_LOWER_SUBSCRIBERS:,} <= subscribers <= {top_subscriber_cutoff:,}, "
+    "excluding top-cohort channel IDs"
 )
 if random_pool_n < COHORT_SIZE:
     raise ValueError(f"Only {random_pool_n:,} random-band channels are eligible; need {COHORT_SIZE:,}.")
@@ -398,6 +436,9 @@ cutoff_df = spark.createDataFrame(
         int(RANDOM_SEED),
         int(top_n),
         int(random_pool_n),
+        int(n_at_cutoff_total),
+        int(n_at_cutoff_in_top),
+        int(n_at_cutoff_outside_top),
         RUN_SUFFIX,
         RUN_ID_TOP,
         RUN_ID_RANDOM,
@@ -409,6 +450,9 @@ cutoff_df = spark.createDataFrame(
     random_seed long,
     top_cohort_n long,
     random_band_pool_n long,
+    n_channels_at_top_cutoff long,
+    n_channels_at_top_cutoff_in_top_cohort long,
+    n_channels_at_top_cutoff_outside_top_cohort long,
     analysis_run_suffix string,
     top_run_id string,
     random_run_id string
@@ -430,8 +474,8 @@ _overwrite_delta(cohort_ids, cohort_ids_table)
 
 print("Wrote cutoff metadata:", cutoff_table)
 print("Wrote cohort IDs:", cohort_ids_table)
-display(spark.table(cutoff_table))
-display(spark.table(cohort_ids_table).groupBy("cohort", "run_id").agg(
+_maybe_display(spark.table(cutoff_table))
+_maybe_display(spark.table(cohort_ids_table).groupBy("cohort", "run_id").agg(
     F.count(F.lit(1)).alias("n_channels"),
     F.min("subscriber_count").alias("min_subscribers"),
     F.expr("percentile_approx(subscriber_count, 0.5, 10000)").alias("median_subscribers"),
@@ -456,22 +500,46 @@ def _cohort_source_table_names(cohort_name: str) -> Tuple[str, str]:
     return channels_table, videos_table
 
 
+combined_channels_source_table = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{TABLE_PREFIX}_selected_channels_all")
+combined_videos_source_table = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{TABLE_PREFIX}_selected_videos_all")
+
+selected_ids_all = (
+    spark.table(cohort_ids_table)
+    .select("cohort", F.col("channel_id").alias("__selected_channel_id"))
+    .cache()
+)
+selected_id_count = selected_ids_all.count()
+print(f"Selected cohort channel IDs across both cohorts: {selected_id_count:,}")
+
+selected_channels_all = (
+    current_channels.alias("c")
+    .join(selected_ids_all.alias("i"), F.col("c.__lid_eval_channel_id") == F.col("i.__selected_channel_id"), "inner")
+    .select(F.col("i.cohort").alias("__lid_eval_cohort"), "c.*")
+    .drop("__lid_eval_channel_id", "__lid_eval_subscriber_count")
+)
+_overwrite_delta(selected_channels_all, combined_channels_source_table, partition_cols=["__lid_eval_cohort"])
+print("Wrote combined selected channels source table:", combined_channels_source_table)
+
+selected_videos_all = (
+    videos_raw.alias("v")
+    .join(selected_ids_all.alias("i"), _qualified_col("v", CHANNEL_ID_COLUMN).cast("string") == F.col("i.__selected_channel_id"), "inner")
+    .select(F.col("i.cohort").alias("__lid_eval_cohort"), "v.*")
+)
+_overwrite_delta(selected_videos_all, combined_videos_source_table, partition_cols=["__lid_eval_cohort"])
+print("Wrote combined selected videos source table:", combined_videos_source_table)
+_maybe_display(spark.table(combined_channels_source_table).groupBy("__lid_eval_cohort").count().orderBy("__lid_eval_cohort"))
+_maybe_display(spark.table(combined_videos_source_table).groupBy("__lid_eval_cohort").count().orderBy("__lid_eval_cohort"))
+
 for cohort_name, run_id in COHORT_SPECS:
-    ids = (
-        spark.table(cohort_ids_table)
-        .where(F.col("cohort") == F.lit(cohort_name))
-        .select(F.col("channel_id").alias("__selected_channel_id"))
-    )
     channels_subset = (
-        current_channels.alias("c")
-        .join(ids.alias("i"), F.col("c.__lid_eval_channel_id") == F.col("i.__selected_channel_id"), "inner")
-        .select("c.*")
-        .drop("__lid_eval_channel_id", "__lid_eval_subscriber_count")
+        spark.table(combined_channels_source_table)
+        .where(F.col("__lid_eval_cohort") == F.lit(cohort_name))
+        .drop("__lid_eval_cohort")
     )
     videos_subset = (
-        videos_raw.alias("v")
-        .join(ids.alias("i"), _qualified_col("v", CHANNEL_ID_COLUMN).cast("string") == F.col("i.__selected_channel_id"), "inner")
-        .select("v.*")
+        spark.table(combined_videos_source_table)
+        .where(F.col("__lid_eval_cohort") == F.lit(cohort_name))
+        .drop("__lid_eval_cohort")
     )
     channels_table, videos_table = _cohort_source_table_names(cohort_name)
     _overwrite_delta(channels_subset, channels_table)
@@ -516,6 +584,10 @@ def _lid_output_table_args(prefix: str) -> Dict[str, str]:
     }
 
 
+def _cohort_lid_output_prefix(cohort_name: str) -> str:
+    return f"{LID_OUTPUT_PREFIX}_{_safe_token(cohort_name, 'cohort')}"
+
+
 COMMON_LID_ARGS = {
     "catalog": SCRATCH_CATALOG,
     "schema": SCRATCH_SCHEMA,
@@ -545,20 +617,24 @@ COMMON_LID_ARGS = {
     "glotlid_local_path": GLOTLID_LOCAL_PATH,
     "download_model_if_missing": DOWNLOAD_MODEL_IF_MISSING,
     "model_distribution_mode": MODEL_DISTRIBUTION_MODE,
-    **_lid_output_table_args(LID_OUTPUT_PREFIX),
 }
 
 child_run_log_rows = []
 if RUN_LID_NOTEBOOKS:
     for cohort_name, run_id in COHORT_SPECS:
         channels_table, videos_table = _cohort_source_table_names(cohort_name)
+        cohort_output_prefix = _cohort_lid_output_prefix(cohort_name)
+        cohort_checkpoint_dir = _append_path(CHECKPOINT_DIR_BASE, RUN_SUFFIX, _safe_token(cohort_name, "cohort"))
         args = {
             **COMMON_LID_ARGS,
+            **_lid_output_table_args(cohort_output_prefix),
             "run_id": run_id,
             "channels_table": channels_table.split(".")[-1],
             "videos_table": videos_table.split(".")[-1],
+            "checkpoint_dir": cohort_checkpoint_dir,
         }
-        print(f"Running {cohort_name}: run_id={run_id}")
+        print(f"Running {cohort_name}: run_id={run_id} output_prefix={cohort_output_prefix}")
+        print(f"Checkpoint dir: {cohort_checkpoint_dir}")
         started_at = datetime.now(timezone.utc).isoformat()
         result = dbutils.notebook.run(LID_NOTEBOOK_PATH, NOTEBOOK_TIMEOUT_SECONDS, args)
         finished_at = datetime.now(timezone.utc).isoformat()
@@ -583,16 +659,31 @@ if child_run_log_rows:
     _overwrite_delta(run_log, run_log_table)
     print("Wrote child run log:", run_log_table)
 
+spark.conf.set("spark.sql.shuffle.partitions", str(DRIVER_SHUFFLE_PARTITIONS))
+print(f"Reset driver spark.sql.shuffle.partitions to {DRIVER_SHUFFLE_PARTITIONS}")
+
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 5. Materialize combined analysis outputs
 
 # COMMAND ----------
-channels_output_full = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{LID_OUTPUT_PREFIX}_channels")
-model_agreement_full = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{LID_OUTPUT_PREFIX}_model_agreement_summary")
-language_summary_full = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{LID_OUTPUT_PREFIX}_language_summary_full")
-validation_sample_full = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{LID_OUTPUT_PREFIX}_manual_validation_sample")
-high_risk_redirect_full = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{LID_OUTPUT_PREFIX}_high_risk_redirect_diagnostic")
+def _cohort_lid_table(cohort_name: str, suffix: str) -> str:
+    return _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{_cohort_lid_output_prefix(cohort_name)}_{suffix}")
+
+
+def _union_all_by_name(frames):
+    if not frames:
+        raise ValueError("No DataFrames to union.")
+    out = frames[0]
+    for frame in frames[1:]:
+        out = out.unionByName(frame, allowMissingColumns=True)
+    return out
+
+
+lid_output_channels_tables = [_cohort_lid_table(cohort_name, "channels") for cohort_name, _ in COHORT_SPECS]
+lid_output_language_summary_tables = [_cohort_lid_table(cohort_name, "language_summary_full") for cohort_name, _ in COHORT_SPECS]
+lid_output_validation_sample_tables = [_cohort_lid_table(cohort_name, "manual_validation_sample") for cohort_name, _ in COHORT_SPECS]
+lid_output_high_risk_redirect_tables = [_cohort_lid_table(cohort_name, "high_risk_redirect_diagnostic") for cohort_name, _ in COHORT_SPECS]
 
 result_table = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{TABLE_PREFIX}_language_results")
 status_summary_table = _fqtn(SCRATCH_CATALOG, SCRATCH_SCHEMA, f"{TABLE_PREFIX}_language_status_summary")
@@ -611,7 +702,10 @@ cohort_ids_for_join = spark.table(cohort_ids_table).select(
     "random_seed",
 )
 
-lid_channels = spark.table(channels_output_full).where(F.col("run_id").isin(RUN_ID_TOP, RUN_ID_RANDOM))
+lid_channels = _union_all_by_name([
+    spark.table(_cohort_lid_table(cohort_name, "channels")).where(F.col("run_id") == F.lit(run_id))
+    for cohort_name, run_id in COHORT_SPECS
+])
 results = (
     cohort_ids_for_join
     .join(lid_channels, on=["run_id", "channel_id"], how="left")
@@ -691,8 +785,10 @@ _overwrite_delta(review_queue, review_queue_table)
 print("Wrote review queue:", review_queue_table)
 
 model_agreement_by_cohort = (
-    spark.table(model_agreement_full)
-    .where(F.col("run_id").isin(RUN_ID_TOP, RUN_ID_RANDOM))
+    _union_all_by_name([
+        spark.table(_cohort_lid_table(cohort_name, "model_agreement_summary")).where(F.col("run_id") == F.lit(run_id))
+        for cohort_name, run_id in COHORT_SPECS
+    ])
     .join(spark.table(cohort_ids_table).select("cohort", "run_id").distinct(), on="run_id", how="left")
     .withColumn("analysis_run_suffix", F.lit(RUN_SUFFIX))
 )
@@ -712,21 +808,21 @@ print("Language status summary:", status_summary_table)
 print("Consensus language summary:", language_review_summary_table)
 print("Review queue:", review_queue_table)
 print("Model agreement by cohort:", model_agreement_by_cohort_table)
-print("LID output channels:", channels_output_full)
-print("LID output language summary:", language_summary_full)
-print("LID output validation sample:", validation_sample_full)
-print("LID output high-risk redirect:", high_risk_redirect_full)
+print("LID output channels:", lid_output_channels_tables)
+print("LID output language summaries:", lid_output_language_summary_tables)
+print("LID output validation samples:", lid_output_validation_sample_tables)
+print("LID output high-risk redirects:", lid_output_high_risk_redirect_tables)
 
-display(spark.table(cutoff_table))
-display(spark.table(status_summary_table))
-display(spark.table(language_review_summary_table).limit(100))
-display(spark.table(model_agreement_by_cohort_table).orderBy("run_id"))
-display(spark.table(review_queue_table).limit(200))
+_maybe_display(spark.table(cutoff_table))
+_maybe_display(spark.table(status_summary_table))
+_maybe_display(spark.table(language_review_summary_table).limit(100))
+_maybe_display(spark.table(model_agreement_by_cohort_table).orderBy("run_id"))
+_maybe_display(spark.table(review_queue_table).limit(200))
 
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## Done
 # MAGIC
 # MAGIC Use the printed table names above for detailed review. The two final channel-level cohorts are combined in
-# MAGIC the `*_language_results` table, while all raw LID v3 outputs are preserved under the generated
-# MAGIC `*_lid_v3_*` table family and separated by `run_id`.
+# MAGIC the `*_language_results` table, while each cohort's raw LID v3 outputs are preserved under its own
+# MAGIC generated `*_lid_v3_<cohort>_*` table family.
