@@ -252,7 +252,7 @@ if CHANNEL_ID_COLUMN not in videos_raw.columns:
     raise ValueError(f"Channel ID column `{CHANNEL_ID_COLUMN}` not found in {SOURCE_VIDEOS_FULL}.")
 
 SUBSCRIBER_CANDIDATES = [
-    "following_count",
+    "follower_count",
     "subscriber_count",
     "subscribers_count",
     "subscribers",
