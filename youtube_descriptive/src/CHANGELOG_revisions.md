@@ -1,6 +1,35 @@
 # Revision changelog after external review
 
-## Language notebook
+## Language notebook — v3 dual-model revision (OpenLID-v3 + GlotLID)
+
+Reworked `01_language_openlid_v3_databricks.py` into a v3 dual-model consensus pipeline per
+`lang_detect_revision_spec.md`. The single-model first cut remains in git history at commit `d3cb137`;
+see `README_language_lid_v3.md` for full documentation.
+
+- GlotLID now runs as a peer model by default on **all valid segments** (not a low-confidence subset);
+  `audit_segments` and `glotlid_native_audit` are optional non-default modes.
+- New `yt_lid_v3_*` output family (segments input, per-model segment predictions, channel votes, per-model
+  aggregation, segment/channel model comparison + consensus, final channels, mixed-language candidates,
+  Hindi/Indic audit, high-risk redirect diagnostic, QA summaries, manual validation sample, dedupe QA,
+  ablation summary). The legacy `yt_lid_openlid_v3_*` tables are never overwritten.
+- Deterministic channel/video dedup (`row_number()`, never `.dropDuplicates()`) and deterministic
+  `xxhash64` smoke sampling (never `.limit()` on unordered data); dedupe QA table.
+- Letter-based validity (`min_clean_chars=40`, non-Latin exception at 12 letters / 0.60 dominant-script
+  share) with per-script letter metrics, replacing whitespace-padded length thresholds.
+- Robust `parse_lid_label`; long-format top-k predictions; `top_k=5`.
+- Per-model channel aggregation with top-1/top-2 admission rules, segment-type + rank weights (length
+  weighting dropped for comparability), vote shares, margins, and `language_votes_json`.
+- Deterministic `consensus_status` classifier; high-risk tail labels flagged (and reviewed) but never
+  hard-recoded.
+- Screen vs. credible mixed-language distinction with second-model support by default.
+- Hindi/Indic recall diagnostics with word-boundary romanized-keyword flags (recall-only; never feed
+  labels), and a high-risk redirect diagnostic combining Devanagari/keywords/source/other-model signals.
+- Deterministic stratified manual-validation sample and ablation summaries with primary-label churn vs.
+  both the v3 default OpenLID and v3 default consensus.
+- Fails clearly if an enabled model binary is unavailable; source table not modified unless explicitly
+  enabled.
+
+## Language notebook — first cut (single-model OpenLID-v3)
 
 Accepted and fixed:
 
