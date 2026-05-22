@@ -208,7 +208,7 @@ _create_text_widget("target_segments_per_partition", "250000")
 _create_text_widget("min_num_partitions", "800")
 _create_text_widget("max_num_partitions", "20000")
 _create_text_widget("run_heavy_qa", "false")
-_create_text_widget("enable_notebook_displays", "false")
+_create_text_widget("enable_notebook_displays", "true")
 _create_text_widget("allow_full_native_audit", "false")
 _create_text_widget("optimize_after_write", "false")
 _create_text_widget("limit_channels", "0")  # 0 = full corpus
@@ -319,7 +319,7 @@ TARGET_SEGMENTS_PER_PARTITION = _get_int_widget("target_segments_per_partition",
 MIN_NUM_PARTITIONS = _get_int_widget("min_num_partitions", 800)
 MAX_NUM_PARTITIONS = _get_int_widget("max_num_partitions", 20000)
 RUN_HEAVY_QA = _get_bool_widget("run_heavy_qa", False)
-ENABLE_NOTEBOOK_DISPLAYS = _get_bool_widget("enable_notebook_displays", False)
+ENABLE_NOTEBOOK_DISPLAYS = _get_bool_widget("enable_notebook_displays", True)
 ALLOW_FULL_NATIVE_AUDIT = _get_bool_widget("allow_full_native_audit", False)
 OPTIMIZE_AFTER_WRITE = _get_bool_widget("optimize_after_write", False)
 
