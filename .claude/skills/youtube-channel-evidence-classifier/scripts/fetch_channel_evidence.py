@@ -47,7 +47,11 @@ def unique(items: list[str], limit: int) -> list[str]:
 
 def extract_page(html_text: str | None) -> dict[str, object]:
     if not html_text:
-        return {"titles": [], "descriptions": [], "unavailable": False}
+        return {"channel_title": None, "titles": [], "descriptions": [], "unavailable": False}
+    # The authoritative channel title is the og:title meta tag; the generic "title": JSON matches below
+    # are noisy (video/section titles), so surface og:title separately as channel_title.
+    og = re.search(r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']', html_text, flags=re.I)
+    channel_title = html.unescape(re.sub(r"\s+", " ", og.group(1))).strip() if og else None
     titles = re.findall(r'"title"\s*:\s*"([^"]{1,180})"', html_text)
     titles += re.findall(r"<title>(.*?)</title>", html_text, flags=re.I | re.S)
     descriptions = re.findall(r'"description"\s*:\s*"([^"]{1,300})"', html_text)
@@ -60,6 +64,7 @@ def extract_page(html_text: str | None) -> dict[str, object]:
         re.search(r"channel does not exist|not available|404", html_text, flags=re.I)
     )
     return {
+        "channel_title": channel_title,
         "titles": unique(titles, 8),
         "descriptions": unique(descriptions, 5),
         "unavailable": unavailable,

@@ -32,13 +32,12 @@ import json
 import os
 import re
 from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Optional
 
-import pandas as pd
 from pyspark.sql import functions as F
 from pyspark.sql import Window
 from pyspark.sql.types import (
-    StructType, StructField, StringType, IntegerType, DoubleType, BooleanType, ArrayType,
+    StructType, StructField, StringType, IntegerType, DoubleType, BooleanType,
 )
 
 # COMMAND ----------

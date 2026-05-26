@@ -1926,6 +1926,13 @@ SOUTH_ASIAN_ISO = {"hin", "urd", "pan", "ben", "tel", "tam", "mal", "guj", "mar"
                    "npi", "bho", "awa", "mai", "mag", "asm", "snd", "kas", "doi", "san"}
 print("Experimental fixes -> B3_name_downweight:", B3_DOWNWEIGHT_LATIN_NAME,
       "| B4_bilingual:", B4_EMIT_BILINGUAL_STATUS, "| B2b_romanized_indic:", B2B_PREFER_ROMANIZED_INDIC)
+if not IS_FULL_BUCKET_RANGE:
+    print(
+        "NOTE: this build adds new output columns (consensus_source, bilingual_*, b2b_* and the new "
+        "consensus_status values taxonomy_normalized_agreement / romanized_indic_override). The FIRST run "
+        "after these schema changes must use the FULL bucket range so write_delta can migrate the output "
+        "tables; a partial bucket range will fail at write time."
+    )
 
 # COMMAND ----------
 # Segment-type vote weights (§8). Unmatched segment types default to weight 1.0.
@@ -3165,8 +3172,15 @@ channels = (
 _b2b_sa = sorted(SOUTH_ASIAN_ISO)
 _b2b_indic_signal = F.coalesce(F.col("contains_devanagari_metadata"), F.lit(False)) | (F.coalesce(F.col("romanized_indic_keyword_count"), F.lit(0)) >= F.lit(B2B_MIN_ROMANIZED_KEYWORDS))
 _b2b_override_label = (
+    # Prefer GlotLID's South-Asian label (more reliable on romanized South-Asian per the validation report).
     F.when(F.col("glotlid_primary_language_iso639_3").isin(*_b2b_sa), F.col("glotlid_primary_language_label"))
-     .when(F.col("openlid_primary_language_iso639_3").isin(*_b2b_sa), F.col("openlid_primary_language_label"))
+     # Only fall back to OpenLID's South-Asian label when OpenLID is not the low-confidence loser, so we
+     # never promote a low-confidence OpenLID label over a confident English call.
+     .when(
+        F.col("openlid_primary_language_iso639_3").isin(*_b2b_sa)
+        & (F.coalesce(F.col("openlid_primary_language_vote_share_with_top2"), F.lit(0.0)) >= F.lit(CONSENSUS_LOW_CONF_VOTE_SHARE)),
+        F.col("openlid_primary_language_label"),
+     )
 )
 _b2b_fire = F.lit(bool(B2B_PREFER_ROMANIZED_INDIC)) & (F.col("consensus_language_iso639_3") == F.lit("eng")) & _b2b_indic_signal & _b2b_override_label.isNotNull()
 channels = (
@@ -3503,7 +3517,7 @@ if CREATE_VALIDATION_SAMPLES:
 
     # (stratum_name, predicate) in fixed priority order (§14 list).
     strata = [
-        ("high_confidence_major_language", (F.col("consensus_status") == F.lit("exact_model_agreement")) & (vs >= F.lit(CONSENSUS_HIGH_CONF_VOTE_SHARE))),
+        ("high_confidence_major_language", (F.col("consensus_status").isin("exact_model_agreement", "taxonomy_normalized_agreement")) & (vs >= F.lit(CONSENSUS_HIGH_CONF_VOTE_SHARE))),
         ("low_confidence", has_primary & (vs < F.lit(CONSENSUS_LOW_CONF_VOTE_SHARE))),
         ("credible_mixed_language_candidate", F.coalesce(F.col("consensus_is_credible_mixed_language_candidate"), F.lit(False))),
         ("mixed_screen_not_credible", F.coalesce(F.col("consensus_is_mixed_language_screen"), F.lit(False)) & (~F.coalesce(F.col("consensus_is_credible_mixed_language_candidate"), F.lit(False)))),

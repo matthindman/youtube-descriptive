@@ -108,6 +108,16 @@ Two source columns (`channel_description`, `video_tags`) **did not resolve to an
 | openlid_high_confidence_glotlid_missing_or_error | 31 |
 | insufficient_text | 19 |
 
+> **v3.1 vocabulary change (for downstream consumers).** The implemented fixes add a new
+> `consensus_source` column and two new `consensus_status` values: **`taxonomy_normalized_agreement`**
+> (B1 — Arabic macro/dialect recovered to `ara_Arab`, ~4.5k channels; counts as `classified`) and
+> **`romanized_indic_override`** (B2(b), default-off). Any query/dashboard/rollup that enumerates
+> `consensus_status` must include these, and the validation-sample stratifier now treats
+> `taxonomy_normalized_agreement` as high-confidence agreement. `consensus_source` values:
+> `fasttext_consensus`, `taxonomy_normalized_fasttext`, `fasttext_mutual_high_risk_agreement`,
+> `manual_adjudication_required`, `fasttext_unlabeled_consensus`, `romanized_indic_override`, plus
+> `llm_panel` / `audit_sample` / `human_review` from the panel (notebook 03).
+
 **Top consensus languages:** eng_Latn 45,321 · spa_Latn 10,789 · por_Latn 8,850 · rus_Cyrl 6,069 ·
 fra_Latn 2,711 · tha_Thai 1,977 · jpn_Jpan 1,704 · deu_Latn 1,590 · tur_Latn 1,533 · kor_Hang 1,333 …
 (146 distinct labels).
