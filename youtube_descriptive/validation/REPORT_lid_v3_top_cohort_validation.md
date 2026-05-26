@@ -38,11 +38,13 @@ and has not been audited.
 lines. The only red text is a non-fatal pip dependency-resolver notice (install succeeded). All
 acceptance checks printed `[PASS]`. The run completed cleanly.
 
-**Important provenance caveat.** The child run's own config shows `run_id=default`, source
-`yt_sl_channels` (full prod table), `limit_channels=0`, full bucket range — i.e. it carries **no
-cohort markers**. We are treating it as the top-subscriber cohort on the basis of external
-confirmation, but the `.dbc` alone cannot prove cohort identity, the subscriber cutoff, or cohort
-size. **Confirm against the driver run log.**
+**Cohort definition (confirmed by owner).** This run is the **entire "top of the ocean" population** —
+the highest-subscriber channels, from the top down to a subscriber cutoff estimated to cover ~half of
+all platform-wide views. It is **not** a 100k cohort: 105,638 channels is the intended full set, and
+`run_id=default`, full `yt_sl_channels` source, and full bucket range are all correct for processing the
+whole population (no per-cohort sub-selection applies). The separate `random_*_subscriber_band` sample
+(channels below this cutoff) has not yet been run. Open item: record the exact subscriber cutoff value
+and the basis for the ~50%-of-views estimate (§9).
 
 **Display gap.** QA distributions in the notebook are gated behind `enable_notebook_displays`
 (default `false`), so the run log captured only `print()` headers, not the distribution tables. All
@@ -344,7 +346,9 @@ a live fetch recovers.)
    step was skipped (`create_validation_samples=false`).
 2. **Provenance of the `channel_language` column** — is it human gold or another tool's output? This
    determines whether §8.1 numbers are "accuracy" or "agreement." (It behaves like a judge, not the pipeline.)
-3. **Cohort identity / subscriber cutoff / cohort size** — needs the driver run log.
+3. **Subscriber cutoff value & the ~50%-of-views basis** — cohort identity/size are confirmed (entire
+   top-of-ocean population, 105,638 channels); the exact cutoff and the view-share estimate are still to
+   be recorded for documentation.
 4. **The ~30% unreachable channels** — need correct IDs (export) to verify; until then ~1/3 of the sample is dark.
 5. **Whether `channel_description` is genuinely absent** or a column-name mismatch (§2).
 6. **The random-100k subscriber-band cohort** — not yet run; representativeness of the top cohort is unknown.

@@ -1905,6 +1905,29 @@ else:
 # MAGIC pipeline is intentionally **not** applied in v3 (§8 omits it), for cross-model comparability.
 
 # COMMAND ----------
+# Experimental, DEFAULT-OFF fixes (plan B2b / B3 / B4). Enable per-subset to collect scale-test data;
+# while false they do NOT change production output. See validation/IMPLEMENTATION_PLAN_lid_v3_fixes.md.
+for _w, _d in [
+    ("b3_downweight_latin_name", "false"),       # B3: suppress a Latin channel-name vote on non-Latin channels
+    ("b3_nonlatin_share", "0.60"),
+    ("b3_min_nonname_segments", "2"),
+    ("b4_emit_bilingual_status", "false"),        # B4: emit credible bilingual as a first-class status
+    ("b2b_prefer_romanized_indic_when_eng", "false"),  # B2(b): English -> South-Asian when Indic signal present
+    ("b2b_min_romanized_keywords", "1"),
+]:
+    _create_text_widget(_w, _d)
+B3_DOWNWEIGHT_LATIN_NAME = _get_bool_widget("b3_downweight_latin_name", False)
+B3_NONLATIN_SHARE = _get_float_widget("b3_nonlatin_share", 0.60)
+B3_MIN_NONNAME_SEGMENTS = _get_int_widget("b3_min_nonname_segments", 2)
+B4_EMIT_BILINGUAL_STATUS = _get_bool_widget("b4_emit_bilingual_status", False)
+B2B_PREFER_ROMANIZED_INDIC = _get_bool_widget("b2b_prefer_romanized_indic_when_eng", False)
+B2B_MIN_ROMANIZED_KEYWORDS = _get_int_widget("b2b_min_romanized_keywords", 1)
+SOUTH_ASIAN_ISO = {"hin", "urd", "pan", "ben", "tel", "tam", "mal", "guj", "mar", "ory", "kan", "sin",
+                   "npi", "bho", "awa", "mai", "mag", "asm", "snd", "kas", "doi", "san"}
+print("Experimental fixes -> B3_name_downweight:", B3_DOWNWEIGHT_LATIN_NAME,
+      "| B4_bilingual:", B4_EMIT_BILINGUAL_STATUS, "| B2b_romanized_indic:", B2B_PREFER_ROMANIZED_INDIC)
+
+# COMMAND ----------
 # Segment-type vote weights (§8). Unmatched segment types default to weight 1.0.
 SEGMENT_WEIGHTS = spark.createDataFrame(
     [
@@ -1982,7 +2005,7 @@ def build_admitted_votes_from_compact(compact_df):
             & ((F.col("score") / F.col("score_1")) >= F.lit(SECONDARY_MIN_SCORE_RATIO))
         )
     )
-    return (
+    weighted = (
         admitted
         .join(F.broadcast(SEGMENT_WEIGHTS), on="segment_type", how="left")
         .withColumn("segment_weight", F.coalesce(F.col("segment_weight"), F.lit(1.0)))
@@ -1992,6 +2015,37 @@ def build_admitted_votes_from_compact(compact_df):
         )
         .withColumn("weighted_score", F.col("score") * F.col("segment_weight") * F.col("rank_weight"))
     )
+    # B3 (default-off): if a channel's non-name segments are predominantly non-Latin but the channel name
+    # is Latin, suppress the channel-name vote so the Latin brand name can't flip a non-Latin channel.
+    if B3_DOWNWEIGHT_LATIN_NAME:
+        _nonlatin = (~F.col("dominant_script").isin("latin", "none"))
+        # Count by DISTINCT segment (rank-1 rows = one per segment) so top-1+top-2 of the same segment
+        # don't double-count toward b3_min_nonname_segments.
+        _r1 = weighted.where(F.col("prediction_rank") == F.lit(1))
+        _name_flags = (
+            _r1.groupBy("channel_id").agg(
+                F.avg(F.when(F.col("segment_type") != F.lit("channel_name"), _nonlatin.cast("double"))).alias("_nonname_nonlatin_share"),
+                F.countDistinct(F.when(F.col("segment_type") != F.lit("channel_name"), F.col("segment_id"))).alias("_nonname_n"),
+                F.max(F.when((F.col("segment_type") == F.lit("channel_name")) & (F.col("dominant_script") == F.lit("latin")), F.lit(1)).otherwise(F.lit(0))).alias("_name_is_latin"),
+            )
+            .withColumn(
+                "_suppress_name",
+                (F.col("_nonname_n") >= F.lit(B3_MIN_NONNAME_SEGMENTS))
+                & (F.coalesce(F.col("_nonname_nonlatin_share"), F.lit(0.0)) >= F.lit(B3_NONLATIN_SHARE))
+                & (F.col("_name_is_latin") == F.lit(1)),
+            )
+            .select("channel_id", "_suppress_name")
+        )
+        weighted = (
+            weighted.join(_name_flags, on="channel_id", how="left")
+            .withColumn(
+                "weighted_score",
+                F.when((F.col("segment_type") == F.lit("channel_name")) & F.coalesce(F.col("_suppress_name"), F.lit(False)), F.lit(0.0))
+                 .otherwise(F.col("weighted_score")),
+            )
+            .drop("_suppress_name")
+        )
+    return weighted
 
 
 def build_channel_votes(admitted, model_name: str):
@@ -2201,6 +2255,19 @@ def _isnull(x) -> bool:
     return x is None or (isinstance(x, float) and x != x)
 
 
+# B1: Arabic macrolanguage + dialects collapse to one key so dialect-vs-macro is treated as agreement
+# (the dialect is preserved as an audit field, never overwritten). Chinese already shares iso `cmn`.
+ARABIC_FAMILY_ISO = {"ara", "arb", "ary", "arz", "apc", "ars", "ajp", "aeb", "acm", "acq", "aec", "afb", "ayl", "ayn"}
+
+
+def _canonical_iso(iso):
+    return "ara" if (iso is not None and str(iso) in ARABIC_FAMILY_ISO) else iso
+
+
+def _canonical_iso_col(col):
+    return F.when(col.isin(*sorted(ARABIC_FAMILY_ISO)), F.lit("ara")).otherwise(col)
+
+
 def compute_consensus(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
                       gl_label, gl_iso, gl_script, gl_vs, gl_hr, gl_cl, gl_present) -> dict:
     """Deterministic §10 consensus classifier. References CONSENSUS_LOW/HIGH_CONF_VOTE_SHARE globals.
@@ -2223,7 +2290,7 @@ def compute_consensus(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
     gl_present = (not _isnull(gl_present)) and bool(gl_present) and gl_label is not None
     low_conf, high_conf = CONSENSUS_LOW_CONF_VOTE_SHARE, CONSENSUS_HIGH_CONF_VOTE_SHARE
 
-    def out(status, label=None, manual=False, cluster=None, rollup="__auto__"):
+    def out(status, label=None, manual=False, cluster=None, rollup="__auto__", source=None):
         iso = script = None
         if label:
             parts = label.split("_")
@@ -2231,8 +2298,20 @@ def compute_consensus(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
             script = parts[1] if len(parts) >= 2 and parts[1] else None
         if rollup == "__auto__":
             rollup = cluster or iso
+        if source is None:
+            if status == "taxonomy_normalized_agreement":
+                source = "taxonomy_normalized_fasttext"
+            elif status == "high_risk_tail_label_needs_review" and label:
+                source = "fasttext_mutual_high_risk_agreement"
+            elif manual:
+                source = "manual_adjudication_required"
+            elif label:
+                source = "fasttext_consensus"
+            else:
+                source = "fasttext_unlabeled_consensus"
         return {
             "consensus_status": status,
+            "consensus_source": source,
             "consensus_language_label": label,
             "consensus_language_iso639_3": iso,
             "consensus_language_script": script,
@@ -2270,7 +2349,14 @@ def compute_consensus(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
             return out("glotlid_fallback_openlid_low_confidence", label=gl_label, manual=False, cluster=gl_cl)
         return out("model_disagreement_needs_review", label=None, manual=True)
 
-    # Both present, labels differ. A high-risk tail label without exact agreement is flagged for review
+    # Both present, labels differ.
+    # B1: Arabic macro/dialect normalization. If both models land in the Arabic family, they agree the
+    # content is Arabic; emit the canonical ara_Arab label instead of dropping to NULL/needs_review.
+    # The specific dialects remain in the per-model audit fields (openlid/glotlid_primary_*).
+    if ol_iso and gl_iso and _canonical_iso(ol_iso) == "ara" and _canonical_iso(gl_iso) == "ara":
+        return out("taxonomy_normalized_agreement", label="ara_Arab", manual=False, cluster=(ol_cl or gl_cl), rollup="ara")
+
+    # A high-risk tail label without exact agreement is flagged for review
     # before any iso/cluster/fallback consensus, so high-risk hallucinations are never silently rolled up
     # or used as a fallback target (§10 high-risk rule; §11 caution).
     if ol_hr or gl_hr:
@@ -2287,6 +2373,7 @@ def compute_consensus(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
 
 consensus_schema = StructType([
     StructField("consensus_status", StringType(), True),
+    StructField("consensus_source", StringType(), True),
     StructField("consensus_language_label", StringType(), True),
     StructField("consensus_language_iso639_3", StringType(), True),
     StructField("consensus_language_script", StringType(), True),
@@ -2408,7 +2495,7 @@ both_nn = lambda a, b: F.col(a).isNotNull() & F.col(b).isNotNull()
 chan_cmp = (
     chan_cmp
     .withColumn("models_agree_exact_primary", both_nn("openlid_primary_language_label", "glotlid_primary_language_label") & (F.col("openlid_primary_language_label") == F.col("glotlid_primary_language_label")))
-    .withColumn("models_agree_iso_primary", both_nn("openlid_primary_language_iso639_3", "glotlid_primary_language_iso639_3") & (F.col("openlid_primary_language_iso639_3") == F.col("glotlid_primary_language_iso639_3")))
+    .withColumn("models_agree_iso_primary", both_nn("openlid_primary_language_iso639_3", "glotlid_primary_language_iso639_3") & (_canonical_iso_col(F.col("openlid_primary_language_iso639_3")) == _canonical_iso_col(F.col("glotlid_primary_language_iso639_3"))))
     .withColumn("models_agree_analysis_cluster_primary", both_nn("openlid_primary_cluster", "glotlid_primary_cluster") & (F.col("openlid_primary_cluster") == F.col("glotlid_primary_cluster")))
     .withColumn("models_agree_exact_secondary", both_nn("openlid_secondary_language_label", "glotlid_secondary_language_label") & (F.col("openlid_secondary_language_label") == F.col("glotlid_secondary_language_label")))
     .withColumn("models_agree_analysis_cluster_secondary", both_nn("openlid_secondary_cluster", "glotlid_secondary_cluster") & (F.col("openlid_secondary_cluster") == F.col("glotlid_secondary_cluster")))
@@ -2444,12 +2531,27 @@ _maybe_display(cmp_tbl.groupBy("requires_manual_adjudication").count().orderBy(F
 if ENABLE_OPENLID and GLOTLID_CAN_FEED_MAIN:
     print("Primary agreement rates (exact / iso / cluster) over channels where both models have a primary")
     both_primary = cmp_tbl.where(F.col("openlid_primary_language_label").isNotNull() & F.col("glotlid_primary_language_label").isNotNull())
+    # B6: cluster agreement is only meaningful within the cluster taxonomy. Averaging over ALL both-primary
+    # channels (most of which have a NULL cluster) understates it badly (the misleading 14.23%). Report the
+    # WITHIN-cluster rate (denominator = both clusters non-null) plus the cluster coverage separately.
+    _both_clustered = F.col("openlid_primary_cluster").isNotNull() & F.col("glotlid_primary_cluster").isNotNull()
     _maybe_display(both_primary.agg(
         F.avg(F.col("models_agree_exact_primary").cast("double")).alias("exact_primary_agreement_rate"),
         F.avg(F.col("models_agree_iso_primary").cast("double")).alias("iso_primary_agreement_rate"),
-        F.avg(F.col("models_agree_analysis_cluster_primary").cast("double")).alias("cluster_primary_agreement_rate"),
+        F.avg(F.when(_both_clustered, F.col("models_agree_analysis_cluster_primary").cast("double"))).alias("within_cluster_primary_agreement_rate"),
+        F.avg(_both_clustered.cast("double")).alias("cluster_coverage_rate"),
+        F.sum(_both_clustered.cast("int")).alias("n_channels_both_clustered"),
         F.count(F.lit(1)).alias("n_channels_both_primary"),
     ))
+    # B5 audit: high-risk tail labels kept as a FINAL consensus label come only from confident mutual
+    # agreement. Surface the count + the labels so the deliberate policy exception is reviewable before
+    # publication (per plan B5 acceptance).
+    _hr_final = cmp_tbl.where(
+        F.col("consensus_language_label").isNotNull()
+        & F.col("consensus_language_label").isin(*sorted(HIGH_RISK_LATIN_TAIL_LABELS))
+    )
+    print("B5: confident mutual-agreement tail labels kept as final (count by label)")
+    _maybe_display(_hr_final.groupBy("consensus_language_label").count().orderBy(F.desc("count")))
 
 # COMMAND ----------
 # MAGIC %md
@@ -3012,7 +3114,7 @@ cmp_fields = current_run_table(channel_model_comparison_full).select(
     "openlid_primary_is_high_risk", "glotlid_primary_is_high_risk",
     "models_agree_exact_primary", "models_agree_iso_primary", "models_agree_analysis_cluster_primary",
     "models_agree_exact_secondary", "models_agree_analysis_cluster_secondary",
-    "consensus_status", "consensus_language_label", "consensus_language_iso639_3", "consensus_language_script",
+    "consensus_status", "consensus_source", "consensus_language_label", "consensus_language_iso639_3", "consensus_language_script",
     "consensus_analysis_language_cluster", "consensus_for_rollup_label", "requires_manual_adjudication",
 )
 
@@ -3040,17 +3142,50 @@ channels = (
     .join(mixed_flags, on="channel_id", how="left")
     .join(hindi_status, on="channel_id", how="left")
     .withColumn("is_mixed_language_candidate", F.coalesce(F.col("consensus_is_credible_mixed_language_candidate"), F.lit(False)))
+    # B4: surface credible bilingual channels' primary+secondary (populated for mixed candidates regardless
+    # of the status-label flag, so the table schema is stable whether or not B4 is enabled).
+    .withColumn("bilingual_primary_language_label", F.when(F.col("is_mixed_language_candidate"), F.coalesce(F.col("openlid_primary_language_label"), F.col("glotlid_primary_language_label"))))
+    .withColumn("bilingual_secondary_language_label", F.when(F.col("is_mixed_language_candidate"), F.coalesce(F.col("openlid_secondary_language_label"), F.col("glotlid_secondary_language_label"))))
     .withColumn(
         "language_status",
         F.when(F.col("primary_language_label").isNull() & F.col("openlid_primary_language_label").isNull() & F.col("glotlid_primary_language_label").isNull(), F.lit("insufficient_text_or_unclassified"))
         .when(F.col("consensus_status") == F.lit("insufficient_text"), F.lit("insufficient_text_or_unclassified"))
-        .when(F.coalesce(F.col("consensus_is_credible_mixed_language_candidate"), F.lit(False)), F.lit("mixed_language_candidate"))
+        .when(F.coalesce(F.col("consensus_is_credible_mixed_language_candidate"), F.lit(False)), F.lit("bilingual" if B4_EMIT_BILINGUAL_STATUS else "mixed_language_candidate"))
         .when(F.coalesce(F.col("requires_manual_adjudication"), F.lit(False)), F.lit("needs_review"))
         .otherwise(F.lit("classified")),
     )
     .withColumn("pipeline_version", F.lit("lid_v3"))
     .transform(with_bucket_run_columns)
     .withColumn("prediction_timestamp", F.current_timestamp())
+)
+
+# B2(b) (default-off): when consensus says English but there is strong romanized-Indic signal AND a model
+# gave a South-Asian language, prefer that South-Asian label. The marker column is always present (False
+# when the flag is off) so the schema is stable across flag states.
+_b2b_sa = sorted(SOUTH_ASIAN_ISO)
+_b2b_indic_signal = F.coalesce(F.col("contains_devanagari_metadata"), F.lit(False)) | (F.coalesce(F.col("romanized_indic_keyword_count"), F.lit(0)) >= F.lit(B2B_MIN_ROMANIZED_KEYWORDS))
+_b2b_override_label = (
+    F.when(F.col("glotlid_primary_language_iso639_3").isin(*_b2b_sa), F.col("glotlid_primary_language_label"))
+     .when(F.col("openlid_primary_language_iso639_3").isin(*_b2b_sa), F.col("openlid_primary_language_label"))
+)
+_b2b_fire = F.lit(bool(B2B_PREFER_ROMANIZED_INDIC)) & (F.col("consensus_language_iso639_3") == F.lit("eng")) & _b2b_indic_signal & _b2b_override_label.isNotNull()
+channels = (
+    channels
+    .withColumn("b2b_romanized_indic_override", F.coalesce(_b2b_fire, F.lit(False)))
+    .withColumn("b2b_romanized_indic_original_consensus_status", F.when(F.col("b2b_romanized_indic_override"), F.col("consensus_status")))
+    .withColumn("b2b_romanized_indic_original_consensus_source", F.when(F.col("b2b_romanized_indic_override"), F.col("consensus_source")))
+    .withColumn("b2b_romanized_indic_original_consensus_language_label", F.when(F.col("b2b_romanized_indic_override"), F.col("consensus_language_label")))
+    .withColumn("b2b_romanized_indic_original_consensus_language_iso639_3", F.when(F.col("b2b_romanized_indic_override"), F.col("consensus_language_iso639_3")))
+    .withColumn("b2b_romanized_indic_original_consensus_language_script", F.when(F.col("b2b_romanized_indic_override"), F.col("consensus_language_script")))
+    .withColumn("consensus_status", F.when(F.col("b2b_romanized_indic_override"), F.lit("romanized_indic_override")).otherwise(F.col("consensus_status")))
+    .withColumn("consensus_source", F.when(F.col("b2b_romanized_indic_override"), F.lit("romanized_indic_override")).otherwise(F.col("consensus_source")))
+    .withColumn("requires_manual_adjudication", F.when(F.col("b2b_romanized_indic_override"), F.lit(False)).otherwise(F.col("requires_manual_adjudication")))
+    .withColumn("consensus_language_label", F.when(F.col("b2b_romanized_indic_override"), _b2b_override_label).otherwise(F.col("consensus_language_label")))
+    .withColumn("consensus_language_iso639_3", F.when(F.col("b2b_romanized_indic_override"), F.split(_b2b_override_label, "_").getItem(0)).otherwise(F.col("consensus_language_iso639_3")))
+    .withColumn("consensus_language_script", F.when(F.col("b2b_romanized_indic_override"), F.element_at(F.split(_b2b_override_label, "_"), 2)).otherwise(F.col("consensus_language_script")))
+    # Keep the rollup/cluster fields in sync so overridden channels are summarized under the new language.
+    .withColumn("consensus_analysis_language_cluster", F.when(F.col("b2b_romanized_indic_override"), analysis_cluster_expr(F.col("consensus_language_label"), F.col("consensus_language_iso639_3"))).otherwise(F.col("consensus_analysis_language_cluster")))
+    .withColumn("consensus_for_rollup_label", F.when(F.col("b2b_romanized_indic_override"), F.coalesce(analysis_cluster_expr(F.col("consensus_language_label"), F.col("consensus_language_iso639_3")), F.col("consensus_language_iso639_3"))).otherwise(F.col("consensus_for_rollup_label")))
 )
 
 write_delta(
@@ -3194,6 +3329,10 @@ if ENABLE_OPENLID and GLOTLID_CAN_FEED_MAIN:
             "glotlid_primary_analysis_cluster",
             analysis_cluster_expr(F.col("glotlid_primary_language_label"), F.col("glotlid_primary_language_iso639_3")),
         )
+        .withColumn(
+            "both_primary_analysis_clustered",
+            F.col("openlid_primary_analysis_cluster").isNotNull() & F.col("glotlid_primary_analysis_cluster").isNotNull(),
+        )
     )
     model_agreement_summary = (
         both_primary.groupBy(
@@ -3204,9 +3343,12 @@ if ENABLE_OPENLID and GLOTLID_CAN_FEED_MAIN:
             "consensus_analysis_language_cluster",
         ).agg(
             F.count(F.lit(1)).alias("n_channels"),
+            F.sum(F.col("both_primary_analysis_clustered").cast("long")).alias("n_channels_both_clustered"),
             F.avg(F.col("models_agree_exact_primary").cast("double")).alias("exact_agreement_rate"),
             F.avg(F.col("models_agree_iso_primary").cast("double")).alias("iso_agreement_rate"),
-            F.avg(F.col("models_agree_analysis_cluster_primary").cast("double")).alias("cluster_agreement_rate"),
+            F.avg(F.when(F.col("both_primary_analysis_clustered"), F.col("models_agree_analysis_cluster_primary").cast("double"))).alias("cluster_agreement_rate"),
+            F.avg(F.when(F.col("both_primary_analysis_clustered"), F.col("models_agree_analysis_cluster_primary").cast("double"))).alias("within_cluster_primary_agreement_rate"),
+            F.avg(F.col("both_primary_analysis_clustered").cast("double")).alias("cluster_coverage_rate"),
         )
         .orderBy(F.desc("n_channels"))
     )
@@ -3227,9 +3369,12 @@ else:
         StructField("glotlid_primary_analysis_cluster", StringType(), True),
         StructField("consensus_analysis_language_cluster", StringType(), True),
         StructField("n_channels", LongType(), True),
+        StructField("n_channels_both_clustered", LongType(), True),
         StructField("exact_agreement_rate", DoubleType(), True),
         StructField("iso_agreement_rate", DoubleType(), True),
         StructField("cluster_agreement_rate", DoubleType(), True),
+        StructField("within_cluster_primary_agreement_rate", DoubleType(), True),
+        StructField("cluster_coverage_rate", DoubleType(), True),
     ])
     write_delta(
         with_run_scope_columns(spark.createDataFrame([], empty_model_agreement_schema))

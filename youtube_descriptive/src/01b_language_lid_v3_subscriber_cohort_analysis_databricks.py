@@ -128,6 +128,14 @@ _create_text_widget("scratch_schema", "matt")
 
 _create_text_widget("channel_id_column", "channel_id")
 _create_text_widget("subscriber_column", "")  # blank = auto-detect
+# C1: text-column overrides forwarded to the child notebook. Blank = child auto-detects. Set these so
+# cohort runs pick up channel_description / video_tags (otherwise the child only auto-detects from the
+# cohort source-table columns, and these were missing in the audited run).
+_create_text_widget("channel_name_column", "")
+_create_text_widget("channel_description_column", "")
+_create_text_widget("video_title_column", "")
+_create_text_widget("video_description_column", "")
+_create_text_widget("video_tags_column", "")
 _create_text_widget("cohort_size", "100000")
 _create_text_widget("random_lower_subscribers", "10000")
 _create_text_widget("random_seed", "20260521")
@@ -171,6 +179,11 @@ SCRATCH_SCHEMA = _get_widget("scratch_schema", "matt")
 
 CHANNEL_ID_COLUMN = _get_widget("channel_id_column", "channel_id")
 SUBSCRIBER_COLUMN_OVERRIDE = _get_widget("subscriber_column", "").strip()
+CHANNEL_NAME_COLUMN = _get_widget("channel_name_column", "").strip()
+CHANNEL_DESCRIPTION_COLUMN = _get_widget("channel_description_column", "").strip()
+VIDEO_TITLE_COLUMN = _get_widget("video_title_column", "").strip()
+VIDEO_DESCRIPTION_COLUMN = _get_widget("video_description_column", "").strip()
+VIDEO_TAGS_COLUMN = _get_widget("video_tags_column", "").strip()
 COHORT_SIZE = _get_int_widget("cohort_size", 100000)
 RANDOM_LOWER_SUBSCRIBERS = _get_int_widget("random_lower_subscribers", 10000)
 RANDOM_SEED = _get_int_widget("random_seed", 20260521)
@@ -593,6 +606,12 @@ COMMON_LID_ARGS = {
     "catalog": SCRATCH_CATALOG,
     "schema": SCRATCH_SCHEMA,
     "channel_id_column": CHANNEL_ID_COLUMN,
+    # C1: forward text-column overrides so cohort runs pick up channel_description / video_tags, etc.
+    "channel_name_column": CHANNEL_NAME_COLUMN,
+    "channel_description_column": CHANNEL_DESCRIPTION_COLUMN,
+    "video_title_column": VIDEO_TITLE_COLUMN,
+    "video_description_column": VIDEO_DESCRIPTION_COLUMN,
+    "video_tags_column": VIDEO_TAGS_COLUMN,
     "limit_channels": "0",
     "production_mode": PRODUCTION_MODE,
     "prediction_output_mode": PREDICTION_OUTPUT_MODE,
