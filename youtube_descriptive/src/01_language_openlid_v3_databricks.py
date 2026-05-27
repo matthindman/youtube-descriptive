@@ -1929,7 +1929,8 @@ print("Experimental fixes -> B3_name_downweight:", B3_DOWNWEIGHT_LATIN_NAME,
 if not IS_FULL_BUCKET_RANGE:
     print(
         "NOTE: this build adds new output columns (consensus_source, bilingual_*, b2b_* and the new "
-        "consensus_status values taxonomy_normalized_agreement / romanized_indic_override). The FIRST run "
+        "consensus_status values taxonomy_normalized_agreement / high_risk_tail_exact_agreement / "
+        "romanized_indic_override). The FIRST run "
         "after these schema changes must use the FULL bucket range so write_delta can migrate the output "
         "tables; a partial bucket range will fail at write time."
     )
@@ -2307,13 +2308,19 @@ def compute_consensus(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
             rollup = cluster or iso
         if source is None:
             if status == "taxonomy_normalized_agreement":
-                source = "taxonomy_normalized_fasttext"
-            elif status == "high_risk_tail_label_needs_review" and label:
-                source = "fasttext_mutual_high_risk_agreement"
+                source = "taxonomy_normalized"
+            elif status == "high_risk_tail_exact_agreement":
+                source = "fasttext_tail_agreement"
             elif manual:
                 source = "manual_adjudication_required"
-            elif label:
-                source = "fasttext_consensus"
+            elif status in {
+                "exact_model_agreement",
+                "iso_or_script_variant_agreement",
+                "cluster_model_agreement",
+                "openlid_high_confidence_glotlid_missing_or_error",
+                "glotlid_fallback_openlid_low_confidence",
+            }:
+                source = "fasttext_agreement"
             else:
                 source = "fasttext_unlabeled_consensus"
         return {
@@ -2334,13 +2341,16 @@ def compute_consensus(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
     if ol_present and gl_present and ol_label == gl_label:
         if ol_hr:
             strong_high_risk_evidence = ol_vs >= high_conf and gl_vs >= high_conf
-            return out(
-                "high_risk_tail_label_needs_review",
-                label=ol_label if strong_high_risk_evidence else None,
-                manual=True,
-                cluster=ol_cl,
-                rollup=(ol_cl or ol_iso),
-            )
+            if strong_high_risk_evidence:
+                return out(
+                    "high_risk_tail_exact_agreement",
+                    label=ol_label,
+                    manual=False,
+                    cluster=ol_cl,
+                    rollup=(ol_cl or ol_iso),
+                )
+            return out("high_risk_tail_label_needs_review", label=None, manual=True,
+                       cluster=ol_cl, rollup=(ol_cl or ol_iso))
         return out("exact_model_agreement", label=ol_label, manual=False, cluster=ol_cl)
 
     # GlotLID absent/errored -> single-model OpenLID only when confident and not high-risk.
@@ -3192,7 +3202,7 @@ channels = (
     .withColumn("b2b_romanized_indic_original_consensus_language_iso639_3", F.when(F.col("b2b_romanized_indic_override"), F.col("consensus_language_iso639_3")))
     .withColumn("b2b_romanized_indic_original_consensus_language_script", F.when(F.col("b2b_romanized_indic_override"), F.col("consensus_language_script")))
     .withColumn("consensus_status", F.when(F.col("b2b_romanized_indic_override"), F.lit("romanized_indic_override")).otherwise(F.col("consensus_status")))
-    .withColumn("consensus_source", F.when(F.col("b2b_romanized_indic_override"), F.lit("romanized_indic_override")).otherwise(F.col("consensus_source")))
+    .withColumn("consensus_source", F.when(F.col("b2b_romanized_indic_override"), F.lit("reconciliation_rule")).otherwise(F.col("consensus_source")))
     .withColumn("requires_manual_adjudication", F.when(F.col("b2b_romanized_indic_override"), F.lit(False)).otherwise(F.col("requires_manual_adjudication")))
     .withColumn("consensus_language_label", F.when(F.col("b2b_romanized_indic_override"), _b2b_override_label).otherwise(F.col("consensus_language_label")))
     .withColumn("consensus_language_iso639_3", F.when(F.col("b2b_romanized_indic_override"), F.split(_b2b_override_label, "_").getItem(0)).otherwise(F.col("consensus_language_iso639_3")))

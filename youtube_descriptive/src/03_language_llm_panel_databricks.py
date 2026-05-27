@@ -37,7 +37,7 @@ from typing import Any, Dict, Optional
 from pyspark.sql import functions as F
 from pyspark.sql import Window
 from pyspark.sql.types import (
-    StructType, StructField, StringType, IntegerType, DoubleType, BooleanType,
+    StructType, StructField, StringType, IntegerType, DoubleType, BooleanType, ArrayType,
 )
 
 # COMMAND ----------
@@ -87,6 +87,7 @@ _create_text_widget("schema", "matt")
 _create_text_widget("comparison_table", "yt_lid_v3_channel_model_comparison")
 _create_text_widget("segments_input_table", "yt_lid_v3_segments_input")
 _create_text_widget("channel_text_features_table", "yt_lid_v3_channel_text_features")
+_create_text_widget("hindi_indic_audit_table", "yt_lid_v3_hindi_indic_audit_candidates")
 _create_text_widget("run_id", "default")
 _create_text_widget("inference_hash_buckets", "4096")
 
@@ -148,6 +149,7 @@ SCHEMA = _get_widget("schema", "matt")
 COMPARISON_TABLE = _get_widget("comparison_table", "yt_lid_v3_channel_model_comparison")
 SEGMENTS_INPUT_TABLE = _get_widget("segments_input_table", "yt_lid_v3_segments_input")
 CHANNEL_TEXT_FEATURES_TABLE = _get_widget("channel_text_features_table", "yt_lid_v3_channel_text_features")
+HINDI_INDIC_AUDIT_TABLE = _get_widget("hindi_indic_audit_table", "yt_lid_v3_hindi_indic_audit_candidates")
 RUN_ID = _get_widget("run_id", "default").strip() or "default"
 INFERENCE_HASH_BUCKETS = _get_int_widget("inference_hash_buckets", 4096)
 
@@ -199,6 +201,7 @@ def safe_model_dir(model: str) -> str:
 comparison_full = fqtn(COMPARISON_TABLE)
 segments_input_full = fqtn(SEGMENTS_INPUT_TABLE)
 channel_text_features_full = fqtn(CHANNEL_TEXT_FEATURES_TABLE)
+hindi_indic_audit_full = fqtn(HINDI_INDIC_AUDIT_TABLE)
 panel_requests_full = fqtn(PANEL_REQUESTS_TABLE)
 panel_batch_jobs_full = fqtn(PANEL_BATCH_JOBS_TABLE)
 panel_raw_results_full = fqtn(PANEL_RAW_RESULTS_TABLE)
@@ -213,14 +216,83 @@ except Exception:
     pass
 
 
+def _table_exists_full(table_full: str) -> bool:
+    try:
+        spark.table(table_full).limit(0)
+        return True
+    except Exception:
+        return False
+
+
+def _table_partition_columns(table_full: str):
+    try:
+        row = spark.sql(f"DESCRIBE DETAIL {table_full}").select("partitionColumns").collect()[0]
+        return list(row["partitionColumns"] or [])
+    except Exception:
+        return []
+
+
+def _sql_string(value: str) -> str:
+    return "'" + str(value).replace("'", "''") + "'"
+
+
 def write_run_scoped(df, table_full, extra_partitions=None):
     if "run_id" not in df.columns:
         df = df.withColumn("run_id", F.lit(RUN_ID))
     parts = ["run_id"] + list(extra_partitions or [])
-    writer = df.write.format("delta").mode("overwrite").partitionBy(*parts)
-    if not spark.catalog.tableExists(table_full.replace("`", "")):
-        writer = writer.option("overwriteSchema", "true")
-    writer.saveAsTable(table_full)
+    if not _table_exists_full(table_full):
+        (
+            df.write.format("delta")
+            .mode("overwrite")
+            .option("overwriteSchema", "true")
+            .partitionBy(*parts)
+            .saveAsTable(table_full)
+        )
+        return
+
+    actual_partitions = _table_partition_columns(table_full)
+    if actual_partitions != parts:
+        raise RuntimeError(
+            f"{table_full} partition columns are {actual_partitions}, expected {parts}. "
+            "Recreate or migrate the table before running a scoped panel overwrite."
+        )
+
+    existing = spark.table(table_full)
+    if "run_id" not in existing.columns:
+        raise RuntimeError(f"{table_full} has no run_id column and cannot be safely overwritten by run scope.")
+
+    existing_cols = set(existing.columns)
+    write_cols = set(df.columns)
+    missing_write_cols = sorted(write_cols - existing_cols)
+    if missing_write_cols:
+        print(f"Evolving {table_full} schema with new output columns {missing_write_cols}.")
+        (
+            df.limit(0)
+            .write.format("delta")
+            .mode("append")
+            .option("mergeSchema", "true")
+            .saveAsTable(table_full)
+        )
+        existing = spark.table(table_full)
+        existing_cols = set(existing.columns)
+
+    unknown_write_cols = sorted(set(df.columns) - existing_cols)
+    if unknown_write_cols:
+        raise RuntimeError(f"{table_full} schema did not accept new output columns {unknown_write_cols}.")
+
+    write_df = df
+    for field in existing.schema.fields:
+        if field.name not in write_df.columns:
+            write_df = write_df.withColumn(field.name, F.lit(None).cast(field.dataType))
+    write_df = write_df.select(*existing.columns)
+
+    (
+        write_df.write.format("delta")
+        .mode("overwrite")
+        .option("replaceWhere", f"run_id = {_sql_string(RUN_ID)}")
+        .partitionBy(*parts)
+        .saveAsTable(table_full)
+    )
 
 # Arabic macrolanguage + dialects collapsed to one family for the "exclude taxonomy artifact" filter.
 ARABIC_FAMILY_ISO = {"ara", "arb", "ary", "arz", "apc", "ars", "ajp", "aeb", "acm", "acq", "aec", "afb", "ayl", "ayn"}
@@ -309,6 +381,7 @@ AGREEMENT_STATUSES = [
     "iso_or_script_variant_agreement",
     "cluster_model_agreement",
     "taxonomy_normalized_agreement",
+    "high_risk_tail_exact_agreement",
 ]
 
 route_frames = []
@@ -328,9 +401,10 @@ if ROUTE_UNRESOLVED_TAIL:
     route_frames.append(t.withColumn("route_reason", F.lit("unresolved_tail")))
 
 if ROUTE_SHARED_BIAS:
-    # D3: both models agree on English, but Indic evidence contradicts. Reuse channel_text_features signals
-    # (Devanagari metadata, romanized-Indic keywords) when available; fall back to source language code.
-    text_feat_cols = set(spark.table(channel_text_features_full).columns) if spark.catalog.tableExists(channel_text_features_full.replace("`", "")) else set()
+    # D3: both models agree on English, but Indic evidence contradicts. Reuse channel_text_features
+    # for metadata signals and hindi_indic_audit for source-language evidence when available.
+    text_feat_cols = set(spark.table(channel_text_features_full).columns) if _table_exists_full(channel_text_features_full) else set()
+    hindi_audit_cols = set(spark.table(hindi_indic_audit_full).columns) if _table_exists_full(hindi_indic_audit_full) else set()
     sig = cmp_df.where(F.col("consensus_language_iso639_3") == F.lit("eng"))
     indic_signal = F.lit(False)
     if text_feat_cols:
@@ -341,17 +415,40 @@ if ROUTE_SHARED_BIAS:
             tf = tf.where(F.col("run_id") == F.lit(RUN_ID))
         if "inference_hash_buckets" in text_feat_cols:
             tf = tf.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
-        tf = tf.select(
-            "channel_id",
-            *[c for c in ["contains_devanagari_metadata", "romanized_indic_keyword_count", "source_language_value"] if c in text_feat_cols],
-        ).dropDuplicates(["channel_id"])
+        tf_select = ["channel_id"]
+        if "contains_devanagari_metadata" in text_feat_cols:
+            tf_select.append(F.col("contains_devanagari_metadata").alias("tf_contains_devanagari_metadata"))
+        if "romanized_indic_keyword_count" in text_feat_cols:
+            tf_select.append(F.col("romanized_indic_keyword_count").alias("tf_romanized_indic_keyword_count"))
+        tf = tf.select(*tf_select).dropDuplicates(["channel_id"])
         sig = sig.join(tf, on="channel_id", how="left")
         if "contains_devanagari_metadata" in text_feat_cols:
-            indic_signal = indic_signal | F.coalesce(F.col("contains_devanagari_metadata"), F.lit(False))
+            indic_signal = indic_signal | F.coalesce(F.col("tf_contains_devanagari_metadata"), F.lit(False))
         if "romanized_indic_keyword_count" in text_feat_cols:
-            indic_signal = indic_signal | (F.coalesce(F.col("romanized_indic_keyword_count"), F.lit(0)) > 0)
-        if "source_language_value" in text_feat_cols:
-            indic_signal = indic_signal | F.lower(F.col("source_language_value")).isin(*sorted(SOURCE_INDIC_CODES))
+            indic_signal = indic_signal | (F.coalesce(F.col("tf_romanized_indic_keyword_count"), F.lit(0)) > 0)
+    if hindi_audit_cols:
+        # D4: run-scope the Hindi/Indic audit join too; source_language_value is written there, not in
+        # channel_text_features, so this preserves the D3 source-code trigger.
+        hi = spark.table(hindi_indic_audit_full)
+        if "run_id" in hindi_audit_cols:
+            hi = hi.where(F.col("run_id") == F.lit(RUN_ID))
+        if "inference_hash_buckets" in hindi_audit_cols:
+            hi = hi.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
+        hi_select = ["channel_id"]
+        if "contains_devanagari_metadata" in hindi_audit_cols:
+            hi_select.append(F.col("contains_devanagari_metadata").alias("hi_contains_devanagari_metadata"))
+        if "romanized_indic_keyword_count" in hindi_audit_cols:
+            hi_select.append(F.col("romanized_indic_keyword_count").alias("hi_romanized_indic_keyword_count"))
+        if "source_language_value" in hindi_audit_cols:
+            hi_select.append(F.lower(F.trim(F.col("source_language_value").cast("string"))).alias("hi_source_language_value"))
+        hi = hi.select(*hi_select).dropDuplicates(["channel_id"])
+        sig = sig.join(hi, on="channel_id", how="left")
+        if "contains_devanagari_metadata" in hindi_audit_cols:
+            indic_signal = indic_signal | F.coalesce(F.col("hi_contains_devanagari_metadata"), F.lit(False))
+        if "romanized_indic_keyword_count" in hindi_audit_cols:
+            indic_signal = indic_signal | (F.coalesce(F.col("hi_romanized_indic_keyword_count"), F.lit(0)) > 0)
+        if "source_language_value" in hindi_audit_cols:
+            indic_signal = indic_signal | F.col("hi_source_language_value").isin(*sorted(SOURCE_INDIC_CODES))
     sig = sig.where(indic_signal)
     route_frames.append(sig.select(*cmp_df.columns, F.lit("shared_bias_english_indic").alias("route_reason")))
 
@@ -619,18 +716,21 @@ for g in groups:
         (F.col("provider") == provider) & (F.col("model") == model) & (F.col("chunk_id") == chunk_id)
     ).select("batch_line")
     n = 0
+    n_bytes = 0
     with open(local_path, "w", encoding="utf-8") as f:
         for row in subset.toLocalIterator():
-            f.write(row["batch_line"] + "\n")
+            line = row["batch_line"]
+            f.write(line + "\n")
             n += 1
-    batch_file_records.append((RUN_ID, provider, model, chunk_id, local_path, n, datetime.utcnow().isoformat()))
-    print(f"Wrote {n:,} requests: {local_path}")
+            n_bytes += len(line.encode("utf-8")) + 1
+    batch_file_records.append((RUN_ID, provider, model, chunk_id, local_path, n, n_bytes, datetime.utcnow().isoformat()))
+    print(f"Wrote {n:,} requests: {local_path} ({n_bytes:,} bytes)")
 
 # D4: persist a batch-file registry (run-scoped, idempotent) so submission/import are auditable.
 if batch_file_records:
     batch_files_df = spark.createDataFrame(
         batch_file_records,
-        ["run_id", "provider", "model", "chunk_id", "local_jsonl_path", "n_requests", "created_at_utc"],
+        ["run_id", "provider", "model", "chunk_id", "local_jsonl_path", "n_requests", "n_bytes", "created_at_utc"],
     )
     write_run_scoped(batch_files_df, panel_batch_files_full)
     print("Wrote batch-file registry to", panel_batch_files_full)
@@ -652,7 +752,7 @@ def submit_openai_batch(path: str, model: str) -> Dict[str, Any]:
         uploaded = client.files.create(file=f, purpose="batch")
     batch = client.batches.create(input_file_id=uploaded.id, endpoint=_openai_batch_endpoint_for_model(model),
                                   completion_window="24h", metadata={"run_id": RUN_ID, "task": "yt_lid_panel", "model": model})
-    return {"provider_batch_id": batch.id, "provider_status": getattr(batch, "status", None)}
+    return {"provider_file_id": uploaded.id, "provider_batch_id": batch.id, "provider_status": getattr(batch, "status", None)}
 
 
 def submit_anthropic_batch(path: str, model: str) -> Dict[str, Any]:
@@ -660,7 +760,7 @@ def submit_anthropic_batch(path: str, model: str) -> Dict[str, Any]:
     client = anthropic.Anthropic(api_key=get_secret(SECRET_SCOPE, ANTHROPIC_SECRET_KEY))
     payload = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
     batch = client.messages.batches.create(requests=payload)
-    return {"provider_batch_id": batch.id, "provider_status": getattr(batch, "processing_status", None)}
+    return {"provider_file_id": None, "provider_batch_id": batch.id, "provider_status": getattr(batch, "processing_status", None)}
 
 
 def submit_gemini_batch(path: str, model: str) -> Dict[str, Any]:
@@ -669,7 +769,12 @@ def submit_gemini_batch(path: str, model: str) -> Dict[str, Any]:
     client = genai.Client(api_key=get_secret(SECRET_SCOPE, GEMINI_SECRET_KEY))
     uploaded = client.files.upload(file=path, config=types.UploadFileConfig(display_name=f"{RUN_ID}_{safe_model_dir(model)}", mime_type="jsonl"))
     batch = client.batches.create(model=model, src=uploaded.name, config={"display_name": f"{RUN_ID}_{safe_model_dir(model)}"})
-    return {"provider_batch_id": getattr(batch, "name", None), "provider_status": getattr(getattr(batch, "state", None), "name", None)}
+    batch_state = getattr(batch, "state", None)
+    return {
+        "provider_file_id": getattr(uploaded, "name", None),
+        "provider_batch_id": getattr(batch, "name", None),
+        "provider_status": getattr(batch_state, "name", None) or (str(batch_state) if batch_state is not None else None),
+    }
 
 
 batch_job_schema = StructType([
@@ -679,31 +784,35 @@ batch_job_schema = StructType([
     StructField("chunk_id", IntegerType(), True),
     StructField("local_jsonl_path", StringType(), True),
     StructField("n_requests", IntegerType(), True),
+    StructField("n_bytes", IntegerType(), True),
+    StructField("provider_file_id", StringType(), True),
     StructField("provider_batch_id", StringType(), True),
     StructField("provider_status", StringType(), True),
+    StructField("submission_status", StringType(), True),
     StructField("submitted_at_utc", StringType(), True),
     StructField("recorded_at_utc", StringType(), True),
-    StructField("submit_error", StringType(), True),
+    StructField("submission_error", StringType(), True),
 ])
 
 if SUBMIT_BATCHES:
     batch_job_records = []
     for rec in batch_file_records:
-        _, provider, model, chunk_id, path, n, _ = rec
+        _, provider, model, chunk_id, path, n, n_bytes, _ = rec
         submitted_at = datetime.utcnow().isoformat()
         try:
             res = {"openai": submit_openai_batch, "anthropic": submit_anthropic_batch, "gemini": submit_gemini_batch}[provider](path, model)
             print(provider, model, chunk_id, "submitted", res)
             batch_job_records.append((
-                RUN_ID, provider, model, int(chunk_id), path, int(n), res.get("provider_batch_id"),
-                res.get("provider_status"), submitted_at, datetime.utcnow().isoformat(), None,
+                RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), res.get("provider_file_id"),
+                res.get("provider_batch_id"), res.get("provider_status"), "submitted",
+                submitted_at, datetime.utcnow().isoformat(), None,
             ))
         except Exception as e:
             err = repr(e)[:500]
             print(provider, model, chunk_id, "ERROR", err)
             batch_job_records.append((
-                RUN_ID, provider, model, int(chunk_id), path, int(n), None,
-                "submit_error", submitted_at, datetime.utcnow().isoformat(), err,
+                RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), None,
+                None, None, "error", submitted_at, datetime.utcnow().isoformat(), err,
             ))
     if batch_job_records:
         batch_jobs_df = spark.createDataFrame(batch_job_records, batch_job_schema)
@@ -796,11 +905,14 @@ def extract_provider_text_udf(line: str):
 pred_schema = StructType([
     StructField("primary_language_label", StringType(), True),
     StructField("primary_language_iso639_3", StringType(), True),
+    StructField("primary_language_script", StringType(), True),
     StructField("status", StringType(), True),
     StructField("is_romanized", BooleanType(), True),
     StructField("is_high_risk_tail", BooleanType(), True),
     StructField("is_mixed_language", BooleanType(), True),
     StructField("secondary_language_label", StringType(), True),
+    StructField("dialect_or_variant", StringType(), True),
+    StructField("mixed_languages", ArrayType(StringType()), True),
     StructField("confidence", StringType(), True),
     StructField("evidence", StringType(), True),
     StructField("prediction_parse_error", StringType(), True),
@@ -836,19 +948,48 @@ def _base_iso(label, iso):
     return None
 
 
+def _to_nullable_bool(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        v = value.strip().lower()
+        if v in {"1", "true", "t", "yes", "y"}:
+            return True
+        if v in {"0", "false", "f", "no", "n"}:
+            return False
+    return None
+
+
+def _string_list(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(v) for v in value if v is not None and str(v).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
 @F.udf(pred_schema)
 def normalize_prediction_udf(raw_text: str):
     o = extract_first_json_object(raw_text)
     if not o:
-        return (None, None, None, None, None, None, None, None, None, "no_json_object")
+        return (None, None, None, None, None, None, None, None, None, [], None, None, "no_json_object")
     label = o.get("primary_language_label")
     iso = o.get("primary_language_iso639_3") or _base_iso(label, None)
+    script = o.get("primary_language_script") or (str(label).split("_")[1] if label and "_" in str(label) else None)
     return (
-        label, iso, o.get("status"),
-        bool(o.get("is_romanized")) if o.get("is_romanized") is not None else None,
-        bool(o.get("is_high_risk_tail")) if o.get("is_high_risk_tail") is not None else None,
-        bool(o.get("is_mixed_language")) if o.get("is_mixed_language") is not None else None,
+        label, iso, script, o.get("status"),
+        _to_nullable_bool(o.get("is_romanized")),
+        _to_nullable_bool(o.get("is_high_risk_tail")),
+        _to_nullable_bool(o.get("is_mixed_language")),
         o.get("secondary_language_label"),
+        o.get("dialect_or_variant"),
+        _string_list(o.get("mixed_languages")),
         o.get("confidence"),
         (o.get("evidence") or "")[:500],
         None,
@@ -863,31 +1004,76 @@ if IMPORT_RESULTS:
     )
     parsed = raw.withColumn("p", extract_provider_text_udf(F.col("line"))).select("p.*")
     parsed = parsed.withColumn("pred", normalize_prediction_udf(F.col("raw_text"))).select("*", "pred.*").drop("pred")
-    # request_id = run_id__provider__model__channel_id -> recover parts; keep ONLY this run's results.
-    rid = F.split("request_id", "__")
+    # Keep ONLY this run's results by joining to the exact request registry. Do not parse request_id:
+    # run/model/channel IDs may contain the delimiter used in request_id.
+    request_map = (
+        spark.table(panel_requests_full)
+        .where(F.col("run_id") == F.lit(RUN_ID))
+        .select(
+            "request_id",
+            F.col("run_id").alias("_request_run_id"),
+            F.col("provider").alias("_request_provider"),
+            F.col("model").alias("_request_model"),
+            F.col("channel_id").alias("_request_channel_id"),
+        )
+        .dropDuplicates(["request_id"])
+    )
     parsed = (
         parsed
-        .withColumn("result_run_id", rid.getItem(0))
-        .withColumn("provider", rid.getItem(1))
-        .withColumn("model", rid.getItem(2))
-        .withColumn("channel_id", F.element_at(rid, -1))
-        .withColumn("pred_base_iso", F.lower(F.coalesce(F.col("primary_language_iso639_3"), F.split("primary_language_label", "_").getItem(0))))
-        .where(F.col("result_run_id") == F.lit(RUN_ID))
+        .join(request_map, on="request_id", how="inner")
+        .withColumn("result_run_id", F.col("_request_run_id"))
+        .withColumn("provider", F.col("_request_provider"))
+        .withColumn("model", F.col("_request_model"))
+        .withColumn("channel_id", F.col("_request_channel_id"))
+        .drop("_request_run_id", "_request_provider", "_request_model", "_request_channel_id")
+        .withColumn("_pred_iso_raw", F.lower(F.trim(F.col("primary_language_iso639_3"))))
+        .withColumn("_pred_iso_from_label", F.lower(F.trim(F.split("primary_language_label", "_").getItem(0))))
+        .withColumn("_pred_iso_raw", F.when(F.col("_pred_iso_raw").isin("", "null", "none"), F.lit(None)).otherwise(F.col("_pred_iso_raw")))
+        .withColumn("_pred_iso_from_label", F.when(F.col("_pred_iso_from_label").isin("", "null", "none"), F.lit(None)).otherwise(F.col("_pred_iso_from_label")))
+        .withColumn("pred_base_iso", F.coalesce(F.col("_pred_iso_raw"), F.col("_pred_iso_from_label")))
+        .drop("_pred_iso_raw", "_pred_iso_from_label")
     )
-    # D4: drop stale/orphan result lines by inner-joining to THIS run's request registry, and dedupe to one
-    # result per request_id so duplicate result files can't inflate the panel vote count (one vote per model).
-    run_request_ids = spark.table(panel_requests_full).where(F.col("run_id") == F.lit(RUN_ID)).select("request_id").distinct()
+    imported_at_utc = datetime.utcnow().isoformat()
+    result_status_l = F.lower(F.coalesce(F.col("result_status").cast("string"), F.lit("")))
+    failed_result_status = (
+        result_status_l.rlike("^[45][0-9][0-9]$")
+        | result_status_l.isin(
+            "error", "failed", "failure", "errored", "expired", "cancelled", "canceled",
+            "json_load_error", "rate_limited", "timeout",
+        )
+    )
     parsed = (
-        parsed.join(run_request_ids, on="request_id", how="inner")
-        .withColumn("run_id", F.lit(RUN_ID))
-        .dropDuplicates(["request_id"])
+        parsed.withColumn("run_id", F.lit(RUN_ID))
+        .withColumn("imported_at_utc", F.lit(imported_at_utc))
+        .withColumn(
+            "is_valid_panel_vote",
+            (F.col("pred_base_iso").isNotNull())
+            & (F.lower(F.coalesce(F.col("status").cast("string"), F.lit(""))) == F.lit("classified"))
+            & F.col("parse_error").isNull()
+            & F.col("prediction_parse_error").isNull()
+            & (~failed_result_status)
+        )
+    )
+    # D4: dedupe to one result per request_id so duplicate result files can't inflate the panel vote count
+    # (one vote per model). Prefer a valid classified prediction if duplicated result files disagree.
+    w_request = Window.partitionBy("request_id").orderBy(
+        F.desc(F.col("is_valid_panel_vote").cast("int")),
+        F.desc(F.col("parse_error").isNull().cast("int")),
+        F.desc(F.col("raw_text").isNotNull().cast("int")),
+        F.asc(F.coalesce(F.col("result_status").cast("string"), F.lit(""))),
+        F.asc(F.coalesce(F.col("provider_result_model").cast("string"), F.lit(""))),
+    )
+    parsed = (
+        parsed.withColumn("_request_rank", F.row_number().over(w_request))
+        .where(F.col("_request_rank") == 1)
+        .drop("_request_rank")
     )
     write_run_scoped(parsed, panel_raw_results_full)
     print("Wrote parsed per-model predictions to", panel_raw_results_full)
 
     # --- Reconcile: majority vote on base ISO, but PRESERVE the full winning label/script + side fields. ---
     n_models = len(MODELS)
-    votes = parsed.where(F.col("pred_base_iso").isNotNull())
+    votes = parsed.where(F.col("is_valid_panel_vote") == F.lit(True))
     per_iso = votes.groupBy("channel_id", "pred_base_iso").agg(F.count(F.lit(1)).alias("n_votes"))
     w_iso = Window.partitionBy("channel_id").orderBy(F.desc("n_votes"), F.asc("pred_base_iso"))
     top_iso = (per_iso.withColumn("_rk", F.row_number().over(w_iso)).where(F.col("_rk") == 1)
@@ -895,26 +1081,35 @@ if IMPORT_RESULTS:
     # Full winning label among the winning-ISO voters (mode; tie-break by confidence). Preserves script
     # (e.g. hin_Deva vs hin_Latn) and the side fields, not just the base ISO.
     _conf_rank = F.when(F.col("confidence") == "high", 3).when(F.col("confidence") == "medium", 2).when(F.col("confidence") == "low", 1).otherwise(0)
+    _empty_string_array = F.from_json(F.lit("[]"), ArrayType(StringType()))
     winners = votes.join(top_iso, on="channel_id", how="inner").where(F.col("pred_base_iso") == F.col("panel_language_iso"))
     lbl = winners.groupBy("channel_id", "primary_language_label").agg(
         F.count(F.lit(1)).alias("lbl_n"),
         F.max(_conf_rank).alias("conf_rank"),
+        F.first("primary_language_script", ignorenulls=True).alias("panel_language_script_from_model"),
         F.first("secondary_language_label", ignorenulls=True).alias("panel_secondary_language_label"),
+        F.first("dialect_or_variant", ignorenulls=True).alias("panel_dialect_or_variant"),
+        F.array_distinct(F.flatten(F.collect_list(F.coalesce(F.col("mixed_languages"), _empty_string_array)))).alias("panel_mixed_languages"),
         F.max(F.col("is_mixed_language").cast("int")).alias("_mixed_int"),
         F.max(F.col("is_romanized").cast("int")).alias("_romanized_int"),
         F.first("evidence", ignorenulls=True).alias("panel_evidence"),
     )
     w_lbl = Window.partitionBy("channel_id").orderBy(F.desc("lbl_n"), F.desc("conf_rank"), F.asc("primary_language_label"))
     full = (lbl.withColumn("_rk", F.row_number().over(w_lbl)).where(F.col("_rk") == 1)
+            .withColumn("panel_confidence", F.when(F.col("conf_rank") == 3, F.lit("high"))
+                        .when(F.col("conf_rank") == 2, F.lit("medium"))
+                        .when(F.col("conf_rank") == 1, F.lit("low")))
             .select("channel_id", F.col("primary_language_label").alias("panel_language_label"),
-                    "panel_secondary_language_label", "_mixed_int", "_romanized_int", "panel_evidence"))
+                    "panel_language_script_from_model", "panel_secondary_language_label",
+                    "panel_dialect_or_variant", "panel_mixed_languages", "panel_confidence",
+                    "_mixed_int", "_romanized_int", "panel_evidence"))
     # Per-provider labels + reach (full predictions preserved per provider).
     prov = parsed.groupBy("channel_id").agg(
-        F.first(F.when(F.col("provider") == "openai", F.col("primary_language_label")), ignorenulls=True).alias("openai_label"),
-        F.first(F.when(F.col("provider") == "anthropic", F.col("primary_language_label")), ignorenulls=True).alias("anthropic_label"),
-        F.first(F.when(F.col("provider") == "gemini", F.col("primary_language_label")), ignorenulls=True).alias("gemini_label"),
-        F.sum(F.when(F.col("pred_base_iso").isNotNull(), 1).otherwise(0)).alias("n_reached"),
-        F.collect_set(F.when(F.col("pred_base_iso").isNotNull(), F.col("model"))).alias("panel_models"),
+        F.first(F.when((F.col("provider") == "openai") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("openai_label"),
+        F.first(F.when((F.col("provider") == "anthropic") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("anthropic_label"),
+        F.first(F.when((F.col("provider") == "gemini") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("gemini_label"),
+        F.sum(F.when(F.col("is_valid_panel_vote") == F.lit(True), 1).otherwise(0)).alias("n_reached"),
+        F.collect_set(F.when(F.col("is_valid_panel_vote") == F.lit(True), F.col("model"))).alias("panel_models"),
     )
     verdict = (
         routed
@@ -922,7 +1117,7 @@ if IMPORT_RESULTS:
         .join(full, on="channel_id", how="left")
         .join(prov, on="channel_id", how="left")
         .withColumn("panel_language_iso639_3", F.col("panel_language_iso"))
-        .withColumn("panel_language_script", F.element_at(F.split("panel_language_label", "_"), 2))
+        .withColumn("panel_language_script", F.coalesce(F.col("panel_language_script_from_model"), F.element_at(F.split("panel_language_label", "_"), 2)))
         .withColumn("panel_is_mixed_language", F.coalesce(F.col("_mixed_int") == 1, F.lit(False)))
         .withColumn("panel_is_romanized", F.coalesce(F.col("_romanized_int") == 1, F.lit(False)))
         .withColumn("panel_status", F.when(F.col("panel_language_iso").isNull(), F.lit("no_panel_result"))
@@ -935,7 +1130,7 @@ if IMPORT_RESULTS:
                     .otherwise(F.lit("human_review")))
         .withColumn("prediction_timestamp", F.current_timestamp())
         .withColumn("run_id", F.lit(RUN_ID))
-        .drop("_mixed_int", "_romanized_int")
+        .drop("_mixed_int", "_romanized_int", "panel_language_script_from_model")
     )
     write_run_scoped(verdict, panel_verdicts_full)
     print("Wrote panel verdicts to", panel_verdicts_full)

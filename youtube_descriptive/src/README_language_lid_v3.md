@@ -99,9 +99,10 @@ for cross-model comparability.
 `HIGH_RISK_LATIN_TAIL_LABELS` (srd, ast, vec, gug, pap, …) are languages the models tend to hallucinate for
 English/Hindi/major-language content. They are **flagged** (`*_primary_is_high_risk`, the high-risk redirect
 diagnostic, and a `high_risk_tail_label_needs_review` consensus status) and never hard-recoded. A high-risk
-label does not produce a clean consensus. The exact label remains NULL unless both models agree exactly and
-both have strong channel-level evidence; even then the channel remains marked
-`high_risk_tail_label_needs_review` for manual adjudication.
+label does not produce a clean consensus unless both models agree exactly and both have strong channel-level
+evidence. That narrow exception emits `high_risk_tail_exact_agreement` with
+`consensus_source='fasttext_tail_agreement'`; all other high-risk cases keep a NULL exact label and
+`high_risk_tail_label_needs_review` for panel or manual adjudication.
 
 ## 8. Hindi/Indic audit fields are high-recall, not classification
 
@@ -124,12 +125,17 @@ and is a **recall-only audit signal** — it never feeds label assignment, vote 
 
 `consensus_status` is assigned by deterministic rules: `exact_model_agreement`,
 `iso_or_script_variant_agreement`, `cluster_model_agreement`,
+`taxonomy_normalized_agreement`, `high_risk_tail_exact_agreement`,
 `openlid_high_confidence_glotlid_missing_or_error`, `glotlid_fallback_openlid_low_confidence`,
 `high_risk_tail_label_needs_review`, `model_disagreement_needs_review`, `insufficient_text`. For ISO/script
 variant agreement, cluster agreement, disagreement, and most high-risk review cases,
 `consensus_language_label` is intentionally **NULL** — only a rollup cluster (`consensus_for_rollup_label`)
 and/or `requires_manual_adjudication=true` are populated. A NULL exact label is a deliberate "do not assert a
 single label here" signal, not missing data.
+
+`consensus_source` records the tier that produced the current consensus, including
+`fasttext_agreement`, `fasttext_tail_agreement`, `taxonomy_normalized`, `reconciliation_rule`,
+`manual_adjudication_required`, and panel/human-review sources from the LLM adjudication workflow.
 
 ## 11. GlotLID preprocessing caveat
 

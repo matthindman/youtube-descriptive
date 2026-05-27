@@ -76,7 +76,8 @@ column (line ~2411).
 (`ara/arb/ary/arz/apc/ars/ajp/aeb/acm/acq/aec/afb/ayl/ayn` → `ara`) and apply it at:
 - the exact/iso comparison branches in `compute_consensus` (lines 2248, 2278);
 - the `models_agree_iso_primary` derivation (line 2411).
-Keep the original dialect in a new `*_dialect_or_variant` audit field; never overwrite.
+Keep the original dialect-specific model labels/ISO codes in the existing `openlid_*` / `glotlid_*`
+audit fields; never overwrite them with the canonical macro label.
 Chinese (`cmn_Hant/Hans/Hani`) already shares iso `cmn`, so it needs no new map — verify it lands in
 `iso_or_script_variant_agreement`.
 **Acceptance:** the within-Arabic NULL-consensus query (report §5) returns ≈0 (was 4,526);
@@ -140,8 +141,9 @@ exact-agreement tail population rather than assuming the disagreement-sample res
 apply.
 **Where:** `compute_consensus()` — exact-agreement branch (`01_…py:2248–2258`) vs the
 disagreement/single-model paths (2261–2285).
-**Change (scope-limited):** **keep** emitting the tail label when both models agree *and* both clear
-`high_conf` (current behavior — no change). Ensure every *other* tail occurrence
+**Change (scope-limited):** **keep** emitting the tail label as a classified final label when both models
+agree *and* both clear `high_conf` (`consensus_status='high_risk_tail_exact_agreement'`,
+`consensus_source='fasttext_tail_agreement'`, `requires_manual_adjudication=false`). Ensure every *other* tail occurrence
 (disagreement, single-model, or low-confidence agreement) emits `consensus_language_label=NULL`, keeps
 the tail label as an audit field, and routes to the panel (D). This is already the intent today;
 B5 just verifies it and adds a test.
@@ -201,7 +203,7 @@ sampled titles/descriptions from `yt_lid_v3_segments_input`), since batch LLM AP
 Routing widgets implement `route_disagreement` / `route_unresolved_tail` (excludes confident-agreement
 tails) / `route_shared_bias_english_indic` (D3) / `route_agreement_audit` (E3, default 0.5%), with
 `exclude_arabic_family_pairs` so the B1 taxonomy artifact isn't sent. Reuses notebook 02's batch-line
-format, submission, and result-parsing helpers. Remaining build detail below:
+format, submission, and result-parsing helpers. Implemented guardrails include:
 - **Routing input:** the ~5% core load from report §8.6 — non-Arabic `model_disagreement` +
   `high_risk_tail` *except the confident-mutual-agreement subset kept as final by B5* (minimal) +
   low-confidence/fallback buckets — read from `yt_lid_v3_channel_model_comparison` (after B1–B2 so
@@ -210,19 +212,21 @@ format, submission, and result-parsing helpers. Remaining build detail below:
 - **Prompt:** `llm_panel_classifier_prompt.md` (this folder), per channel, with the channel's metadata.
 - **Providers:** fork `02_category_llm`'s batch-file generation; swap the category prompt for the
   language prompt; keep the 3 frontier providers.
-- **Reconciliation:** ≥2 agree → majority label (record split + rationales); 3-way split →
-  `needs_human_review`; `unreachable`/`insufficient_text` → abstain, decide on the rest.
-**Important:** the current notebook is a scaffold, not yet production-ready. D4 below is mandatory before
-any panel verdicts are trusted or merged back into the final consensus table.
+- **Reconciliation:** ≥2 valid classified votes agree → majority label (record split + rationales);
+  3-way split → `needs_human_review`; `unreachable`/`insufficient_text` → abstain, decide on the rest.
+**Important:** validate D4's acceptance checks on Databricks before promoting panel verdicts into the
+final consensus table.
 
 ### D2. Integrate panel verdicts as a consensus tier
-- Add a `consensus_source` field (`fasttext_agreement` | `fasttext_tail_agreement` |
-  `taxonomy_normalized` | `reconciliation_rule` | `llm_panel` | `human_review`) and write the panel
+- Add/use a `consensus_source` field (`fasttext_agreement` | `fasttext_tail_agreement` |
+  `taxonomy_normalized` | `reconciliation_rule` | `manual_adjudication_required` |
+  `audit_sample` | `llm_panel` | `human_review`) and write the panel
   label into `consensus_language_label` for the routed channels.
 - The verdict table must preserve the **full winning panel label**, not only base ISO: at minimum
   `panel_language_label`, `panel_language_iso639_3`, `panel_language_script`, `panel_secondary_language_label`,
-  `panel_is_mixed_language`, `panel_confidence`, `panel_evidence`, vote split, and per-provider raw/parsed
-  labels. This is required to distinguish e.g. `hin_Deva` vs `hin_Latn`, Arabic dialect notes, and
+  `panel_dialect_or_variant`, `panel_mixed_languages`, `panel_is_mixed_language`, `panel_confidence`,
+  `panel_evidence`, vote split, and per-provider raw/parsed labels. This is required to distinguish
+  e.g. `hin_Deva` vs `hin_Latn`, Arabic dialect notes, and
   bilingual verdicts.
 - Blind audit rows (`route_reason='agreement_audit'`) are measurement rows by default: they should not
   overwrite `consensus_language_label` unless explicitly promoted after review. Non-audit routed rows can
@@ -248,10 +252,11 @@ budget (incremental, on top of the ~5% core).
 bucket is measured (quantifies how much false confidence the "clean 95%" was hiding).
 
 ### D4. Harden the panel notebook before production use  — **P0**  [new component]
-**Added after code review of `03_language_llm_panel_databricks.py`.** The scaffold parses and writes
-request JSONL, but it needs correctness/idempotency hardening before it can be the adjudication layer.
+**Added after code review of `03_language_llm_panel_databricks.py`.** The panel notebook now implements
+the required correctness/idempotency guardrails; keep this checklist as the Databricks smoke-test target
+before using panel verdicts as the adjudication layer.
 
-**Required fixes:**
+**Implemented guardrails:**
 - **Run-scope every auxiliary join.** In the D3 route, `yt_lid_v3_channel_text_features` must be filtered
   by the same `run_id` and `inference_hash_buckets` as the comparison table before joining. Do the same for
   any future joins to segments, Hindi/Indic audit, or panel results. Reject or dedupe if a join would create
@@ -269,8 +274,9 @@ request JSONL, but it needs correctness/idempotency hardening before it can be t
   for the primary decision, but the stored panel verdict must keep the full normalized label chosen by the
   majority side.
 - **Add batch/job registries and idempotent writes.** Persist JSONL file paths, request counts, byte counts,
-  provider batch IDs, provider statuses, submission errors, and import timestamps. Prefer run-scoped append
-  or replace-where semantics over table-wide overwrite so reruns do not silently erase prior runs.
+  provider file/batch IDs, provider statuses, submission status/errors, and import timestamps. Use
+  run-scoped `replaceWhere` semantics for normal reruns, with a preserving schema-migration path for older
+  panel tables so reruns do not silently erase prior runs.
 
 **Acceptance:** a dry run with `submit_batches=false` writes scoped requests + batch registries with stable
 IDs; importing a small hand-made results file produces one verdict per routed channel with full labels and
@@ -302,7 +308,8 @@ iso/cluster-resolved buckets) ≈ **~460–520 channels** — a small panel batc
 + D3 routing budget.
 **How:** deterministic hash sample (reuse `xxhash64(channel_id | seed)`, like the pipeline's existing
 sampling) over `consensus_status ∈ {exact_model_agreement, iso_or_script_variant_agreement,
-cluster_model_agreement}`; run the D panel; compare panel majority vs the fastText consensus label.
+cluster_model_agreement, taxonomy_normalized_agreement, high_risk_tail_exact_agreement}`;
+run the D panel; compare panel majority vs the fastText consensus label.
 Keep it **uniform-random** for an unbiased headline accuracy estimate; optionally add a small
 non-Latin/non-English stratified slice for bias coverage. Tag these `audit_sample=true` so they are
 flagged as a measurement, not a correction.
