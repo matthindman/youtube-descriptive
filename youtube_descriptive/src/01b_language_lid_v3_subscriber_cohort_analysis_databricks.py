@@ -157,13 +157,15 @@ _create_text_widget("create_validation_samples", "true")
 _create_text_widget("run_ablation_aggregations", "true")
 _create_text_widget("enable_notebook_displays", "true")
 _create_text_widget("videos_per_channel", "10")
+_create_text_widget("allow_unbounded_videos_per_channel", "false")
+_create_text_widget("video_rank_column", "")  # blank = auto-detect
 _create_text_widget("top_k", "5")
 _create_text_widget("inference_hash_buckets", "4096")
 _create_text_widget("target_segments_per_partition", "250000")
 _create_text_widget("min_num_partitions", "800")
 _create_text_widget("max_num_partitions", "20000")
 
-_create_text_widget("model_local_path", "/dbfs/models/openlid_v3/openlid-v3.bin")
+_create_text_widget("model_local_path", "/Volumes/dev_sean/matt/models/openlid-v3.bin")
 _create_text_widget("glotlid_local_path", "/Volumes/dev_sean/matt/models/glotlid.bin")
 _create_text_widget("download_model_if_missing", "true")
 _create_text_widget("model_distribution_mode", "direct_path")
@@ -206,13 +208,16 @@ CREATE_VALIDATION_SAMPLES = _get_widget("create_validation_samples", "true")
 RUN_ABLATION_AGGREGATIONS = _get_widget("run_ablation_aggregations", "true")
 ENABLE_NOTEBOOK_DISPLAYS = _get_widget("enable_notebook_displays", "true")
 VIDEOS_PER_CHANNEL = _get_widget("videos_per_channel", "10")
+VIDEOS_PER_CHANNEL_INT = _get_int_widget("videos_per_channel", 10)
+ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL = _get_bool_widget("allow_unbounded_videos_per_channel", False)
+VIDEO_RANK_COLUMN = _get_widget("video_rank_column", "").strip()
 TOP_K = _get_widget("top_k", "5")
 INFERENCE_HASH_BUCKETS = _get_widget("inference_hash_buckets", "4096")
 TARGET_SEGMENTS_PER_PARTITION = _get_widget("target_segments_per_partition", "250000")
 MIN_NUM_PARTITIONS = _get_widget("min_num_partitions", "800")
 MAX_NUM_PARTITIONS = _get_widget("max_num_partitions", "20000")
 
-MODEL_LOCAL_PATH = _get_widget("model_local_path", "/dbfs/models/openlid_v3/openlid-v3.bin")
+MODEL_LOCAL_PATH = _get_widget("model_local_path", "/Volumes/dev_sean/matt/models/openlid-v3.bin")
 GLOTLID_LOCAL_PATH = _get_widget("glotlid_local_path", "/Volumes/dev_sean/matt/models/glotlid.bin")
 DOWNLOAD_MODEL_IF_MISSING = _get_widget("download_model_if_missing", "true")
 MODEL_DISTRIBUTION_MODE = _get_widget("model_distribution_mode", "direct_path")
@@ -224,6 +229,14 @@ if RANDOM_LOWER_SUBSCRIBERS < 0:
     raise ValueError("random_lower_subscribers must be nonnegative.")
 if DRIVER_SHUFFLE_PARTITIONS <= 0:
     raise ValueError("driver_shuffle_partitions must be positive.")
+if VIDEOS_PER_CHANNEL_INT < 0:
+    raise ValueError("videos_per_channel must be non-negative.")
+if VIDEOS_PER_CHANNEL_INT == 0 and not ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL:
+    raise ValueError(
+        "videos_per_channel=0 would write all source videos for each selected cohort channel. Set "
+        "allow_unbounded_videos_per_channel=true only for an intentional full-video cohort run, or set a "
+        "positive videos_per_channel cap."
+    )
 
 SOURCE_CHANNELS_FULL = _fqtn(SOURCE_CATALOG, SOURCE_SCHEMA, SOURCE_CHANNELS_TABLE)
 SOURCE_VIDEOS_FULL = _fqtn(SOURCE_CATALOG, SOURCE_SCHEMA, SOURCE_VIDEOS_TABLE)
@@ -246,6 +259,7 @@ print("LID output table prefix:", LID_OUTPUT_PREFIX)
 print("Top run_id:", RUN_ID_TOP)
 print("Random-band run_id:", RUN_ID_RANDOM)
 print("LID notebook path:", LID_NOTEBOOK_PATH)
+print("videos_per_channel:", VIDEOS_PER_CHANNEL_INT, "| allow_unbounded_videos_per_channel:", ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL)
 if NOTEBOOK_TIMEOUT_SECONDS == 0:
     print("Notebook timeout: disabled (notebook_timeout_seconds=0).")
 
@@ -539,6 +553,36 @@ selected_videos_all = (
     .join(selected_ids_all.alias("i"), _qualified_col("v", CHANNEL_ID_COLUMN).cast("string") == F.col("i.__selected_channel_id"), "inner")
     .select(F.col("i.cohort").alias("__lid_eval_cohort"), "v.*")
 )
+
+VIDEO_RANK_CANDIDATES = [
+    "published_at", "publish_time", "published_time", "upload_date", "created_time",
+    "created_at", "first_capture_time", "ingestion_timestamp", "capture_date",
+]
+
+if VIDEOS_PER_CHANNEL_INT > 0:
+    if VIDEO_RANK_COLUMN:
+        video_rank_col = _first_existing_column(selected_videos_all, [], VIDEO_RANK_COLUMN)
+    else:
+        video_rank_col = _first_existing_column(selected_videos_all, VIDEO_RANK_CANDIDATES)
+    video_row_hash = F.sha2(F.to_json(F.struct(*[F.col(c) for c in selected_videos_all.columns])), 256)
+    order_cols = []
+    if video_rank_col:
+        print(f"Restricting cohort source videos to {VIDEOS_PER_CHANNEL_INT} videos/channel using rank column `{video_rank_col}`.")
+        order_cols.append(F.col(video_rank_col).desc_nulls_last())
+    else:
+        print(f"Restricting cohort source videos to {VIDEOS_PER_CHANNEL_INT} deterministic videos/channel by row hash.")
+    order_cols.append(F.col("__lid_eval_video_row_hash").asc())
+    video_window = Window.partitionBy("__lid_eval_cohort", CHANNEL_ID_COLUMN).orderBy(*order_cols)
+    selected_videos_all = (
+        selected_videos_all
+        .withColumn("__lid_eval_video_row_hash", video_row_hash)
+        .withColumn("__lid_eval_video_rank_for_lid", F.row_number().over(video_window))
+        .where(F.col("__lid_eval_video_rank_for_lid") <= F.lit(VIDEOS_PER_CHANNEL_INT))
+        .drop("__lid_eval_video_row_hash", "__lid_eval_video_rank_for_lid")
+    )
+else:
+    print("videos_per_channel=0 and allow_unbounded_videos_per_channel=true; writing all selected source videos.")
+
 _overwrite_delta(selected_videos_all, combined_videos_source_table, partition_cols=["__lid_eval_cohort"])
 print("Wrote combined selected videos source table:", combined_videos_source_table)
 _maybe_display(spark.table(combined_channels_source_table).groupBy("__lid_eval_cohort").count().orderBy("__lid_eval_cohort"))
@@ -594,6 +638,7 @@ def _lid_output_table_args(prefix: str) -> Dict[str, str]:
         "output_unclassified_audit_table": f"{prefix}_unclassified_audit",
         "output_source_language_confusion_table": f"{prefix}_source_language_confusion",
         "output_dedupe_qa_table": f"{prefix}_dedupe_qa",
+        "output_preflight_estimate_table": f"{prefix}_preflight_estimate",
         "output_ablation_summary_table": f"{prefix}_ablation_summary",
     }
 
@@ -620,6 +665,8 @@ COMMON_LID_ARGS = {
     "run_ablation_aggregations": RUN_ABLATION_AGGREGATIONS,
     "enable_notebook_displays": ENABLE_NOTEBOOK_DISPLAYS,
     "videos_per_channel": VIDEOS_PER_CHANNEL,
+    "allow_unbounded_videos_per_channel": str(ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL).lower(),
+    "video_rank_column": VIDEO_RANK_COLUMN,
     "top_k": TOP_K,
     "enable_openlid": "true",
     "enable_glotlid": "true",

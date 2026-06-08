@@ -11,6 +11,9 @@ Requires **Databricks Runtime 13.0+ (Apache Spark 3.4+)**. The channel aggregati
 steps use `array_sort` with a comparator and `array_compact`, both introduced in Spark 3.4; the notebook
 asserts the Spark version up front and fails clearly on older runtimes. Notebook-scoped Python deps
 (`numpy<2`, `fasttext`, `huggingface-hub`, `regex`, `pandas`, `pyarrow`) are installed by the first cell.
+The production defaults avoid DBFS FUSE assumptions: model binaries default to Unity Catalog Volume paths,
+and checkpointing falls back to persisted storage on shared clusters where direct `SparkContext` access is
+blocked.
 
 ## 1. What the output measures
 
@@ -62,6 +65,19 @@ Partition sizing is computed from the number of valid segments:
 `max_num_partitions`. The notebook also sets `spark.sql.shuffle.partitions` to this effective value. When
 the effective partition count exceeds the active bucket count, inference repartitions by
 `channel_hash_bucket` plus `segment_id` so bucket cardinality does not cap map task parallelism.
+
+### Larger-run guardrails
+
+Validation and cohort runs should keep `videos_per_channel` positive. The default is `10`; setting
+`videos_per_channel=0` means "all selected source videos" and now fails unless
+`allow_unbounded_videos_per_channel=true` is also set. This prevents a validation run from accidentally
+materializing the full video history for sampled channels. Subscriber-cohort driver runs apply the same cap
+before writing cohort video scratch tables and forward the same guard to the child LID notebook.
+
+Every run writes `yt_lid_v3_preflight_estimate` after segment validity is computed and before model
+inference starts. It records the selected channel count, selected video count, total segment rows, expected
+valid segments, and projected compact prediction rows for the enabled model configuration. Check this table
+before committing a larger run to inference.
 
 ## 4. Letter-based validity thresholds
 
@@ -176,6 +192,7 @@ overwritten. Displays are disabled by default in production. Outputs:
 | `yt_lid_v3_unclassified_audit` | Text-sparse / invalid-text channels |
 | `yt_lid_v3_source_language_confusion` | Source-vs-model disagreement patterns, scoped by run/bucket metadata |
 | `yt_lid_v3_dedupe_qa` | Dedup and pipeline row counts; exact raw before/duplicate-key counts are populated when heavy QA is enabled, scoped by run/bucket metadata |
+| `yt_lid_v3_preflight_estimate` | Pre-inference channel/video/segment fanout and projected compact prediction rows, scoped by run/bucket metadata |
 | `yt_lid_v3_ablation_summary` | Per-config counts + primary-label churn, scoped by run/bucket metadata |
 
 Notebook displays, validation samples, ablation, exact raw source before-counts, expensive duplicate-key
@@ -186,6 +203,12 @@ The **manual validation sample** is deterministic (seeded by `validation_sample_
 across high-confidence, low-confidence, credible/screen mixed, high-risk, Hindi/Indic, source disagreement,
 exact/cluster model disagreement, insufficient-text, and a non-Latin control; each channel keeps all
 qualifying strata in an array with one primary stratum assigned by fixed priority.
+It is enabled by default because it is capped per stratum and cheap relative to inference. Ablations and
+heavy QA remain opt-in for full production runs.
+
+Validation-analysis figures should be treated as table artifacts, not filesystem artifacts. The companion
+analysis notebook writes SVG text into `{output_prefix}_analysis_figures_svg`; optional DBFS/Volume copies
+may be enabled only when the caller supplies a known-writable path.
 
 The **ablation summary** re-aggregates from compact stored predictions (no re-inference) for the configs in
 §15 of the spec and reports primary-label churn vs. both the v3 default OpenLID and v3 default consensus.
@@ -206,8 +229,9 @@ for write-back; review and mixed-language cases remain audit-only.
 
 - OpenLID-v3 is distributed under GPL-3.0; review license implications before redistributing the binary.
 - The model binaries are downloaded from Hugging Face (`HPLT/OpenLID-v3`, `cis-lmu/glotlid`) when missing.
-  The production GlotLID default points at the uploaded Databricks Volume binary
-  `/Volumes/dev_sean/matt/models/glotlid.bin`; for air-gapped clusters, upload model binaries and set
-  `download_model_if_missing=false`. The notebook fails clearly if a model is enabled but unavailable.
+  Production defaults point at uploaded Databricks Volume binaries:
+  `/Volumes/dev_sean/matt/models/openlid-v3.bin` and `/Volumes/dev_sean/matt/models/glotlid.bin`. For
+  air-gapped clusters, upload model binaries and set `download_model_if_missing=false`. The notebook fails
+  clearly if a model is enabled but unavailable.
 - Collapse model outputs to a project-level language taxonomy before publication; do not treat raw
   ISO/script labels (especially high-risk tail labels and macro/near-language clusters) as final.

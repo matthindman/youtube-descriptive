@@ -134,12 +134,13 @@ _create_text_widget("output_manual_validation_sample_table", "yt_lid_v3_manual_v
 _create_text_widget("output_unclassified_audit_table", "yt_lid_v3_unclassified_audit")
 _create_text_widget("output_source_language_confusion_table", "yt_lid_v3_source_language_confusion")
 _create_text_widget("output_dedupe_qa_table", "yt_lid_v3_dedupe_qa")
+_create_text_widget("output_preflight_estimate_table", "yt_lid_v3_preflight_estimate")
 _create_text_widget("output_ablation_summary_table", "yt_lid_v3_ablation_summary")
 
 # OpenLID-v3 model parameters.
 _create_text_widget("model_repo", "HPLT/OpenLID-v3")
 _create_text_widget("model_filename", "openlid-v3.bin")
-_create_text_widget("model_local_path", "/dbfs/models/openlid_v3/openlid-v3.bin")
+_create_text_widget("model_local_path", "/Volumes/dev_sean/matt/models/openlid-v3.bin")
 _create_text_widget("download_model_if_missing", "true")
 _create_text_widget("model_distribution_mode", "direct_path")  # direct_path or sparkfiles
 
@@ -191,7 +192,7 @@ _create_text_widget("channel_name_weight", "0.25")
 
 # Ablation / validation controls (§3).
 _create_text_widget("run_ablation_aggregations", "false")
-_create_text_widget("create_validation_samples", "false")
+_create_text_widget("create_validation_samples", "true")
 _create_text_widget("validation_sample_seed", "20260520")
 _create_text_widget("validation_max_per_stratum", "100")
 _create_text_widget("validation_min_per_stratum", "30")
@@ -212,7 +213,8 @@ _create_text_widget("enable_notebook_displays", "true")
 _create_text_widget("allow_full_native_audit", "false")
 _create_text_widget("optimize_after_write", "false")
 _create_text_widget("limit_channels", "0")  # 0 = full corpus
-_create_text_widget("videos_per_channel", "10")
+_create_text_widget("videos_per_channel", "10")  # 0 = unbounded only when allow_unbounded_videos_per_channel=true
+_create_text_widget("allow_unbounded_videos_per_channel", "false")
 _create_text_widget("video_rank_column", "")  # blank = auto-detect
 _create_text_widget("max_segment_chars", "2000")
 _create_text_widget("score_threshold", "0.0")
@@ -260,11 +262,12 @@ OUTPUT_MANUAL_VALIDATION_SAMPLE_TABLE = _get_widget("output_manual_validation_sa
 OUTPUT_UNCLASSIFIED_AUDIT_TABLE = _get_widget("output_unclassified_audit_table", "yt_lid_v3_unclassified_audit")
 OUTPUT_SOURCE_LANGUAGE_CONFUSION_TABLE = _get_widget("output_source_language_confusion_table", "yt_lid_v3_source_language_confusion")
 OUTPUT_DEDUPE_QA_TABLE = _get_widget("output_dedupe_qa_table", "yt_lid_v3_dedupe_qa")
+OUTPUT_PREFLIGHT_ESTIMATE_TABLE = _get_widget("output_preflight_estimate_table", "yt_lid_v3_preflight_estimate")
 OUTPUT_ABLATION_SUMMARY_TABLE = _get_widget("output_ablation_summary_table", "yt_lid_v3_ablation_summary")
 
 MODEL_REPO = _get_widget("model_repo", "HPLT/OpenLID-v3")
 MODEL_FILENAME = _get_widget("model_filename", "openlid-v3.bin")
-MODEL_LOCAL_PATH = _get_widget("model_local_path", "/dbfs/models/openlid_v3/openlid-v3.bin")
+MODEL_LOCAL_PATH = _get_widget("model_local_path", "/Volumes/dev_sean/matt/models/openlid-v3.bin")
 DOWNLOAD_MODEL_IF_MISSING = _get_bool_widget("download_model_if_missing", True)
 MODEL_DISTRIBUTION_MODE = _get_widget("model_distribution_mode", "direct_path").strip().lower()
 
@@ -326,15 +329,14 @@ OPTIMIZE_AFTER_WRITE = _get_bool_widget("optimize_after_write", False)
 RUN_ABLATION_AGGREGATIONS = _get_bool_widget("run_ablation_aggregations", not PRODUCTION_MODE)
 if PRODUCTION_MODE and not RUN_HEAVY_QA:
     RUN_ABLATION_AGGREGATIONS = False
-CREATE_VALIDATION_SAMPLES = _get_bool_widget("create_validation_samples", not PRODUCTION_MODE)
-if PRODUCTION_MODE and not RUN_HEAVY_QA:
-    CREATE_VALIDATION_SAMPLES = False
+CREATE_VALIDATION_SAMPLES = _get_bool_widget("create_validation_samples", True)
 VALIDATION_SAMPLE_SEED = _get_widget("validation_sample_seed", "20260520")
 VALIDATION_MAX_PER_STRATUM = _get_int_widget("validation_max_per_stratum", 100)
 VALIDATION_MIN_PER_STRATUM = _get_int_widget("validation_min_per_stratum", 30)
 
 LIMIT_CHANNELS = _get_int_widget("limit_channels", 0)
 VIDEOS_PER_CHANNEL = _get_int_widget("videos_per_channel", 10)
+ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL = _get_bool_widget("allow_unbounded_videos_per_channel", False)
 VIDEO_RANK_COLUMN = _get_widget("video_rank_column", "").strip()
 MAX_SEGMENT_CHARS = _get_int_widget("max_segment_chars", 2000)
 SCORE_THRESHOLD = _get_float_widget("score_threshold", 0.0)
@@ -449,6 +451,12 @@ for _name, _value in {
     _require_nonnegative_float(_name, _value)
 _require_nonnegative_int("limit_channels", LIMIT_CHANNELS)
 _require_nonnegative_int("videos_per_channel", VIDEOS_PER_CHANNEL)
+if VIDEOS_PER_CHANNEL == 0 and not ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL:
+    raise ValueError(
+        "videos_per_channel=0 would fan out to all selected source videos. Set "
+        "allow_unbounded_videos_per_channel=true only for an intentional full-video run, or set a positive "
+        "videos_per_channel cap for validation and smoke-test runs."
+    )
 _require_positive_int("max_segment_chars", MAX_SEGMENT_CHARS)
 _require_fraction("score_threshold", SCORE_THRESHOLD)
 _require_nonnegative_int("validation_max_per_stratum", VALIDATION_MAX_PER_STRATUM)
@@ -471,6 +479,12 @@ GLOTLID_ACTIVE = ENABLE_GLOTLID and GLOTLID_MODE != "disabled"
 # Only a full all-valid-segments GlotLID run may feed agreement, consensus, and downstream diagnostics.
 # audit_segments remains available as a separate runtime-saving audit output, but it is subset-biased.
 GLOTLID_CAN_FEED_MAIN = GLOTLID_ACTIVE and GLOTLID_MODE == "all_valid_segments"
+NATIVE_AUDIT_ENABLED = GLOTLID_ACTIVE and (
+    GLOTLID_PREPROCESSING_MODE == "glotlid_native_audit" or GLOTLID_NATIVE_AUDIT_SAMPLE_FRACTION > 0
+)
+NATIVE_AUDIT_IS_FULL = NATIVE_AUDIT_ENABLED and (
+    GLOTLID_NATIVE_AUDIT_SAMPLE_FRACTION == 0 or GLOTLID_NATIVE_AUDIT_SAMPLE_FRACTION >= 1.0
+)
 if not (ENABLE_OPENLID or GLOTLID_ACTIVE):
     raise ValueError("At least one active model is required. Enable OpenLID or enable GlotLID with glotlid_mode != disabled.")
 if GLOTLID_ACTIVE and GLOTLID_MODE == "audit_segments" and not ENABLE_OPENLID:
@@ -511,6 +525,7 @@ suspect_tail_audit_full = fqtn(OUTPUT_SUSPECT_TAIL_AUDIT_TABLE)
 manual_validation_sample_full = fqtn(OUTPUT_MANUAL_VALIDATION_SAMPLE_TABLE)
 unclassified_audit_full = fqtn(OUTPUT_UNCLASSIFIED_AUDIT_TABLE)
 source_language_confusion_full = fqtn(OUTPUT_SOURCE_LANGUAGE_CONFUSION_TABLE)
+preflight_estimate_full = fqtn(OUTPUT_PREFLIGHT_ESTIMATE_TABLE)
 ablation_summary_full = fqtn(OUTPUT_ABLATION_SUMMARY_TABLE)
 
 print("Source channels table:", channels_full)
@@ -518,11 +533,13 @@ print("Source videos table:", videos_full)
 print("Segments-input output table:", segments_input_full)
 print("Compact prediction tables:", openlid_compact_full, glotlid_compact_full)
 print("Dedupe QA output table:", dedupe_qa_full)
+print("Preflight estimate output table:", preflight_estimate_full)
 print("enable_openlid:", ENABLE_OPENLID, "| enable_glotlid:", ENABLE_GLOTLID, "| glotlid_mode:", GLOTLID_MODE)
 print("min_clean_chars:", MIN_CLEAN_CHARS, "| min_clean_chars_non_latin:", MIN_CLEAN_CHARS_NON_LATIN,
       "| non_latin_dominant_script_share:", NON_LATIN_DOMINANT_SCRIPT_SHARE, "| top_k:", TOP_K)
 print("production_mode:", PRODUCTION_MODE, "| prediction_output_mode:", PREDICTION_OUTPUT_MODE,
       "| run_id:", RUN_ID, "| bucket range:", f"{BUCKET_START}-{BUCKET_END}/{INFERENCE_HASH_BUCKETS}")
+print("videos_per_channel:", VIDEOS_PER_CHANNEL, "| allow_unbounded_videos_per_channel:", ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL)
 
 try:
     spark.conf.set("spark.databricks.delta.replaceWhere.dataColumns.enabled", "true")
@@ -624,7 +641,7 @@ def _maybe_display(df) -> None:
 
 def _table_exists_full(table_full: str) -> bool:
     try:
-        spark.table(table_full).limit(0)
+        spark.table(table_full).limit(0).count()
         return True
     except Exception:
         return False
@@ -1394,6 +1411,91 @@ _maybe_display(
 
 # COMMAND ----------
 # MAGIC %md
+# MAGIC ## 4b. Preflight estimate before inference
+# MAGIC
+# MAGIC This table records the actual channel/video fanout and the expected valid-segment inference universe
+# MAGIC before any model runs. It is intentionally written after the segment-input table, because the valid text
+# MAGIC count depends on the configured cleaning and letter-validity thresholds.
+
+# COMMAND ----------
+n_segment_input_rows = seg_in.count()
+n_valid_segments = seg_in.where(F.col("is_valid_text_for_lid")).count()
+projected_openlid_compact_rows = n_valid_segments if ENABLE_OPENLID else 0
+projected_glotlid_compact_rows = None
+projected_glotlid_note = "glotlid disabled"
+if GLOTLID_ACTIVE:
+    if GLOTLID_MODE == "all_valid_segments":
+        projected_glotlid_compact_rows = n_valid_segments
+        projected_glotlid_note = "all valid segments"
+    elif GLOTLID_MODE == "audit_segments":
+        projected_glotlid_note = "audit_segments depends on OpenLID low-confidence output; not knowable before inference"
+
+if NATIVE_AUDIT_ENABLED:
+    if NATIVE_AUDIT_IS_FULL:
+        projected_native_compact_rows = n_valid_segments
+        projected_native_note = "full native-preprocessing audit"
+    else:
+        projected_native_compact_rows = int(n_valid_segments * GLOTLID_NATIVE_AUDIT_SAMPLE_FRACTION)
+        projected_native_note = f"approximate sampled native-preprocessing audit at fraction={GLOTLID_NATIVE_AUDIT_SAMPLE_FRACTION}"
+else:
+    projected_native_compact_rows = 0
+    projected_native_note = "native audit disabled"
+
+projected_segment_model_comparison_rows = n_valid_segments if ENABLE_OPENLID and GLOTLID_CAN_FEED_MAIN else 0
+projected_known_compact_prediction_rows = (
+    int(projected_openlid_compact_rows or 0)
+    + int(projected_glotlid_compact_rows or 0)
+    + int(projected_native_compact_rows or 0)
+)
+
+preflight_rows = [
+    ("selected_channels_after_dedup_and_sampling", n_channels_pipeline, "post-dedup channels entering this run"),
+    ("selected_videos_after_dedup_and_cap", n_videos_selected_for_segments, "post-dedup videos selected for segment fanout"),
+    ("videos_per_channel", VIDEOS_PER_CHANNEL, "0 means unbounded, guarded by allow_unbounded_videos_per_channel"),
+    ("allow_unbounded_videos_per_channel", int(ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL), "must be true to allow videos_per_channel=0"),
+    ("segment_input_rows", n_segment_input_rows, "non-empty text segments after channel/video selection"),
+    ("expected_valid_segments", n_valid_segments, "segments where is_valid_text_for_lid=true"),
+    ("projected_openlid_compact_rows", projected_openlid_compact_rows, "one compact row per valid segment when OpenLID is enabled"),
+    ("projected_glotlid_compact_rows", projected_glotlid_compact_rows, projected_glotlid_note),
+    ("projected_glotlid_native_compact_rows", projected_native_compact_rows, projected_native_note),
+    ("projected_segment_model_comparison_rows", projected_segment_model_comparison_rows, "one row per valid segment only when both models cover all valid segments"),
+    ("projected_known_compact_prediction_rows", projected_known_compact_prediction_rows, "sum of compact prediction rows known before inference"),
+    ("limit_channels", LIMIT_CHANNELS, "0 means full selected bucket/channel universe"),
+    ("inference_hash_buckets", INFERENCE_HASH_BUCKETS, "hash bucket modulus"),
+    ("bucket_start", BUCKET_START, "active bucket range start"),
+    ("bucket_end", BUCKET_END, "active bucket range end"),
+]
+preflight_schema = StructType([
+    StructField("metric", StringType(), False),
+    StructField("numeric_value", LongType(), True),
+    StructField("note", StringType(), True),
+])
+preflight_estimate = (
+    spark.createDataFrame(preflight_rows, schema=preflight_schema)
+    .withColumn("value", F.col("numeric_value").cast("string"))
+    .transform(with_run_scope_columns)
+    .withColumn("prediction_timestamp", F.current_timestamp())
+)
+write_delta(
+    preflight_estimate,
+    preflight_estimate_full,
+    partition_cols=["run_id"],
+    replace_where=_run_scope_replace_where(),
+    replace_where_cols=_run_scope_required_cols(),
+)
+print("Wrote preflight estimate to", preflight_estimate_full)
+print(
+    "Preflight summary:",
+    f"channels={n_channels_pipeline:,}",
+    f"videos={n_videos_selected_for_segments:,}",
+    f"segments={n_segment_input_rows:,}",
+    f"valid_segments={n_valid_segments:,}",
+    f"known_compact_prediction_rows={projected_known_compact_prediction_rows:,}",
+)
+_maybe_display(current_run_scope_table(preflight_estimate_full).orderBy("metric"))
+
+# COMMAND ----------
+# MAGIC %md
 # MAGIC ## 5. Run OpenLID and GlotLID on the same valid-segment universe (spec §6)
 # MAGIC
 # MAGIC Both models run on `is_valid_text_for_lid=true` rows from the canonical segment-input table. The main
@@ -1542,16 +1644,15 @@ def predict_segments_compact(input_df, worker_path: str, model_name: str, k: int
     return compact.select(*_compact_prediction_columns(k))
 
 # COMMAND ----------
-# Materialize the shared valid-segment universe once via a DBFS-backed checkpoint. localCheckpoint caused
-# executor-eviction failures upstream, so we use a DBFS checkpoint dir (commit d3cb137 / upstream fix).
-spark.sparkContext.setCheckpointDir(CHECKPOINT_DIR)
+# Materialize the shared valid-segment universe once. Prefer a DBFS-backed checkpoint when the cluster
+# exposes SparkContext; shared Unity Catalog clusters may block SparkContext, in which case we persist.
+CHECKPOINT_AVAILABLE = True
+try:
+    spark.sparkContext.setCheckpointDir(CHECKPOINT_DIR)
+except Exception as exc:  # noqa: BLE001 - shared clusters intentionally block SparkContext
+    CHECKPOINT_AVAILABLE = False
+    print(f"WARNING: checkpointing disabled because SparkContext is unavailable: {exc}")
 
-NATIVE_AUDIT_ENABLED = GLOTLID_ACTIVE and (
-    GLOTLID_PREPROCESSING_MODE == "glotlid_native_audit" or GLOTLID_NATIVE_AUDIT_SAMPLE_FRACTION > 0
-)
-NATIVE_AUDIT_IS_FULL = NATIVE_AUDIT_ENABLED and (
-    GLOTLID_NATIVE_AUDIT_SAMPLE_FRACTION == 0 or GLOTLID_NATIVE_AUDIT_SAMPLE_FRACTION >= 1.0
-)
 if NATIVE_AUDIT_IS_FULL and not ALLOW_FULL_NATIVE_AUDIT:
     raise ValueError(
         "GlotLID native audit would run on all valid segments. Set allow_full_native_audit=true "
@@ -1569,7 +1670,6 @@ valid_segments_base = (
     .where(F.col("is_valid_text_for_lid"))
     .select(*(SEGMENT_INFERENCE_COLS + (["text"] if NATIVE_AUDIT_ENABLED else [])))
 )
-n_valid_segments = valid_segments_base.count()
 EFFECTIVE_NUM_PARTITIONS = max(
     MIN_NUM_PARTITIONS,
     min(MAX_NUM_PARTITIONS, int((n_valid_segments + TARGET_SEGMENTS_PER_PARTITION - 1) // TARGET_SEGMENTS_PER_PARTITION)),
@@ -1581,7 +1681,12 @@ print(
     "| target_segments_per_partition:",
     TARGET_SEGMENTS_PER_PARTITION,
 )
-valid_segments = repartition_for_bucketed_parallelism(valid_segments_base, EFFECTIVE_NUM_PARTITIONS).checkpoint(eager=True)
+valid_segments_materialized = repartition_for_bucketed_parallelism(valid_segments_base, EFFECTIVE_NUM_PARTITIONS)
+if CHECKPOINT_AVAILABLE:
+    valid_segments = valid_segments_materialized.checkpoint(eager=True)
+else:
+    valid_segments = valid_segments_materialized.persist(StorageLevel.DISK_ONLY)
+    valid_segments.count()
 print(f"Valid segments for inference: {n_valid_segments:,}")
 
 # COMMAND ----------
@@ -2403,8 +2508,11 @@ _CONSENSUS_COLS = [f.name for f in consensus_schema.fields]
 
 
 @F.pandas_udf(consensus_schema)
-def consensus_udf(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
-                  gl_label, gl_iso, gl_script, gl_vs, gl_hr, gl_cl, gl_present) -> pd.DataFrame:
+def consensus_udf(ol_label: pd.Series, ol_iso: pd.Series, ol_script: pd.Series,
+                  ol_vs: pd.Series, ol_hr: pd.Series, ol_cl: pd.Series,
+                  gl_label: pd.Series, gl_iso: pd.Series, gl_script: pd.Series,
+                  gl_vs: pd.Series, gl_hr: pd.Series, gl_cl: pd.Series,
+                  gl_present: pd.Series) -> pd.DataFrame:
     rows = [
         compute_consensus(*vals)
         for vals in zip(ol_label, ol_iso, ol_script, ol_vs, ol_hr, ol_cl,
@@ -3873,6 +3981,7 @@ _core_tables = [
     (OUTPUT_UNCLASSIFIED_AUDIT_TABLE, _bucket_table_cols),
     (OUTPUT_SOURCE_LANGUAGE_CONFUSION_TABLE, _scope_table_cols),
     (OUTPUT_DEDUPE_QA_TABLE, _scope_table_cols),
+    (OUTPUT_PREFLIGHT_ESTIMATE_TABLE, _scope_table_cols),
 ]
 if IS_FULL_BUCKET_RANGE:
     _core_tables.append((OUTPUT_SUSPECT_TAIL_AUDIT_TABLE, _bucket_table_cols))
@@ -3904,6 +4013,12 @@ if GLOTLID_CAN_FEED_MAIN:
     _check((N_GLOTLID_COMPACT_ROWS if N_GLOTLID_COMPACT_ROWS is not None else current_run_table(glotlid_compact_full).count()) == n_valid_segments,
            "GlotLID compact predictions match current valid-segment count")
 _check(current_run_scope_table(dedupe_qa_full).count() == 2, "dedupe QA has current run/scope rows")
+_check(
+    current_run_scope_table(preflight_estimate_full)
+    .where(F.col("metric").isin("selected_channels_after_dedup_and_sampling", "selected_videos_after_dedup_and_cap", "expected_valid_segments"))
+    .count() == 3,
+    "preflight estimate has current channel/video/valid-segment metrics",
+)
 _check(n_rows == n_universe, "final channel table has current run/bucket rows")
 
 print("Acceptance checks:")
