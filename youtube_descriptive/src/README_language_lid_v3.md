@@ -3,7 +3,23 @@
 `01_language_openlid_v3_databricks.py` classifies YouTube channel language by running **two** fastText
 language-ID models — OpenLID-v3 (the legacy primary detector) and GlotLID — on the **same universe of
 valid text segments**, then comparing them and producing model-specific and consensus labels. It supersedes
-the single-model first cut documented in `README_language_openlid_v3.md`.
+the original single-model OpenLID first cut.
+
+## Current validation status
+
+The pipeline has completed a 10,000-channel Databricks validation run split evenly between prior
+OpenLID/GlotLID top-of-ocean exact-agreement and exact-disagreement cases. The run wrote the expected core
+tables, compact OpenLID/GlotLID predictions, analysis tables, table-backed SVG figures, and the preflight
+estimate table under `dev_sean.matt` with prefix
+`yt_lid_v3_validation_10k_20260608_161345_b10`.
+
+The follow-up field-source ablation found no substantial overall advantage to changing the default
+recent-video-metadata approach. Channel title/name contributed little in that run and can be omitted or kept
+at very low weight; video titles alone reduced coverage and agreement; channel description could not be
+evaluated because no valid `channel_description` segments were present in the validation source.
+
+Treat this README and the current notebook code as the operational source of truth. Historical planning,
+review, and validation-fix files should not be used as active runbooks.
 
 ## Runtime requirements
 

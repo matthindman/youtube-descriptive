@@ -1,6 +1,6 @@
 ---
 name: lid-v3-audit
-description: Audit and repair the YouTube Descriptive language-detection v3 workflow. Use when reviewing or fixing changes to `01_language_openlid_v3_databricks.py`, `01b_language_lid_v3_subscriber_cohort_analysis_databricks.py`, `README_language_lid_v3.md`, `CODEX_REVIEW_lang_detect_v3.md`, residual-validation CSVs, or branches such as `lang-detect-v3-dual-model`.
+description: Audit and repair the YouTube Descriptive language-detection v3 workflow. Use when reviewing or fixing changes to `01_language_openlid_v3_databricks.py`, `01b_language_lid_v3_subscriber_cohort_analysis_databricks.py`, `README_language_lid_v3.md`, residual-validation CSVs, or branches such as `lang-detect-v3-dual-model`.
 ---
 
 # LID v3 Audit
@@ -12,10 +12,10 @@ Use this skill for high-risk review and repair of the YouTube language-detection
 ## Start Here
 
 1. Check branch and dirty state with `git status --short --branch`.
-2. Read the review/spec files first:
-   - `youtube_descriptive/src/CODEX_REVIEW_lang_detect_v3.md`
+2. Read the current runbook first:
    - `youtube_descriptive/src/README_language_lid_v3.md`
-   - `youtube_descriptive/src/README_language_openlid_v3.md` if present
+   - `youtube_descriptive/src/lang_detect_revision_spec.md` if the task requires spec traceability
+   - archived review or legacy OpenLID docs only if present and specifically relevant
 3. Read the notebook exports:
    - `youtube_descriptive/src/01_language_openlid_v3_databricks.py`
    - `youtube_descriptive/src/01b_language_lid_v3_subscriber_cohort_analysis_databricks.py`

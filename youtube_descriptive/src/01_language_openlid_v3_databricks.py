@@ -16,7 +16,7 @@
 # MAGIC **Output table family:** a new `yt_lid_v3_*` family (see section 1). The legacy
 # MAGIC `yt_lid_openlid_v3_*` tables are never overwritten.
 # MAGIC
-# MAGIC **Implementation status:** all phases of `lang_detect_v3_implementation_plan.md` are implemented:
+# MAGIC **Implementation status:** the v3 dual-model workflow is implemented:
 # MAGIC scaffolding/widgets/constants/models, deterministic dedup + smoke sampling, canonical segment-input
 # MAGIC table, dual-model inference on the shared valid-segment universe, compact predictions with optional
 # MAGIC long-format audit output,
@@ -2010,8 +2010,8 @@ else:
 # MAGIC pipeline is intentionally **not** applied in v3 (§8 omits it), for cross-model comparability.
 
 # COMMAND ----------
-# Experimental, DEFAULT-OFF fixes (plan B2b / B3 / B4). Enable per-subset to collect scale-test data;
-# while false they do NOT change production output. See validation/IMPLEMENTATION_PLAN_lid_v3_fixes.md.
+# Experimental, DEFAULT-OFF fixes from validation follow-up. Enable per-subset to collect scale-test data;
+# while false they do NOT change production output.
 for _w, _d in [
     ("b3_downweight_latin_name", "false"),       # B3: suppress a Latin channel-name vote on non-Latin channels
     ("b3_nonlatin_share", "0.60"),
@@ -4042,6 +4042,6 @@ print(
 # MAGIC %md
 # MAGIC ## Done
 # MAGIC
-# MAGIC All phases of `lang_detect_v3_implementation_plan.md` are implemented. See `README_language_lid_v3.md`
-# MAGIC for documentation and `CHANGELOG_revisions.md` for the revision summary. The legacy single-model
-# MAGIC OpenLID-v3 pipeline remains in git history at commit `d3cb137`.
+# MAGIC The v3 dual-model workflow is implemented. See `README_language_lid_v3.md` for current documentation
+# MAGIC and `CHANGELOG_revisions.md` for the revision summary. The legacy single-model OpenLID-v3 pipeline
+# MAGIC remains in git history at commit `d3cb137`.
