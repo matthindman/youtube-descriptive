@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # YouTube Census: LLM-based YouTube category classification bake-off
 # MAGIC
-# MAGIC This notebook prepares channel-level prompts, generates provider-specific batch request files for OpenAI, Anthropic, and Gemini, optionally submits batches, imports batch results, and evaluates model agreement against existing YouTube/category labels.
+# MAGIC This notebook prepares channel-level prompts, generates provider-specific request files for OpenAI, Anthropic, Gemini, and DeepSeek, optionally submits batches/direct requests, imports results, and evaluates model agreement against existing YouTube/category labels.
 # MAGIC
 # MAGIC **Run language classification first.** This notebook stratifies the bake-off by detected channel language from `yt_lid_openlid_v3_channels`.
 # MAGIC
@@ -13,7 +13,7 @@
 # MAGIC ## 0. Install notebook-scoped dependencies
 
 # COMMAND ----------
-# MAGIC %pip install "openai>=2.0.0" anthropic "google-genai>=1.51.0" pandas pyarrow tenacity
+# MAGIC %pip install "openai>=2.0.0" anthropic "google-genai>=1.51.0" pandas pyarrow requests tenacity
 
 # COMMAND ----------
 dbutils.library.restartPython()
@@ -123,29 +123,43 @@ _create_text_widget("random_seed", "20260511")
 # Batch generation.
 _create_text_widget("batch_output_dir", "/dbfs/FileStore/youtube_category_batches")
 _create_text_widget("max_requests_per_file", "10000")
-_create_text_widget("max_output_tokens", "300")
+_create_text_widget("max_output_tokens", "600")
 _create_text_widget("temperature", "")  # blank/omit = provider default; do not set 0.0 for GPT-5/Gemini-3 unless explicitly tested
 
-# Model list. Replace display IDs with exact API model IDs used by the three providers.
+# Model list. Defaults cover current size/cost brackets across the configured providers.
 DEFAULT_MODELS_JSON = json.dumps([
     {"provider": "openai", "model": "gpt-5.5", "tier": "frontier"},
-    {"provider": "openai", "model": "gpt-5-nano", "tier": "small"},
-    {"provider": "anthropic", "model": "claude-opus-4-7", "tier": "frontier"},
+    {"provider": "openai", "model": "gpt-5.4", "tier": "mid"},
+    {"provider": "openai", "model": "gpt-5.4-mini", "tier": "small"},
+    {"provider": "openai", "model": "gpt-5.4-nano", "tier": "nano"},
+    {"provider": "openai", "model": "gpt-5-nano", "tier": "nano_low_cost"},
+    {"provider": "anthropic", "model": "claude-opus-4-8", "tier": "frontier"},
+    {"provider": "anthropic", "model": "claude-sonnet-4-6", "tier": "mid"},
     {"provider": "anthropic", "model": "claude-haiku-4-5", "tier": "small"},
     {"provider": "gemini", "model": "gemini-3.1-pro-preview", "tier": "frontier"},
-    {"provider": "gemini", "model": "gemini-3.1-flash-lite-preview", "tier": "small"},
+    {"provider": "gemini", "model": "gemini-3.5-flash", "tier": "mid"},
+    {"provider": "gemini", "model": "gemini-3.1-flash-lite", "tier": "small"},
+    {"provider": "deepseek", "model": "deepseek-v4-pro", "tier": "frontier"},
+    {"provider": "deepseek", "model": "deepseek-v4-flash", "tier": "small"},
 ], ensure_ascii=False)
 _create_text_widget("models_json", DEFAULT_MODELS_JSON)
 _create_text_widget("openai_endpoint_mode", "auto")  # auto, responses, or chat_completions
-_create_text_widget("openai_reasoning_effort", "minimal")  # blank to omit; useful for GPT-5 Responses API
-_create_text_widget("gemini_thinking_level", "low")  # blank to omit; low/minimal can reduce latency/cost for Gemini 3
+_create_text_widget("openai_reasoning_effort", "")  # blank = omit reasoning/thinking controls
+_create_text_widget("gemini_thinking_level", "")  # blank = omit thinking controls
+_create_text_widget("deepseek_thinking_type", "")  # disabled | enabled | blank to omit
+_create_text_widget("deepseek_reasoning_effort", "")  # high | max; only used with enabled thinking
+_create_text_widget("deepseek_max_workers", "8")
+_create_text_widget("deepseek_request_timeout_seconds", "60")
+_create_text_widget("deepseek_max_retries", "1")
 
 # Optional submission. Leave false to only write JSONL files for manual/provider-side submission.
 _create_text_widget("submit_batches", "false")
-_create_text_widget("secret_scope", "llm-api-keys")
-_create_text_widget("openai_secret_key", "openai_api_key")
-_create_text_widget("anthropic_secret_key", "anthropic_api_key")
-_create_text_widget("gemini_secret_key", "gemini_api_key")
+_create_text_widget("skip_existing_submitted_batches", "true")
+_create_text_widget("secret_scope", "youtube-llm-keys")
+_create_text_widget("openai_secret_key", "openai-api-key")
+_create_text_widget("anthropic_secret_key", "anthropic-api-key")
+_create_text_widget("gemini_secret_key", "gemini-api-key")
+_create_text_widget("deepseek_secret_key", "deepseek-api-key")
 
 # Result import. Place downloaded JSONL result files under this directory and set import_results=true.
 _create_text_widget("import_results", "false")
@@ -190,18 +204,49 @@ RANDOM_SEED = _get_int_widget("random_seed", 20260511)
 
 BATCH_OUTPUT_DIR = _get_widget("batch_output_dir", "/dbfs/FileStore/youtube_category_batches").rstrip("/")
 MAX_REQUESTS_PER_FILE = _get_int_widget("max_requests_per_file", 10000)
-MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 300)
+MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 600)
 TEMPERATURE = _get_optional_float_widget("temperature", None)
 MODELS = json.loads(_get_widget("models_json", DEFAULT_MODELS_JSON))
 OPENAI_ENDPOINT_MODE = _get_widget("openai_endpoint_mode", "auto").strip().lower()
-OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "minimal").strip().lower()
-GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "low").strip().lower()
+OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "").strip().lower()
+GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "").strip().lower()
+DEEPSEEK_THINKING_TYPE = _get_widget("deepseek_thinking_type", "").strip().lower()
+DEEPSEEK_REASONING_EFFORT = _get_widget("deepseek_reasoning_effort", "").strip().lower()
+DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 8)
+DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _get_float_widget("deepseek_request_timeout_seconds", 60.0)
+DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 1)
 
 SUBMIT_BATCHES = _get_bool_widget("submit_batches", False)
-SECRET_SCOPE = _get_widget("secret_scope", "llm-api-keys")
-OPENAI_SECRET_KEY = _get_widget("openai_secret_key", "openai_api_key")
-ANTHROPIC_SECRET_KEY = _get_widget("anthropic_secret_key", "anthropic_api_key")
-GEMINI_SECRET_KEY = _get_widget("gemini_secret_key", "gemini_api_key")
+SKIP_EXISTING_SUBMITTED_BATCHES = _get_bool_widget("skip_existing_submitted_batches", True)
+DEFAULT_SECRET_SCOPE = "youtube-llm-keys"
+DEFAULT_SECRET_KEYS = {
+    "openai": "openai-api-key",
+    "anthropic": "anthropic-api-key",
+    "gemini": "gemini-api-key",
+    "deepseek": "deepseek-api-key",
+}
+
+
+def _normalize_secret_scope(raw: str) -> str:
+    value = (raw or "").strip()
+    if value in {"", "llm-api-keys"}:
+        return DEFAULT_SECRET_SCOPE
+    return value
+
+
+def _normalize_secret_key(provider: str, raw: str) -> str:
+    value = (raw or "").strip()
+    legacy_default = f"{provider}_api_key"
+    if value in {"", legacy_default}:
+        return DEFAULT_SECRET_KEYS[provider]
+    return value
+
+
+SECRET_SCOPE = _normalize_secret_scope(_get_widget("secret_scope", DEFAULT_SECRET_SCOPE))
+OPENAI_SECRET_KEY = _normalize_secret_key("openai", _get_widget("openai_secret_key", DEFAULT_SECRET_KEYS["openai"]))
+ANTHROPIC_SECRET_KEY = _normalize_secret_key("anthropic", _get_widget("anthropic_secret_key", DEFAULT_SECRET_KEYS["anthropic"]))
+GEMINI_SECRET_KEY = _normalize_secret_key("gemini", _get_widget("gemini_secret_key", DEFAULT_SECRET_KEYS["gemini"]))
+DEEPSEEK_SECRET_KEY = _normalize_secret_key("deepseek", _get_widget("deepseek_secret_key", DEFAULT_SECRET_KEYS["deepseek"]))
 
 IMPORT_RESULTS = _get_bool_widget("import_results", False)
 RESULTS_INPUT_DIR = _get_widget("results_input_dir", "/dbfs/FileStore/youtube_category_batches/results").rstrip("/")
@@ -212,6 +257,16 @@ if EXISTING_LABEL_SOURCE not in {"videos", "channels", "expert_table"}:
     raise ValueError("existing_label_source must be one of: videos, channels, expert_table")
 if OPENAI_ENDPOINT_MODE not in {"auto", "responses", "chat_completions"}:
     raise ValueError("openai_endpoint_mode must be one of: auto, responses, chat_completions")
+if DEEPSEEK_THINKING_TYPE not in {"", "enabled", "disabled"}:
+    raise ValueError("deepseek_thinking_type must be blank, enabled, or disabled")
+if DEEPSEEK_REASONING_EFFORT and DEEPSEEK_REASONING_EFFORT not in {"high", "max"}:
+    raise ValueError("deepseek_reasoning_effort must be blank, high, or max")
+if DEEPSEEK_MAX_WORKERS < 1:
+    raise ValueError("deepseek_max_workers must be at least 1")
+if DEEPSEEK_REQUEST_TIMEOUT_SECONDS <= 0:
+    raise ValueError("deepseek_request_timeout_seconds must be positive")
+if DEEPSEEK_MAX_RETRIES < 0:
+    raise ValueError("deepseek_max_retries must be non-negative")
 
 # COMMAND ----------
 def fqtn(table: str) -> str:
@@ -227,6 +282,20 @@ def table_ref(name: str) -> str:
 
 def safe_model_dir(model: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.=-]+", "_", model)
+
+
+def spark_path(path: str) -> str:
+    path = (path or "").rstrip("/")
+    if path.startswith("/dbfs/"):
+        return "dbfs:/" + path[len("/dbfs/"):]
+    return path
+
+
+def local_fs_path(path: str) -> str:
+    path = (path or "").rstrip("/")
+    if path.startswith("dbfs:/"):
+        return "/dbfs/" + path[len("dbfs:/"):]
+    return path
 
 
 channels_full = fqtn(CHANNELS_TABLE)
@@ -246,6 +315,57 @@ print("RUN_MODE:", RUN_MODE)
 print("Models:", json.dumps(MODELS, indent=2))
 print("Prompt input table:", prompt_inputs_full)
 print("Request table:", request_full)
+
+
+def _table_exists_full(table_full: str) -> bool:
+    try:
+        spark.table(table_full).limit(0)
+        return True
+    except Exception:
+        return False
+
+
+def _sql_string(value: str) -> str:
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def write_run_scoped(df, table_full: str):
+    if "run_id" not in df.columns:
+        df = df.withColumn("run_id", F.lit(RUN_ID))
+
+    if not _table_exists_full(table_full):
+        (
+            df.write.format("delta")
+            .mode("overwrite")
+            .option("mergeSchema", "true")
+            .partitionBy("run_id")
+            .saveAsTable(table_full)
+        )
+        return
+
+    existing = spark.table(table_full)
+    if "run_id" not in existing.columns:
+        raise RuntimeError(f"{table_full} has no run_id column and cannot be safely overwritten by run scope.")
+
+    new_cols = sorted(set(df.columns) - set(existing.columns))
+    if new_cols:
+        print(f"Evolving {table_full} schema with new output columns {new_cols}.")
+        df.limit(0).write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(table_full)
+        existing = spark.table(table_full)
+
+    write_df = df
+    for field in existing.schema.fields:
+        if field.name not in write_df.columns:
+            write_df = write_df.withColumn(field.name, F.lit(None).cast(field.dataType))
+    write_df = write_df.select(*existing.columns)
+
+    spark.sql(f"DELETE FROM {table_full} WHERE run_id = {_sql_string(RUN_ID)}")
+    (
+        write_df.write.format("delta")
+        .mode("append")
+        .option("mergeSchema", "true")
+        .saveAsTable(table_full)
+    )
 
 # COMMAND ----------
 # MAGIC %md
@@ -317,7 +437,7 @@ CATEGORY_RESPONSE_JSON_SCHEMA = {
         "category_name": {"type": "string"},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1},
         "ambiguous": {"type": "boolean"},
-        "rationale_short": {"type": "string", "maxLength": 220},
+        "rationale_short": {"type": "string", "maxLength": 180},
     },
     "required": ["category_id", "category_name", "confidence", "ambiguous", "rationale_short"],
 }
@@ -328,13 +448,14 @@ SYSTEM_PROMPT = f"""You are classifying YouTube channels for an academic study. 
 Allowed categories:
 {CATEGORY_LIST_FOR_PROMPT}
 
-Return strict JSON only, with no markdown and no explanatory text outside JSON. The JSON schema is:
+Return one compact, minified JSON object on one line, with no markdown and no explanatory text outside JSON.
+Keep rationale_short <=160 characters. The JSON schema is:
 {{
   "category_id": "one of: {', '.join(sorted(VALID_CATEGORY_IDS, key=lambda x: int(x)))}",
   "category_name": "exact category name",
   "confidence": 0.0,
   "ambiguous": false,
-  "rationale_short": "brief evidence, maximum 25 words"
+  "rationale_short": "brief evidence, maximum 160 chars"
 }}
 """.strip()
 
@@ -652,17 +773,17 @@ sampled = (
     .withColumn("created_at", F.current_timestamp())
 )
 
-(
-    sampled
-    .write
-    .format("delta")
-    .mode("overwrite")
-    .option("overwriteSchema", "true")
-    .saveAsTable(prompt_inputs_full)
-)
+write_run_scoped(sampled, prompt_inputs_full)
 
 print("Wrote prompt inputs to", prompt_inputs_full)
-display(spark.table(prompt_inputs_full).groupBy("run_mode", "primary_language_iso639_3", "reference_category_id", "reference_category_name").count().orderBy(F.desc("count")).limit(100))
+display(
+    spark.table(prompt_inputs_full)
+    .where(F.col("run_id") == F.lit(RUN_ID))
+    .groupBy("run_mode", "primary_language_iso639_3", "reference_category_id", "reference_category_name")
+    .count()
+    .orderBy(F.desc("count"))
+    .limit(100)
+)
 
 # COMMAND ----------
 # MAGIC %md
@@ -762,15 +883,7 @@ def make_batch_line(provider: str, model: str, request_id: str, system_prompt: s
         obj = {"custom_id": request_id, "params": params}
 
     elif provider == "gemini":
-        generation_config = {
-            "max_output_tokens": max_out,
-            "response_format": {
-                "text": {
-                    "mime_type": "application/json",
-                    "schema": CATEGORY_RESPONSE_JSON_SCHEMA,
-                }
-            },
-        }
+        generation_config = {"max_output_tokens": max_out, "response_mime_type": "application/json"}
         if temp is not None:
             generation_config["temperature"] = temp
         if GEMINI_THINKING_LEVEL:
@@ -783,6 +896,26 @@ def make_batch_line(provider: str, model: str, request_id: str, system_prompt: s
                 "generation_config": generation_config,
             },
         }
+    elif provider == "deepseek":
+        body = {
+            "model": model,
+            "response_format": {"type": "json_object"},
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "max_tokens": max_out,
+            "stream": False,
+        }
+        if DEEPSEEK_THINKING_TYPE:
+            if DEEPSEEK_THINKING_TYPE != "disabled":
+                body["extra_body"] = {"thinking": {"type": DEEPSEEK_THINKING_TYPE}}
+        if DEEPSEEK_REASONING_EFFORT:
+            body.setdefault("extra_body", {})["reasoning_effort"] = DEEPSEEK_REASONING_EFFORT
+        if temp is not None:
+            body["temperature"] = temp
+        # DeepSeek is OpenAI-compatible for chat completions, but does not use provider batch here.
+        obj = {"custom_id": request_id, "method": "POST", "url": "/chat/completions", "body": body}
     else:
         raise ValueError(f"Unsupported provider: {provider}")
     return json.dumps(obj, ensure_ascii=False)
@@ -812,17 +945,16 @@ requests = (
     .drop("_request_n")
 )
 
-(
-    requests
-    .write
-    .format("delta")
-    .mode("overwrite")
-    .option("overwriteSchema", "true")
-    .saveAsTable(request_full)
-)
+write_run_scoped(requests, request_full)
 
 print("Wrote request table to", request_full)
-display(spark.table(request_full).groupBy("provider", "model", "chunk_id").count().orderBy("provider", "model", "chunk_id"))
+display(
+    spark.table(request_full)
+    .where(F.col("run_id") == F.lit(RUN_ID))
+    .groupBy("provider", "model", "chunk_id")
+    .count()
+    .orderBy("provider", "model", "chunk_id")
+)
 
 # COMMAND ----------
 # Write JSONL files to driver-visible DBFS path.
@@ -832,6 +964,7 @@ os.makedirs(run_dir, exist_ok=True)
 
 request_groups = (
     spark.table(request_full)
+    .where(F.col("run_id") == F.lit(RUN_ID))
     .select("provider", "model", "model_tier", "chunk_id")
     .distinct()
     .orderBy("provider", "model", "chunk_id")
@@ -850,6 +983,7 @@ for g in request_groups:
 
     subset = (
         spark.table(request_full)
+        .where(F.col("run_id") == F.lit(RUN_ID))
         .where((F.col("provider") == provider) & (F.col("model") == model) & (F.col("chunk_id") == chunk_id))
         .select("batch_line")
     )
@@ -866,21 +1000,22 @@ for g in request_groups:
     batch_file_records.append((RUN_ID, provider, model, g["model_tier"], chunk_id, local_path, n_lines, n_bytes, datetime.utcnow().isoformat()))
     print(f"Wrote {n_lines:,} requests: {local_path} ({n_bytes:,} bytes)")
 
-batch_files_df = spark.createDataFrame(
-    batch_file_records,
-    ["run_id", "provider", "model", "model_tier", "chunk_id", "local_jsonl_path", "n_requests", "n_bytes", "created_at_utc"],
-)
-(
-    batch_files_df
-    .write
-    .format("delta")
-    .mode("overwrite")
-    .option("overwriteSchema", "true")
-    .saveAsTable(batch_files_full)
-)
+batch_file_schema = StructType([
+    StructField("run_id", StringType(), True),
+    StructField("provider", StringType(), True),
+    StructField("model", StringType(), True),
+    StructField("model_tier", StringType(), True),
+    StructField("chunk_id", IntegerType(), True),
+    StructField("local_jsonl_path", StringType(), True),
+    StructField("n_requests", IntegerType(), True),
+    StructField("n_bytes", IntegerType(), True),
+    StructField("created_at_utc", StringType(), True),
+])
+batch_files_df = spark.createDataFrame(batch_file_records, batch_file_schema)
+write_run_scoped(batch_files_df, batch_files_full)
 
 print("Wrote batch file registry to", batch_files_full)
-display(spark.table(batch_files_full).orderBy("provider", "model", "chunk_id"))
+display(spark.table(batch_files_full).where(F.col("run_id") == F.lit(RUN_ID)).orderBy("provider", "model", "chunk_id"))
 
 # COMMAND ----------
 # MAGIC %md
@@ -944,12 +1079,161 @@ def submit_gemini_batch(local_jsonl_path: str, model: str) -> Dict[str, Any]:
     }
 
 
+def submit_deepseek_direct(local_jsonl_path: str, model: str) -> Dict[str, Any]:
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    import requests
+
+    api_key = get_secret(SECRET_SCOPE, DEEPSEEK_SECRET_KEY)
+    thread_state = threading.local()
+    result_dir = os.path.join(RESULTS_INPUT_DIR, RUN_ID, "deepseek", safe_model_dir(model))
+    os.makedirs(result_dir, exist_ok=True)
+    result_path = os.path.join(result_dir, os.path.basename(local_jsonl_path).replace(".jsonl", "_results.jsonl"))
+    n_ok = 0
+    n_error = 0
+
+    def _session():
+        session = getattr(thread_state, "session", None)
+        if session is None:
+            session = requests.Session()
+            thread_state.session = session
+        return session
+
+    def _parse_response_body(response):
+        try:
+            return response.json()
+        except Exception:
+            return {"text": response.text[:4000]}
+
+    def _call_line(line: str):
+        req = {}
+        try:
+            req = json.loads(line)
+            custom_id = req.get("custom_id") or req.get("key")
+            body = dict(req["body"])
+            extra_body = body.pop("extra_body", None)
+            if isinstance(extra_body, dict):
+                body.update(extra_body)
+            last_error = None
+            for attempt in range(DEEPSEEK_MAX_RETRIES + 1):
+                try:
+                    response = _session().post(
+                        "https://api.deepseek.com/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json=body,
+                        timeout=DEEPSEEK_REQUEST_TIMEOUT_SECONDS,
+                    )
+                    response_body = _parse_response_body(response)
+                    out = {
+                        "custom_id": custom_id,
+                        "response": {
+                            "status_code": response.status_code,
+                            "body": response_body,
+                        },
+                    }
+                    if 200 <= response.status_code < 300:
+                        return out, True
+                    last_error = response.text[:2000]
+                    if response.status_code not in {408, 409, 429, 500, 502, 503, 504} or attempt >= DEEPSEEK_MAX_RETRIES:
+                        out["error"] = last_error
+                        return out, False
+                except Exception as e:
+                    last_error = repr(e)[:2000]
+                    if attempt >= DEEPSEEK_MAX_RETRIES:
+                        out = {
+                            "custom_id": custom_id,
+                            "response": {"status_code": 500, "error": last_error},
+                            "error": last_error,
+                        }
+                        return out, False
+                time.sleep(min(2 ** attempt, 8))
+            out = {"custom_id": custom_id, "response": {"status_code": 500, "error": last_error}, "error": last_error}
+            return out, False
+        except Exception as e:
+            custom_id = None
+            try:
+                custom_id = req.get("custom_id") or req.get("key")
+            except Exception:
+                pass
+            out = {"custom_id": custom_id, "response": {"status_code": 500, "error": repr(e)[:2000]}, "error": repr(e)[:2000]}
+            return out, False
+
+    with open(local_jsonl_path, "r", encoding="utf-8") as src:
+        lines = [line for line in src if line.strip()]
+
+    total = len(lines)
+    print(f"DeepSeek direct {model}: {total:,} requests with {DEEPSEEK_MAX_WORKERS} workers")
+    with open(result_path, "w", encoding="utf-8") as dst:
+        with ThreadPoolExecutor(max_workers=DEEPSEEK_MAX_WORKERS) as pool:
+            futures = [pool.submit(_call_line, line) for line in lines]
+            for i, fut in enumerate(as_completed(futures), start=1):
+                out, ok = fut.result()
+                if ok:
+                    n_ok += 1
+                else:
+                    n_error += 1
+                dst.write(json.dumps(out, ensure_ascii=False) + "\n")
+                if i % 100 == 0 or i == total:
+                    dst.flush()
+                    print(f"DeepSeek direct {model}: {i:,}/{total:,} done; ok={n_ok:,}; error={n_error:,}")
+
+    status = "completed" if n_error == 0 else "completed_with_errors"
+    return {
+        "provider_file_id": result_path,
+        "provider_batch_id": f"deepseek-direct:{RUN_ID}:{safe_model_dir(model)}:{os.path.basename(local_jsonl_path)}",
+        "provider_status": f"{status}; ok={n_ok}; error={n_error}",
+    }
+
+
 if SUBMIT_BATCHES:
+    batch_job_schema = StructType([
+        StructField("run_id", StringType(), True),
+        StructField("provider", StringType(), True),
+        StructField("model", StringType(), True),
+        StructField("chunk_id", IntegerType(), True),
+        StructField("local_jsonl_path", StringType(), True),
+        StructField("provider_file_id", StringType(), True),
+        StructField("provider_batch_id", StringType(), True),
+        StructField("provider_status", StringType(), True),
+        StructField("submission_status", StringType(), True),
+        StructField("submission_error", StringType(), True),
+        StructField("submitted_at_utc", StringType(), True),
+    ])
+    existing_jobs_for_run = None
+    already_submitted = set()
+    if SKIP_EXISTING_SUBMITTED_BATCHES and _table_exists_full(batch_jobs_full):
+        existing_jobs_for_run = spark.table(batch_jobs_full).where(F.col("run_id") == F.lit(RUN_ID))
+        already_rows = (
+            existing_jobs_for_run
+            .where(F.col("submission_status") == F.lit("submitted"))
+            .where(F.col("provider_batch_id").isNotNull())
+            .where(~F.lower(F.coalesce(F.col("provider_status"), F.lit(""))).rlike("error|failed"))
+            .select("provider", "model", "chunk_id")
+            .collect()
+        )
+        already_submitted = {(r["provider"], r["model"], int(r["chunk_id"])) for r in already_rows}
+        if already_submitted:
+            print(f"Skipping {len(already_submitted):,} already submitted category batch chunks.")
+
     job_records = []
-    for row in spark.table(batch_files_full).orderBy("provider", "model", "chunk_id").collect():
+    batch_files_for_run = (
+        spark.table(batch_files_full)
+        .where(F.col("run_id") == F.lit(RUN_ID))
+        .orderBy("provider", "model", "chunk_id")
+    )
+    for row in batch_files_for_run.collect():
         provider = row["provider"]
         model = row["model"]
+        chunk_id = int(row["chunk_id"])
         path = row["local_jsonl_path"]
+        if (provider, model, chunk_id) in already_submitted:
+            print(provider, model, chunk_id, "already submitted; skipping")
+            continue
         try:
             if provider == "openai":
                 result = submit_openai_batch(path, model)
@@ -957,6 +1241,8 @@ if SUBMIT_BATCHES:
                 result = submit_anthropic_batch(path, model)
             elif provider == "gemini":
                 result = submit_gemini_batch(path, model)
+            elif provider == "deepseek":
+                result = submit_deepseek_direct(path, model)
             else:
                 raise ValueError(f"Unsupported provider {provider}")
             status = "submitted"
@@ -965,30 +1251,26 @@ if SUBMIT_BATCHES:
             result = {"provider_file_id": None, "provider_batch_id": None, "provider_status": None}
             status = "error"
             error = repr(e)[:2000]
-        job_records.append((RUN_ID, provider, model, int(row["chunk_id"]), path, result.get("provider_file_id"), result.get("provider_batch_id"), result.get("provider_status"), status, error, datetime.utcnow().isoformat()))
-        print(provider, model, row["chunk_id"], status, result, error)
+        job_records.append((RUN_ID, provider, model, chunk_id, path, result.get("provider_file_id"), result.get("provider_batch_id"), result.get("provider_status"), status, error, datetime.utcnow().isoformat()))
+        print(provider, model, chunk_id, status, result, error)
 
-    jobs_df = spark.createDataFrame(
-        job_records,
-        ["run_id", "provider", "model", "chunk_id", "local_jsonl_path", "provider_file_id", "provider_batch_id", "provider_status", "submission_status", "submission_error", "submitted_at_utc"],
-    )
-    (
-        jobs_df
-        .write
-        .format("delta")
-        .mode("append")
-        .option("mergeSchema", "true")
-        .saveAsTable(batch_jobs_full)
-    )
+    jobs_df = spark.createDataFrame(job_records, batch_job_schema)
+    if existing_jobs_for_run is not None and existing_jobs_for_run.limit(1).count() > 0:
+        replace_keys = jobs_df.select("provider", "model", "chunk_id").distinct()
+        existing_to_keep = existing_jobs_for_run.join(replace_keys, on=["provider", "model", "chunk_id"], how="left_anti")
+        jobs_to_write = existing_to_keep.unionByName(jobs_df, allowMissingColumns=True)
+    else:
+        jobs_to_write = jobs_df
+    write_run_scoped(jobs_to_write, batch_jobs_full)
     display(jobs_df)
 else:
-    print("Batch submission skipped. Set submit_batches=true to submit OpenAI/Anthropic/Gemini batches from this notebook.")
+    print("Batch submission skipped. Set submit_batches=true to submit provider batches/direct requests from this notebook.")
 
 # COMMAND ----------
 # MAGIC %md
 # MAGIC ## 6. Import and parse provider result files
 # MAGIC
-# MAGIC Put downloaded result JSONL files under `results_input_dir`. The parser is tolerant of OpenAI, Anthropic, and Gemini-like result shapes. It joins results back to `yt_category_llm_requests` using `custom_id`/`key`.
+# MAGIC Put downloaded result JSONL files under `results_input_dir`. The parser is tolerant of OpenAI, Anthropic, Gemini, and DeepSeek-like result shapes. It joins results back to `yt_category_llm_requests` using `custom_id`/`key`.
 
 # COMMAND ----------
 parse_schema = StructType([
@@ -1173,10 +1455,12 @@ def normalize_category_prediction_udf(raw_text: str):
 
 # COMMAND ----------
 if IMPORT_RESULTS:
-    if not os.path.exists(RESULTS_INPUT_DIR):
+    if not os.path.exists(local_fs_path(RESULTS_INPUT_DIR)):
         raise FileNotFoundError(f"results_input_dir does not exist: {RESULTS_INPUT_DIR}")
-    print("Importing result JSONL files from", RESULTS_INPUT_DIR)
-    result_lines = spark.read.text(RESULTS_INPUT_DIR)
+    run_results_input_dir = os.path.join(RESULTS_INPUT_DIR.rstrip("/"), RUN_ID)
+    results_read_dir = run_results_input_dir if os.path.exists(local_fs_path(run_results_input_dir)) else RESULTS_INPUT_DIR
+    print("Importing result JSONL files from", results_read_dir)
+    result_lines = spark.read.option("recursiveFileLookup", "true").text(spark_path(results_read_dir))
     raw_results = (
         result_lines
         .withColumn("parsed", extract_provider_text_udf(F.col("value")))
@@ -1184,14 +1468,7 @@ if IMPORT_RESULTS:
         .withColumn("run_id", F.lit(RUN_ID))
         .withColumn("imported_at", F.current_timestamp())
     )
-    (
-        raw_results
-        .write
-        .format("delta")
-        .mode("append")
-        .option("mergeSchema", "true")
-        .saveAsTable(raw_results_full)
-    )
+    write_run_scoped(raw_results, raw_results_full)
     print("Wrote raw results to", raw_results_full)
 else:
     print("Result import skipped. Set import_results=true after placing provider result JSONL files in results_input_dir.")
@@ -1205,7 +1482,7 @@ except Exception:
     have_results = False
 
 if have_results:
-    req_map = spark.table(request_full).select(
+    req_map = spark.table(request_full).where(F.col("run_id") == F.lit(RUN_ID)).select(
         "run_id", "request_id", "provider", "model", "model_tier", "channel_id", "reference_category_id", "reference_category_name",
         "reference_raw_label", "reference_label_source", "reference_label_vote_count", "reference_total_label_count",
         "reference_label_agreement_fraction", "primary_language_iso639_3", "primary_language_label", "n_videos_in_prompt",
@@ -1218,14 +1495,19 @@ if have_results:
         .withColumn("correct_vs_reference", F.when(F.col("reference_category_id").isNotNull() & F.col("category_id").isNotNull(), F.col("reference_category_id") == F.col("category_id")))
         .withColumn("prediction_timestamp", F.current_timestamp())
     )
-    (
-        parsed_predictions
-        .write
-        .format("delta")
-        .mode("overwrite")
-        .option("overwriteSchema", "true")
-        .saveAsTable(parsed_predictions_full)
+    w_request = Window.partitionBy("run_id", "request_id").orderBy(
+        F.desc(F.col("category_id").isNotNull().cast("int")),
+        F.desc(F.col("parse_error").isNull().cast("int")),
+        F.desc(F.col("raw_text").isNotNull().cast("int")),
+        F.asc(F.coalesce(F.col("result_status").cast("string"), F.lit(""))),
     )
+    parsed_predictions = (
+        parsed_predictions
+        .withColumn("_request_rank", F.row_number().over(w_request))
+        .where(F.col("_request_rank") == 1)
+        .drop("_request_rank")
+    )
+    write_run_scoped(parsed_predictions, parsed_predictions_full)
     print("Wrote parsed predictions to", parsed_predictions_full)
     display(parsed_predictions.groupBy("provider", "model", "result_status", "parse_error", "prediction_parse_error").count().orderBy(F.desc("count")))
 else:
@@ -1320,14 +1602,7 @@ def write_evaluation_tables() -> None:
         )
     )
 
-    (
-        eval_metrics
-        .write
-        .format("delta")
-        .mode("overwrite")
-        .option("overwriteSchema", "true")
-        .saveAsTable(eval_metrics_full)
-    )
+    write_run_scoped(eval_metrics, eval_metrics_full)
 
     # Pairwise model agreement on all channels with valid predictions.
     p1 = preds.where(F.col("category_id").isNotNull()).select(
@@ -1346,14 +1621,7 @@ def write_evaluation_tables() -> None:
         )
         .withColumn("run_id", F.lit(RUN_ID))
     )
-    (
-        agreement
-        .write
-        .format("delta")
-        .mode("overwrite")
-        .option("overwriteSchema", "true")
-        .saveAsTable(agreement_full)
-    )
+    write_run_scoped(agreement, agreement_full)
 
     print("Wrote evaluation metrics to", eval_metrics_full)
     print("Wrote model agreement to", agreement_full)

@@ -1,0 +1,71 @@
+{
+  "run_name": "lid_llm_validation_1000_20260610_submit_deepseek",
+  "tasks": [
+    {
+      "task_key": "submit_lid_llm_validation_deepseek",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 7200,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/03_language_llm_panel_databricks",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "comparison_table": "yt_lid_v3_too_full_20260609_channel_model_comparison",
+          "segments_input_table": "yt_lid_v3_too_full_20260609_segments_input",
+          "channel_text_features_table": "yt_lid_v3_too_full_20260609_channel_text_features",
+          "hindi_indic_audit_table": "yt_lid_v3_too_full_20260609_hindi_indic_audit_candidates",
+          "run_id": "too_full_20260609",
+          "inference_hash_buckets": "4096",
+          "routing_mode": "random_validation",
+          "random_validation_sample_size": "1000",
+          "random_validation_seed": "20260610",
+          "max_routed_channels": "0",
+          "panel_requests_table": "yt_lid_v3_too_full_20260609_llm_validation_requests",
+          "panel_batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "panel_raw_results_table": "yt_lid_v3_too_full_20260609_llm_validation_raw_results",
+          "panel_verdicts_table": "yt_lid_v3_too_full_20260609_llm_validation_verdicts",
+          "panel_model_agreement_table": "yt_lid_v3_too_full_20260609_llm_validation_model_agreement",
+          "batch_output_dir": "/dbfs/FileStore/youtube_lid_panel_batches",
+          "results_input_dir": "/dbfs/FileStore/youtube_lid_panel_batches/results",
+          "max_requests_per_file": "10000",
+          "max_output_tokens": "800",
+          "openai_reasoning_effort": "",
+          "gemini_thinking_level": "",
+          "deepseek_thinking_type": "",
+          "deepseek_reasoning_effort": "",
+          "panel_majority_mode": "reached_models",
+          "min_panel_votes_for_majority": "2",
+          "submit_batches": "true",
+          "submit_provider_filter": "deepseek",
+          "skip_existing_submitted_batches": "true",
+          "deepseek_max_workers": "4",
+          "deepseek_request_timeout_seconds": "45",
+          "deepseek_max_retries": "0",
+          "import_results": "false",
+          "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
+          "anthropic_secret_key": "anthropic-api-key",
+          "gemini_secret_key": "gemini-api-key",
+          "deepseek_secret_key": "deepseek-api-key"
+        }
+      }
+    },
+    {
+      "task_key": "terminate_matt_research_gencompute",
+      "depends_on": [
+        {
+          "task_key": "submit_lid_llm_validation_deepseek"
+        }
+      ],
+      "run_if": "ALL_DONE",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/99_terminate_cluster_databricks",
+        "base_parameters": {
+          "cluster_id": "0601-203643-bkxsqffg",
+          "reason": "lid_llm_validation_1000_20260610_deepseek_cleanup"
+        }
+      }
+    }
+  ]
+}

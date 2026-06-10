@@ -21,6 +21,23 @@ evaluated because no valid `channel_description` segments were present in the va
 Treat this README and the current notebook code as the operational source of truth. Historical planning,
 review, and validation-fix files should not be used as active runbooks.
 
+## Production source and output defaults
+
+The production LID source defaults are the top-of-ocean shaped tables:
+
+- `prod_tads.youtube_too.yt_sl_channels`
+- `prod_tads.youtube_too.yt_sl_videos`
+
+The full TOO run should use the same deduplicated channel universe as the earlier big LID run, not a freshly
+ranked subscriber cohort from `yt_sl_channels_metrics`. In the current workspace, the earlier big LID output
+`dev_sean.matt.yt_lid_v3_channels` has `run_id='default'` with 105,638 channel rows. Subscriber metrics are
+only auxiliary context unless a separate subscriber-cohort analysis run is explicitly requested.
+
+Output defaults are separated from source defaults. The notebook reads from `prod_tads.youtube_too` but writes
+the `yt_lid_v3_*` result family, preflight table, validation sample, ablation summary when enabled, and
+progress table to `dev_sean.matt` by default. Use `catalog`/`schema` for source location and
+`output_catalog`/`output_schema` for result location.
+
 ## Runtime requirements
 
 Requires **Databricks Runtime 13.0+ (Apache Spark 3.4+)**. The channel aggregation and validation-sampling
@@ -168,6 +185,94 @@ single label here" signal, not missing data.
 `consensus_source` records the tier that produced the current consensus, including
 `fasttext_agreement`, `fasttext_tail_agreement`, `taxonomy_normalized`, `reconciliation_rule`,
 `manual_adjudication_required`, and panel/human-review sources from the LLM adjudication workflow.
+
+## 10b. LLM adjudication panel secrets
+
+`03_language_llm_panel_databricks.py` writes request files for residual language-disagreement adjudication
+or for a reproducible random validation sample, and can optionally submit OpenAI, Anthropic, Gemini, and
+DeepSeek requests from Databricks. The notebook defaults to the shared project scope:
+
+```text
+secret_scope = youtube-llm-keys
+openai_secret_key = openai-api-key
+anthropic_secret_key = anthropic-api-key
+gemini_secret_key = gemini-api-key
+deepseek_secret_key = deepseek-api-key
+```
+
+Default model coverage by family and size/cost bracket:
+
+```text
+OpenAI:    gpt-5.5, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano, gpt-5-nano
+Anthropic: claude-opus-4-8, claude-sonnet-4-6, claude-haiku-4-5
+Gemini:    gemini-3.1-pro-preview, gemini-3.5-flash, gemini-3.1-flash-lite
+DeepSeek:  deepseek-v4-pro, deepseek-v4-flash
+```
+
+OpenAI, Anthropic, and Gemini use their provider batch APIs. DeepSeek uses the OpenAI-compatible
+`https://api.deepseek.com/chat/completions` path directly and writes parser-compatible result JSONL under
+`results_input_dir`.
+
+## 10c. Initial LLM secrets/API validation run
+
+Use this before any large residual-adjudication or category run. It classifies a reproducible random 1,000
+channels from the June 9, 2026 TOO LID output family and checks whether each provider key and parser path
+works end to end.
+
+Set the source widgets to the actual June 9 prefix written by notebook 01:
+
+```text
+catalog = dev_sean
+schema = matt
+comparison_table = yt_lid_v3_too_full_20260609_channel_model_comparison
+segments_input_table = yt_lid_v3_too_full_20260609_segments_input
+channel_text_features_table = yt_lid_v3_too_full_20260609_channel_text_features
+hindi_indic_audit_table = yt_lid_v3_too_full_20260609_hindi_indic_audit_candidates
+run_id = too_full_20260609
+inference_hash_buckets = 4096
+```
+
+Then set the validation controls:
+
+```text
+routing_mode = random_validation
+random_validation_sample_size = 1000
+random_validation_seed = 20260610
+max_output_tokens = 800
+submit_batches = false
+import_results = false
+panel_majority_mode = reached_models
+min_panel_votes_for_majority = 2
+panel_requests_table = yt_lid_v3_too_full_20260609_llm_validation_requests
+panel_batch_jobs_table = yt_lid_v3_too_full_20260609_llm_validation_batch_jobs
+panel_raw_results_table = yt_lid_v3_too_full_20260609_llm_validation_raw_results
+panel_verdicts_table = yt_lid_v3_too_full_20260609_llm_validation_verdicts
+panel_model_agreement_table = yt_lid_v3_too_full_20260609_llm_validation_model_agreement
+```
+
+Recommended sequence:
+
+1. Run once with `submit_batches=false` to materialize the request table and JSONL files. Confirm each model
+   has exactly 1,000 request rows.
+2. Set `submit_batches=true` for the provider/API smoke. OpenAI, Anthropic, and Gemini will create provider
+   batch jobs; DeepSeek will run direct requests and write result JSONL immediately under `results_input_dir`.
+3. Check provider batch status before import. The helper notebook
+   `.codex_databricks/check_lid_llm_batch_status_20260610.py` writes the latest Anthropic/Gemini status
+   snapshot to `yt_lid_v3_too_full_20260609_llm_validation_batch_status_check`.
+4. Download completed Anthropic/Gemini result files with
+   `.codex_databricks/download_lid_llm_batch_results_20260610.py`. It writes JSONL under
+   `results_input_dir/<run_id>/<provider>/<model>/` and records file counts in
+   `yt_lid_v3_too_full_20260609_llm_validation_result_files`.
+5. Rerun `03_language_llm_panel_databricks.py` with `submit_batches=false` and `import_results=true`.
+   Import reads `results_input_dir/<run_id>` when present, then writes raw parsed predictions, verdicts,
+   and the all-model pairwise agreement matrix.
+6. Review `yt_lid_v3_too_full_20260609_llm_validation_model_agreement` for all model-pair agreement and
+   `yt_lid_v3_too_full_20260609_llm_validation_verdicts` for majority coverage and panel-vs-fastText
+   top-line agreement.
+
+The language panel asks models for compact one-line JSON and defaults to `max_output_tokens=800`. This is
+intentional: the June 10 validation showed that Gemini frequently truncated pretty-printed JSON at 400
+tokens, which reduced valid parsed votes even though the batch jobs themselves succeeded.
 
 ## 11. GlotLID preprocessing caveat
 

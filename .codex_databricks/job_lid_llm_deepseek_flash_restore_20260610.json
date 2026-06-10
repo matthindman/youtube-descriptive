@@ -1,0 +1,30 @@
+{
+  "run_name": "lid_llm_validation_1000_20260610_deepseek_flash_restore",
+  "tasks": [
+    {
+      "task_key": "restore_deepseek_flash",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/run_lid_llm_deepseek_direct_20260610",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "too_full_20260609",
+          "panel_batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "request_base_dir": "/dbfs/FileStore/youtube_lid_panel_batches",
+          "results_input_dir": "/dbfs/FileStore/youtube_lid_panel_batches/results",
+          "models_csv": "deepseek-v4-flash",
+          "deepseek_max_workers": "4",
+          "deepseek_request_timeout_seconds": "60",
+          "deepseek_max_retries": "0",
+          "resume_existing_results": "false",
+          "process_pending_requests": "true",
+          "deepseek_transport": "urllib",
+          "secret_scope": "youtube-llm-keys",
+          "deepseek_secret_key": "deepseek-api-key"
+        }
+      }
+    }
+  ]
+}

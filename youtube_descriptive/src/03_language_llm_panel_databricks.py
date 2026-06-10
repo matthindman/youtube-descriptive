@@ -5,11 +5,11 @@
 # MAGIC **Run order:** run `01_language_openlid_v3_databricks` first (writes the `yt_lid_v3_*` tables),
 # MAGIC then run this notebook. This notebook does **not** re-run the fastText models.
 # MAGIC
-# MAGIC **What it does:** routes the small subset of channels where the two fastText models *disagree*
-# MAGIC (plus a tiny blind *audit* sample of the agreement bucket) to a three-LLM panel — OpenAI `gpt-5.5`,
-# MAGIC Anthropic `claude-opus-4-7`, Gemini `gemini-3.1-pro-preview` — adjudicates the written-metadata
-# MAGIC language, and reconciles a panel verdict by majority vote. It runs the panel **only on disagreement
-# MAGIC or audit cases**, never on the whole population.
+# MAGIC **What it does:** by default, routes the small subset of channels where the two fastText models
+# MAGIC *disagree* (plus a tiny blind *audit* sample of the agreement bucket) to a multi-model LLM panel.
+# MAGIC For API/secrets validation, set `routing_mode=random_validation` to classify a reproducible random
+# MAGIC sample from the notebook 01 comparison table. The panel adjudicates written-metadata language and
+# MAGIC writes per-model outputs, a majority verdict, and an all-model agreement matrix.
 # MAGIC
 # MAGIC **Inputs (from notebook 01):** `yt_lid_v3_channel_model_comparison`, `yt_lid_v3_segments_input`,
 # MAGIC optionally `yt_lid_v3_channel_text_features`.
@@ -23,7 +23,7 @@
 # MAGIC scope and reconciliation rules.
 
 # COMMAND ----------
-# MAGIC %pip install "openai>=2.0.0" anthropic "google-genai>=1.51.0" pandas pyarrow tenacity
+# MAGIC %pip install "openai>=2.0.0" anthropic "google-genai>=1.51.0" pandas pyarrow requests tenacity
 # COMMAND ----------
 dbutils.library.restartPython()
 
@@ -96,8 +96,13 @@ _create_text_widget("panel_requests_table", "yt_lid_v3_llm_panel_requests")
 _create_text_widget("panel_batch_jobs_table", "yt_lid_v3_llm_panel_batch_jobs")
 _create_text_widget("panel_raw_results_table", "yt_lid_v3_llm_panel_raw_results")
 _create_text_widget("panel_verdicts_table", "yt_lid_v3_llm_panel_verdicts")
+_create_text_widget("panel_model_agreement_table", "yt_lid_v3_llm_panel_model_agreement")
 
-# --- Routing controls (ONLY disagreement + audit cases) ---
+# --- Routing controls ---
+_create_text_widget("routing_mode", "residual_panel")  # residual_panel | random_validation
+_create_text_widget("random_validation_sample_size", "1000")
+_create_text_widget("random_validation_seed", "20260610")
+# Residual-panel routes. Ignored when routing_mode=random_validation.
 # Disagreement buckets (always routed).
 _create_text_widget("route_disagreement", "true")
 # Unresolved high-risk tail (consensus label NULL). Confident mutual-agreement tails keep their label and
@@ -119,29 +124,49 @@ _create_text_widget("max_video_descriptions", "4")
 _create_text_widget("max_segment_chars", "350")
 _create_text_widget("prompt_max_chars", "6000")
 
-# Models (three frontier panelists by default).
+# Models: mix frontier/mid/small providers by default for validation agreement matrices.
 DEFAULT_MODELS_JSON = json.dumps([
-    {"provider": "openai", "model": "gpt-5.5"},
-    {"provider": "anthropic", "model": "claude-opus-4-7"},
-    {"provider": "gemini", "model": "gemini-3.1-pro-preview"},
+    {"provider": "openai", "model": "gpt-5.5", "tier": "frontier"},
+    {"provider": "openai", "model": "gpt-5.4", "tier": "mid"},
+    {"provider": "openai", "model": "gpt-5.4-mini", "tier": "small"},
+    {"provider": "openai", "model": "gpt-5.4-nano", "tier": "nano"},
+    {"provider": "openai", "model": "gpt-5-nano", "tier": "nano_low_cost"},
+    {"provider": "anthropic", "model": "claude-opus-4-8", "tier": "frontier"},
+    {"provider": "anthropic", "model": "claude-sonnet-4-6", "tier": "mid"},
+    {"provider": "anthropic", "model": "claude-haiku-4-5", "tier": "small"},
+    {"provider": "gemini", "model": "gemini-3.1-pro-preview", "tier": "frontier"},
+    {"provider": "gemini", "model": "gemini-3.5-flash", "tier": "mid"},
+    {"provider": "gemini", "model": "gemini-3.1-flash-lite", "tier": "small"},
+    {"provider": "deepseek", "model": "deepseek-v4-pro", "tier": "frontier"},
+    {"provider": "deepseek", "model": "deepseek-v4-flash", "tier": "small"},
 ], ensure_ascii=False)
 _create_text_widget("models_json", DEFAULT_MODELS_JSON)
-_create_text_widget("max_output_tokens", "400")
+_create_text_widget("max_output_tokens", "800")
 _create_text_widget("temperature", "")  # blank = provider default
 _create_text_widget("openai_endpoint_mode", "auto")
-_create_text_widget("openai_reasoning_effort", "minimal")
-_create_text_widget("gemini_thinking_level", "low")
+_create_text_widget("openai_reasoning_effort", "")  # blank = omit reasoning/thinking controls
+_create_text_widget("gemini_thinking_level", "")  # blank = omit thinking controls
+_create_text_widget("deepseek_thinking_type", "")  # disabled | enabled | blank to omit
+_create_text_widget("deepseek_reasoning_effort", "")  # high | max; only used with enabled thinking
+_create_text_widget("deepseek_max_workers", "8")
+_create_text_widget("deepseek_request_timeout_seconds", "60")
+_create_text_widget("deepseek_max_retries", "1")
 
 # Batch I/O.
 _create_text_widget("batch_output_dir", "/dbfs/FileStore/youtube_lid_panel_batches")
 _create_text_widget("max_requests_per_file", "10000")
 _create_text_widget("submit_batches", "false")
+_create_text_widget("submit_provider_filter", "")  # blank = all; comma-separated provider names
+_create_text_widget("skip_existing_submitted_batches", "true")
 _create_text_widget("import_results", "false")
 _create_text_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batches/results")
-_create_text_widget("secret_scope", "llm-api-keys")
-_create_text_widget("openai_secret_key", "openai_api_key")
-_create_text_widget("anthropic_secret_key", "anthropic_api_key")
-_create_text_widget("gemini_secret_key", "gemini_api_key")
+_create_text_widget("panel_majority_mode", "reached_models")  # reached_models | configured_models
+_create_text_widget("min_panel_votes_for_majority", "2")
+_create_text_widget("secret_scope", "youtube-llm-keys")
+_create_text_widget("openai_secret_key", "openai-api-key")
+_create_text_widget("anthropic_secret_key", "anthropic-api-key")
+_create_text_widget("gemini_secret_key", "gemini-api-key")
+_create_text_widget("deepseek_secret_key", "deepseek-api-key")
 
 # COMMAND ----------
 CATALOG = _get_widget("catalog", "dev_sean")
@@ -157,7 +182,11 @@ PANEL_REQUESTS_TABLE = _get_widget("panel_requests_table", "yt_lid_v3_llm_panel_
 PANEL_BATCH_JOBS_TABLE = _get_widget("panel_batch_jobs_table", "yt_lid_v3_llm_panel_batch_jobs")
 PANEL_RAW_RESULTS_TABLE = _get_widget("panel_raw_results_table", "yt_lid_v3_llm_panel_raw_results")
 PANEL_VERDICTS_TABLE = _get_widget("panel_verdicts_table", "yt_lid_v3_llm_panel_verdicts")
+PANEL_MODEL_AGREEMENT_TABLE = _get_widget("panel_model_agreement_table", "yt_lid_v3_llm_panel_model_agreement")
 
+ROUTING_MODE = _get_widget("routing_mode", "residual_panel").strip().lower()
+RANDOM_VALIDATION_SAMPLE_SIZE = _get_int_widget("random_validation_sample_size", 1000)
+RANDOM_VALIDATION_SEED = _get_widget("random_validation_seed", "20260610").strip()
 ROUTE_DISAGREEMENT = _get_bool_widget("route_disagreement", True)
 ROUTE_UNRESOLVED_TAIL = _get_bool_widget("route_unresolved_tail", True)
 ROUTE_SHARED_BIAS = _get_bool_widget("route_shared_bias_english_indic", True)
@@ -173,21 +202,56 @@ MAX_SEGMENT_CHARS = _get_int_widget("max_segment_chars", 350)
 PROMPT_MAX_CHARS = _get_int_widget("prompt_max_chars", 6000)
 
 MODELS = json.loads(_get_widget("models_json", DEFAULT_MODELS_JSON))
-MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 400)
+MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 800)
 TEMPERATURE = _get_optional_float_widget("temperature", None)
 OPENAI_ENDPOINT_MODE = _get_widget("openai_endpoint_mode", "auto").strip().lower()
-OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "minimal").strip()
-GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "low").strip()
+OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "").strip()
+GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "").strip()
+DEEPSEEK_THINKING_TYPE = _get_widget("deepseek_thinking_type", "").strip().lower()
+DEEPSEEK_REASONING_EFFORT = _get_widget("deepseek_reasoning_effort", "").strip().lower()
+DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 8)
+DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _get_float_widget("deepseek_request_timeout_seconds", 60.0)
+DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 1)
 
 BATCH_OUTPUT_DIR = _get_widget("batch_output_dir", "/dbfs/FileStore/youtube_lid_panel_batches")
 MAX_REQUESTS_PER_FILE = _get_int_widget("max_requests_per_file", 10000)
 SUBMIT_BATCHES = _get_bool_widget("submit_batches", False)
+SUBMIT_PROVIDER_FILTER_RAW = _get_widget("submit_provider_filter", "").strip().lower()
+SUBMIT_PROVIDER_FILTER = {p.strip() for p in SUBMIT_PROVIDER_FILTER_RAW.split(",") if p.strip()}
+SKIP_EXISTING_SUBMITTED_BATCHES = _get_bool_widget("skip_existing_submitted_batches", True)
 IMPORT_RESULTS = _get_bool_widget("import_results", False)
 RESULTS_INPUT_DIR = _get_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batches/results")
-SECRET_SCOPE = _get_widget("secret_scope", "llm-api-keys")
-OPENAI_SECRET_KEY = _get_widget("openai_secret_key", "openai_api_key")
-ANTHROPIC_SECRET_KEY = _get_widget("anthropic_secret_key", "anthropic_api_key")
-GEMINI_SECRET_KEY = _get_widget("gemini_secret_key", "gemini_api_key")
+PANEL_MAJORITY_MODE = _get_widget("panel_majority_mode", "reached_models").strip().lower()
+MIN_PANEL_VOTES_FOR_MAJORITY = _get_int_widget("min_panel_votes_for_majority", 2)
+DEFAULT_SECRET_SCOPE = "youtube-llm-keys"
+DEFAULT_SECRET_KEYS = {
+    "openai": "openai-api-key",
+    "anthropic": "anthropic-api-key",
+    "gemini": "gemini-api-key",
+    "deepseek": "deepseek-api-key",
+}
+
+
+def _normalize_secret_scope(raw: str) -> str:
+    value = (raw or "").strip()
+    if value in {"", "llm-api-keys"}:
+        return DEFAULT_SECRET_SCOPE
+    return value
+
+
+def _normalize_secret_key(provider: str, raw: str) -> str:
+    value = (raw or "").strip()
+    legacy_default = f"{provider}_api_key"
+    if value in {"", legacy_default}:
+        return DEFAULT_SECRET_KEYS[provider]
+    return value
+
+
+SECRET_SCOPE = _normalize_secret_scope(_get_widget("secret_scope", DEFAULT_SECRET_SCOPE))
+OPENAI_SECRET_KEY = _normalize_secret_key("openai", _get_widget("openai_secret_key", DEFAULT_SECRET_KEYS["openai"]))
+ANTHROPIC_SECRET_KEY = _normalize_secret_key("anthropic", _get_widget("anthropic_secret_key", DEFAULT_SECRET_KEYS["anthropic"]))
+GEMINI_SECRET_KEY = _normalize_secret_key("gemini", _get_widget("gemini_secret_key", DEFAULT_SECRET_KEYS["gemini"]))
+DEEPSEEK_SECRET_KEY = _normalize_secret_key("deepseek", _get_widget("deepseek_secret_key", DEFAULT_SECRET_KEYS["deepseek"]))
 
 
 def fqtn(table: str) -> str:
@@ -198,6 +262,20 @@ def safe_model_dir(model: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]", "_", model or "model")
 
 
+def spark_path(path: str) -> str:
+    path = (path or "").rstrip("/")
+    if path.startswith("/dbfs/"):
+        return "dbfs:/" + path[len("/dbfs/"):]
+    return path
+
+
+def local_fs_path(path: str) -> str:
+    path = (path or "").rstrip("/")
+    if path.startswith("dbfs:/"):
+        return "/dbfs/" + path[len("dbfs:/"):]
+    return path
+
+
 comparison_full = fqtn(COMPARISON_TABLE)
 segments_input_full = fqtn(SEGMENTS_INPUT_TABLE)
 channel_text_features_full = fqtn(CHANNEL_TEXT_FEATURES_TABLE)
@@ -206,6 +284,7 @@ panel_requests_full = fqtn(PANEL_REQUESTS_TABLE)
 panel_batch_jobs_full = fqtn(PANEL_BATCH_JOBS_TABLE)
 panel_raw_results_full = fqtn(PANEL_RAW_RESULTS_TABLE)
 panel_verdicts_full = fqtn(PANEL_VERDICTS_TABLE)
+panel_model_agreement_full = fqtn(PANEL_MODEL_AGREEMENT_TABLE)
 panel_batch_files_full = fqtn(PANEL_REQUESTS_TABLE + "_batch_files")
 
 # D4: idempotent, run-scoped writes — re-running the same run_id overwrites only its own partition,
@@ -244,7 +323,6 @@ def write_run_scoped(df, table_full, extra_partitions=None):
         (
             df.write.format("delta")
             .mode("overwrite")
-            .option("overwriteSchema", "true")
             .partitionBy(*parts)
             .saveAsTable(table_full)
         )
@@ -299,11 +377,36 @@ ARABIC_FAMILY_ISO = {"ara", "arb", "ary", "arz", "apc", "ars", "ajp", "aeb", "ac
 # South-Asian source language codes used to flag the romanized-Indic shared-bias route (D3).
 SOURCE_INDIC_CODES = {"hi", "hi-in", "hin", "ne", "ne-np", "npi", "bho", "ur", "ur-pk", "pa", "gu", "mr", "bn", "ta", "te", "kn", "ml", "or", "si"}
 
+if ROUTING_MODE not in {"residual_panel", "random_validation"}:
+    raise ValueError("routing_mode must be residual_panel or random_validation")
+if RANDOM_VALIDATION_SAMPLE_SIZE < 1:
+    raise ValueError("random_validation_sample_size must be positive")
+if DEEPSEEK_THINKING_TYPE not in {"", "enabled", "disabled"}:
+    raise ValueError("deepseek_thinking_type must be blank, enabled, or disabled")
+if DEEPSEEK_REASONING_EFFORT and DEEPSEEK_REASONING_EFFORT not in {"high", "max"}:
+    raise ValueError("deepseek_reasoning_effort must be blank, high, or max")
+if DEEPSEEK_MAX_WORKERS < 1:
+    raise ValueError("deepseek_max_workers must be at least 1")
+if DEEPSEEK_REQUEST_TIMEOUT_SECONDS <= 0:
+    raise ValueError("deepseek_request_timeout_seconds must be positive")
+if DEEPSEEK_MAX_RETRIES < 0:
+    raise ValueError("deepseek_max_retries must be non-negative")
+if not SUBMIT_PROVIDER_FILTER.issubset({"openai", "anthropic", "gemini", "deepseek"}):
+    raise ValueError("submit_provider_filter may only contain openai, anthropic, gemini, and/or deepseek")
+if PANEL_MAJORITY_MODE not in {"reached_models", "configured_models"}:
+    raise ValueError("panel_majority_mode must be reached_models or configured_models")
+if MIN_PANEL_VOTES_FOR_MAJORITY < 1:
+    raise ValueError("min_panel_votes_for_majority must be positive")
+
 print("Source comparison table:", comparison_full, "| run_id:", RUN_ID)
-print("Panel models:", ", ".join(f"{m['provider']}:{m['model']}" for m in MODELS))
-print("Routes -> disagreement:", ROUTE_DISAGREEMENT, "| unresolved_tail:", ROUTE_UNRESOLVED_TAIL,
-      "| shared_bias_english_indic:", ROUTE_SHARED_BIAS, "| agreement_audit:", ROUTE_AGREEMENT_AUDIT,
-      f"({AGREEMENT_AUDIT_FRACTION:.4f})")
+print("Panel models:", ", ".join(f"{m['provider']}:{m['model']}[{m.get('tier', 'unspecified')}]" for m in MODELS))
+print("Routing mode:", ROUTING_MODE)
+if ROUTING_MODE == "random_validation":
+    print(f"Random validation sample: n={RANDOM_VALIDATION_SAMPLE_SIZE:,}, seed={RANDOM_VALIDATION_SEED}")
+else:
+    print("Routes -> disagreement:", ROUTE_DISAGREEMENT, "| unresolved_tail:", ROUTE_UNRESOLVED_TAIL,
+          "| shared_bias_english_indic:", ROUTE_SHARED_BIAS, "| agreement_audit:", ROUTE_AGREEMENT_AUDIT,
+          f"({AGREEMENT_AUDIT_FRACTION:.4f})")
 
 # COMMAND ----------
 # MAGIC %md
@@ -333,8 +436,9 @@ MIXED LANGUAGE: if a second language recurs across multiple fields, set secondar
 
 ABSTAIN rather than guess: if the supplied metadata has no usable text, status="insufficient_text" and leave labels null. Otherwise status="classified".
 
-Base the judgment ONLY on the supplied text; quote the specific evidence. NEVER invent content. Return ONE JSON object, nothing else:
-{"status":"classified|insufficient_text","primary_language_label":"iso_Script|null","primary_language_iso639_3":"iso|null","primary_language_script":"Script|null","is_romanized":true|false,"dialect_or_variant":"iso|null","is_high_risk_tail":true|false,"secondary_language_label":"iso_Script|null","is_mixed_language":true|false,"mixed_languages":["iso_Script"],"confidence":"high|medium|low","evidence":"1-2 sentences quoting the text that drove the decision"}"""
+Base the judgment ONLY on the supplied text. NEVER invent content. Return ONE compact, minified JSON object
+on one line, nothing else. Keep evidence <=160 characters and quote only the shortest decisive text:
+{"status":"classified|insufficient_text","primary_language_label":"iso_Script|null","primary_language_iso639_3":"iso|null","primary_language_script":"Script|null","is_romanized":true|false,"dialect_or_variant":"iso|null","is_high_risk_tail":true|false,"secondary_language_label":"iso_Script|null","is_mixed_language":true|false,"mixed_languages":["iso_Script"],"confidence":"high|medium|low","evidence":"<=160 chars"}"""
 
 # Response JSON schema for providers that enforce structured output (OpenAI Responses / Gemini).
 LANG_RESPONSE_JSON_SCHEMA = {
@@ -352,7 +456,7 @@ LANG_RESPONSE_JSON_SCHEMA = {
         "is_mixed_language": {"type": "boolean"},
         "mixed_languages": {"type": "array", "items": {"type": "string"}},
         "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
-        "evidence": {"type": "string"},
+        "evidence": {"type": "string", "maxLength": 180},
     },
     "required": ["status", "primary_language_label", "is_romanized", "is_high_risk_tail",
                  "is_mixed_language", "confidence", "evidence"],
@@ -360,7 +464,7 @@ LANG_RESPONSE_JSON_SCHEMA = {
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 3. Routing — select ONLY disagreement + audit channels from notebook 01's output
+# MAGIC ## 3. Routing — select residual-panel cases or a random validation sample from notebook 01's output
 
 # COMMAND ----------
 cmp_df = spark.table(comparison_full).where(
@@ -386,88 +490,99 @@ AGREEMENT_STATUSES = [
 
 route_frames = []
 
-if ROUTE_DISAGREEMENT:
-    d = cmp_df.where(F.col("consensus_status").isin(*DISAGREEMENT_STATUSES))
-    if EXCLUDE_ARABIC_FAMILY_PAIRS:
-        d = d.where(~F.coalesce(both_arabic, F.lit(False)))
-    route_frames.append(d.withColumn("route_reason", F.lit("disagreement")))
-
-if ROUTE_UNRESOLVED_TAIL:
-    # Unresolved tail only: confident mutual-agreement tails already carry a consensus label (kept final).
-    t = cmp_df.where(
-        (F.col("consensus_status") == F.lit("high_risk_tail_label_needs_review"))
-        & F.col("consensus_language_label").isNull()
+if ROUTING_MODE == "random_validation":
+    # Seeded, reproducible sample from the full notebook-01 comparison table. This is intended for
+    # API/secrets smoke validation, not adjudication of only the residual-review queue.
+    sample_order = F.xxhash64(F.concat_ws("|", F.col("channel_id"), F.lit(RANDOM_VALIDATION_SEED)))
+    route_frames.append(
+        cmp_df
+        .orderBy(sample_order, F.col("channel_id"))
+        .limit(RANDOM_VALIDATION_SAMPLE_SIZE)
+        .withColumn("route_reason", F.lit("random_validation"))
     )
-    route_frames.append(t.withColumn("route_reason", F.lit("unresolved_tail")))
+else:
+    if ROUTE_DISAGREEMENT:
+        d = cmp_df.where(F.col("consensus_status").isin(*DISAGREEMENT_STATUSES))
+        if EXCLUDE_ARABIC_FAMILY_PAIRS:
+            d = d.where(~F.coalesce(both_arabic, F.lit(False)))
+        route_frames.append(d.withColumn("route_reason", F.lit("disagreement")))
 
-if ROUTE_SHARED_BIAS:
-    # D3: both models agree on English, but Indic evidence contradicts. Reuse channel_text_features
-    # for metadata signals and hindi_indic_audit for source-language evidence when available.
-    text_feat_cols = set(spark.table(channel_text_features_full).columns) if _table_exists_full(channel_text_features_full) else set()
-    hindi_audit_cols = set(spark.table(hindi_indic_audit_full).columns) if _table_exists_full(hindi_indic_audit_full) else set()
-    sig = cmp_df.where(F.col("consensus_language_iso639_3") == F.lit("eng"))
-    indic_signal = F.lit(False)
-    if text_feat_cols:
-        # D4: run-scope the auxiliary join (channel_text_features is per-run partitioned) and dedupe to one
-        # row per channel, so we never pull rows from another run or fan out the comparison rows.
-        tf = spark.table(channel_text_features_full)
-        if "run_id" in text_feat_cols:
-            tf = tf.where(F.col("run_id") == F.lit(RUN_ID))
-        if "inference_hash_buckets" in text_feat_cols:
-            tf = tf.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
-        tf_select = ["channel_id"]
-        if "contains_devanagari_metadata" in text_feat_cols:
-            tf_select.append(F.col("contains_devanagari_metadata").alias("tf_contains_devanagari_metadata"))
-        if "romanized_indic_keyword_count" in text_feat_cols:
-            tf_select.append(F.col("romanized_indic_keyword_count").alias("tf_romanized_indic_keyword_count"))
-        tf = tf.select(*tf_select).dropDuplicates(["channel_id"])
-        sig = sig.join(tf, on="channel_id", how="left")
-        if "contains_devanagari_metadata" in text_feat_cols:
-            indic_signal = indic_signal | F.coalesce(F.col("tf_contains_devanagari_metadata"), F.lit(False))
-        if "romanized_indic_keyword_count" in text_feat_cols:
-            indic_signal = indic_signal | (F.coalesce(F.col("tf_romanized_indic_keyword_count"), F.lit(0)) > 0)
-    if hindi_audit_cols:
-        # D4: run-scope the Hindi/Indic audit join too; source_language_value is written there, not in
-        # channel_text_features, so this preserves the D3 source-code trigger.
-        hi = spark.table(hindi_indic_audit_full)
-        if "run_id" in hindi_audit_cols:
-            hi = hi.where(F.col("run_id") == F.lit(RUN_ID))
-        if "inference_hash_buckets" in hindi_audit_cols:
-            hi = hi.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
-        hi_select = ["channel_id"]
-        if "contains_devanagari_metadata" in hindi_audit_cols:
-            hi_select.append(F.col("contains_devanagari_metadata").alias("hi_contains_devanagari_metadata"))
-        if "romanized_indic_keyword_count" in hindi_audit_cols:
-            hi_select.append(F.col("romanized_indic_keyword_count").alias("hi_romanized_indic_keyword_count"))
-        if "source_language_value" in hindi_audit_cols:
-            hi_select.append(F.lower(F.trim(F.col("source_language_value").cast("string"))).alias("hi_source_language_value"))
-        hi = hi.select(*hi_select).dropDuplicates(["channel_id"])
-        sig = sig.join(hi, on="channel_id", how="left")
-        if "contains_devanagari_metadata" in hindi_audit_cols:
-            indic_signal = indic_signal | F.coalesce(F.col("hi_contains_devanagari_metadata"), F.lit(False))
-        if "romanized_indic_keyword_count" in hindi_audit_cols:
-            indic_signal = indic_signal | (F.coalesce(F.col("hi_romanized_indic_keyword_count"), F.lit(0)) > 0)
-        if "source_language_value" in hindi_audit_cols:
-            indic_signal = indic_signal | F.col("hi_source_language_value").isin(*sorted(SOURCE_INDIC_CODES))
-    sig = sig.where(indic_signal)
-    route_frames.append(sig.select(*cmp_df.columns, F.lit("shared_bias_english_indic").alias("route_reason")))
+    if ROUTE_UNRESOLVED_TAIL:
+        # Unresolved tail only: confident mutual-agreement tails already carry a consensus label (kept final).
+        t = cmp_df.where(
+            (F.col("consensus_status") == F.lit("high_risk_tail_label_needs_review"))
+            & F.col("consensus_language_label").isNull()
+        )
+        route_frames.append(t.withColumn("route_reason", F.lit("unresolved_tail")))
 
-if ROUTE_AGREEMENT_AUDIT:
-    # E3: uniform-random blind sample of the agreement bucket (deterministic hash) to measure accuracy/bias.
-    audit_threshold = int(max(0.0, min(1.0, AGREEMENT_AUDIT_FRACTION)) * 1_000_000)
-    a = (
-        cmp_df.where(F.col("consensus_status").isin(*AGREEMENT_STATUSES))
-        .where(F.pmod(F.xxhash64(F.concat_ws("|", F.col("channel_id"), F.lit(AGREEMENT_AUDIT_SEED))), F.lit(1_000_000)) < F.lit(audit_threshold))
-        .withColumn("route_reason", F.lit("agreement_audit"))
-    )
-    route_frames.append(a)
+    if ROUTE_SHARED_BIAS:
+        # D3: both models agree on English, but Indic evidence contradicts. Reuse channel_text_features
+        # for metadata signals and hindi_indic_audit for source-language evidence when available.
+        text_feat_cols = set(spark.table(channel_text_features_full).columns) if _table_exists_full(channel_text_features_full) else set()
+        hindi_audit_cols = set(spark.table(hindi_indic_audit_full).columns) if _table_exists_full(hindi_indic_audit_full) else set()
+        sig = cmp_df.where(F.col("consensus_language_iso639_3") == F.lit("eng"))
+        indic_signal = F.lit(False)
+        if text_feat_cols:
+            # D4: run-scope the auxiliary join (channel_text_features is per-run partitioned) and dedupe to one
+            # row per channel, so we never pull rows from another run or fan out the comparison rows.
+            tf = spark.table(channel_text_features_full)
+            if "run_id" in text_feat_cols:
+                tf = tf.where(F.col("run_id") == F.lit(RUN_ID))
+            if "inference_hash_buckets" in text_feat_cols:
+                tf = tf.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
+            tf_select = ["channel_id"]
+            if "contains_devanagari_metadata" in text_feat_cols:
+                tf_select.append(F.col("contains_devanagari_metadata").alias("tf_contains_devanagari_metadata"))
+            if "romanized_indic_keyword_count" in text_feat_cols:
+                tf_select.append(F.col("romanized_indic_keyword_count").alias("tf_romanized_indic_keyword_count"))
+            tf = tf.select(*tf_select).dropDuplicates(["channel_id"])
+            sig = sig.join(tf, on="channel_id", how="left")
+            if "contains_devanagari_metadata" in text_feat_cols:
+                indic_signal = indic_signal | F.coalesce(F.col("tf_contains_devanagari_metadata"), F.lit(False))
+            if "romanized_indic_keyword_count" in text_feat_cols:
+                indic_signal = indic_signal | (F.coalesce(F.col("tf_romanized_indic_keyword_count"), F.lit(0)) > 0)
+        if hindi_audit_cols:
+            # D4: run-scope the Hindi/Indic audit join too; source_language_value is written there, not in
+            # channel_text_features, so this preserves the D3 source-code trigger.
+            hi = spark.table(hindi_indic_audit_full)
+            if "run_id" in hindi_audit_cols:
+                hi = hi.where(F.col("run_id") == F.lit(RUN_ID))
+            if "inference_hash_buckets" in hindi_audit_cols:
+                hi = hi.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
+            hi_select = ["channel_id"]
+            if "contains_devanagari_metadata" in hindi_audit_cols:
+                hi_select.append(F.col("contains_devanagari_metadata").alias("hi_contains_devanagari_metadata"))
+            if "romanized_indic_keyword_count" in hindi_audit_cols:
+                hi_select.append(F.col("romanized_indic_keyword_count").alias("hi_romanized_indic_keyword_count"))
+            if "source_language_value" in hindi_audit_cols:
+                hi_select.append(F.lower(F.trim(F.col("source_language_value").cast("string"))).alias("hi_source_language_value"))
+            hi = hi.select(*hi_select).dropDuplicates(["channel_id"])
+            sig = sig.join(hi, on="channel_id", how="left")
+            if "contains_devanagari_metadata" in hindi_audit_cols:
+                indic_signal = indic_signal | F.coalesce(F.col("hi_contains_devanagari_metadata"), F.lit(False))
+            if "romanized_indic_keyword_count" in hindi_audit_cols:
+                indic_signal = indic_signal | (F.coalesce(F.col("hi_romanized_indic_keyword_count"), F.lit(0)) > 0)
+            if "source_language_value" in hindi_audit_cols:
+                indic_signal = indic_signal | F.col("hi_source_language_value").isin(*sorted(SOURCE_INDIC_CODES))
+        sig = sig.where(indic_signal)
+        route_frames.append(sig.select(*cmp_df.columns, F.lit("shared_bias_english_indic").alias("route_reason")))
+
+    if ROUTE_AGREEMENT_AUDIT:
+        # E3: uniform-random blind sample of the agreement bucket (deterministic hash) to measure accuracy/bias.
+        audit_threshold = int(max(0.0, min(1.0, AGREEMENT_AUDIT_FRACTION)) * 1_000_000)
+        a = (
+            cmp_df.where(F.col("consensus_status").isin(*AGREEMENT_STATUSES))
+            .where(F.pmod(F.xxhash64(F.concat_ws("|", F.col("channel_id"), F.lit(AGREEMENT_AUDIT_SEED))), F.lit(1_000_000)) < F.lit(audit_threshold))
+            .withColumn("route_reason", F.lit("agreement_audit"))
+        )
+        route_frames.append(a)
 
 if not route_frames:
-    raise ValueError("No routes enabled. Enable at least one route_* widget.")
+    raise ValueError("No channels routed. Check routing_mode and route_* widgets.")
 
 # Union; if a channel matches multiple routes, keep the highest-priority reason.
 _priority = F.create_map(*sum([[F.lit(k), F.lit(v)] for k, v in {
-    "disagreement": 0, "unresolved_tail": 1, "shared_bias_english_indic": 2, "agreement_audit": 3,
+    "random_validation": 0, "disagreement": 1, "unresolved_tail": 2, "shared_bias_english_indic": 3, "agreement_audit": 4,
 }.items()], []))
 routed = route_frames[0]
 for rf in route_frames[1:]:
@@ -601,12 +716,18 @@ routed_prompts = routed.join(prompts, on="channel_id", how="left").withColumn(
 )
 
 # Fan out to one request per (channel, model).
-models_df = spark.createDataFrame([(m["provider"], m["model"]) for m in MODELS], ["provider", "model"])
+models_df = spark.createDataFrame(
+    [(m["provider"], m["model"], m.get("tier", "unspecified")) for m in MODELS],
+    ["provider", "model", "model_tier"],
+)
 requests = (
     routed_prompts.crossJoin(models_df)
     # D4: run-scope the request identity so results from other runs can't collide on import.
     .withColumn("run_id", F.lit(RUN_ID))
-    .withColumn("request_id", F.concat_ws("__", F.lit(RUN_ID), F.col("provider"), F.col("model"), F.col("channel_id")))
+    .withColumn(
+        "request_id",
+        F.concat(F.lit("yl_"), F.substring(F.sha2(F.concat_ws("||", F.col("run_id"), F.col("provider"), F.col("model"), F.col("channel_id")), 256), 1, 61)),
+    )
     .withColumn("system_prompt", F.lit(SYSTEM_PROMPT))
     .withColumn("temperature", F.lit(TEMPERATURE).cast("double") if TEMPERATURE is not None else F.lit(None).cast("double"))
     .withColumn("max_output_tokens", F.lit(MAX_OUTPUT_TOKENS))
@@ -614,7 +735,7 @@ requests = (
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 5. Build provider batch lines (reuses notebook 02's request format)
+# MAGIC ## 5. Build provider request lines
 
 # COMMAND ----------
 def _is_openai_reasoning_or_gpt5_model(model: Optional[str]) -> bool:
@@ -673,14 +794,31 @@ def make_batch_line(provider: str, model: str, request_id: str, system_prompt: s
             params["temperature"] = temp
         obj = {"custom_id": request_id, "params": params}
     elif provider == "gemini":
-        generation_config = {"max_output_tokens": max_out,
-                             "response_format": {"text": {"mime_type": "application/json", "schema": LANG_RESPONSE_JSON_SCHEMA}}}
+        generation_config = {"max_output_tokens": max_out, "response_mime_type": "application/json"}
         if temp is not None:
             generation_config["temperature"] = temp
         if GEMINI_THINKING_LEVEL:
             generation_config["thinking_config"] = {"thinking_level": GEMINI_THINKING_LEVEL}
         obj = {"key": request_id, "request": {"system_instruction": {"parts": [{"text": system_prompt}]},
                "contents": [{"role": "user", "parts": [{"text": user_prompt}]}], "generation_config": generation_config}}
+    elif provider == "deepseek":
+        body = {
+            "model": model,
+            "response_format": {"type": "json_object"},
+            "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
+            "max_tokens": max_out,
+            "stream": False,
+        }
+        if DEEPSEEK_THINKING_TYPE:
+            if DEEPSEEK_THINKING_TYPE != "disabled":
+                body["extra_body"] = {"thinking": {"type": DEEPSEEK_THINKING_TYPE}}
+        if DEEPSEEK_REASONING_EFFORT:
+            body.setdefault("extra_body", {})["reasoning_effort"] = DEEPSEEK_REASONING_EFFORT
+        if temp is not None:
+            body["temperature"] = temp
+        # DeepSeek is OpenAI-compatible for chat completions, but does not use the provider Batch API here.
+        # The submit step calls these request bodies directly and writes result JSONL for the common parser.
+        obj = {"custom_id": request_id, "method": "POST", "url": "/chat/completions", "body": body}
     else:
         raise ValueError(f"Unsupported provider: {provider}")
     return json.dumps(obj, ensure_ascii=False)
@@ -738,7 +876,7 @@ print("Batch files written under", run_dir)
 
 # COMMAND ----------
 # MAGIC %md
-# MAGIC ## 6. Optional: submit batches (set submit_batches=true; reads API keys from Databricks Secrets)
+# MAGIC ## 6. Optional: submit batches/direct requests (set submit_batches=true; reads API keys from Databricks Secrets)
 
 # COMMAND ----------
 def get_secret(scope: str, key: str) -> str:
@@ -777,6 +915,117 @@ def submit_gemini_batch(path: str, model: str) -> Dict[str, Any]:
     }
 
 
+def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    import requests
+
+    api_key = get_secret(SECRET_SCOPE, DEEPSEEK_SECRET_KEY)
+    thread_state = threading.local()
+    result_dir = os.path.join(RESULTS_INPUT_DIR, RUN_ID, "deepseek", safe_model_dir(model))
+    os.makedirs(result_dir, exist_ok=True)
+    result_path = os.path.join(result_dir, os.path.basename(path).replace(".jsonl", "_results.jsonl"))
+    n_ok = 0
+    n_error = 0
+
+    def _session():
+        session = getattr(thread_state, "session", None)
+        if session is None:
+            session = requests.Session()
+            thread_state.session = session
+        return session
+
+    def _parse_response_body(response):
+        try:
+            return response.json()
+        except Exception:
+            return {"text": response.text[:4000]}
+
+    def _call_line(line: str):
+        req = {}
+        try:
+            req = json.loads(line)
+            custom_id = req.get("custom_id") or req.get("key")
+            body = dict(req["body"])
+            extra_body = body.pop("extra_body", None)
+            if isinstance(extra_body, dict):
+                body.update(extra_body)
+            last_error = None
+            for attempt in range(DEEPSEEK_MAX_RETRIES + 1):
+                try:
+                    response = _session().post(
+                        "https://api.deepseek.com/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json=body,
+                        timeout=DEEPSEEK_REQUEST_TIMEOUT_SECONDS,
+                    )
+                    response_body = _parse_response_body(response)
+                    out = {
+                        "custom_id": custom_id,
+                        "response": {
+                            "status_code": response.status_code,
+                            "body": response_body,
+                        },
+                    }
+                    if 200 <= response.status_code < 300:
+                        return out, True
+                    last_error = response.text[:2000]
+                    if response.status_code not in {408, 409, 429, 500, 502, 503, 504} or attempt >= DEEPSEEK_MAX_RETRIES:
+                        out["error"] = last_error
+                        return out, False
+                except Exception as e:
+                    last_error = repr(e)[:2000]
+                    if attempt >= DEEPSEEK_MAX_RETRIES:
+                        out = {
+                            "custom_id": custom_id,
+                            "response": {"status_code": 500, "error": last_error},
+                            "error": last_error,
+                        }
+                        return out, False
+                time.sleep(min(2 ** attempt, 8))
+            out = {"custom_id": custom_id, "response": {"status_code": 500, "error": last_error}, "error": last_error}
+            return out, False
+        except Exception as e:
+            custom_id = None
+            try:
+                custom_id = req.get("custom_id") or req.get("key")
+            except Exception:
+                pass
+            out = {"custom_id": custom_id, "response": {"status_code": 500, "error": repr(e)[:2000]}, "error": repr(e)[:2000]}
+            return out, False
+
+    with open(path, "r", encoding="utf-8") as src:
+        lines = [line for line in src if line.strip()]
+
+    total = len(lines)
+    print(f"DeepSeek direct {model}: {total:,} requests with {DEEPSEEK_MAX_WORKERS} workers")
+    with open(result_path, "w", encoding="utf-8") as dst:
+        with ThreadPoolExecutor(max_workers=DEEPSEEK_MAX_WORKERS) as pool:
+            futures = [pool.submit(_call_line, line) for line in lines]
+            for i, fut in enumerate(as_completed(futures), start=1):
+                out, ok = fut.result()
+                if ok:
+                    n_ok += 1
+                else:
+                    n_error += 1
+                dst.write(json.dumps(out, ensure_ascii=False) + "\n")
+                if i % 100 == 0 or i == total:
+                    dst.flush()
+                    print(f"DeepSeek direct {model}: {i:,}/{total:,} done; ok={n_ok:,}; error={n_error:,}")
+
+    status = "completed" if n_error == 0 else "completed_with_errors"
+    return {
+        "provider_file_id": result_path,
+        "provider_batch_id": f"deepseek-direct:{RUN_ID}:{safe_model_dir(model)}:{os.path.basename(path)}",
+        "provider_status": f"{status}; ok={n_ok}; error={n_error}",
+    }
+
+
 batch_job_schema = StructType([
     StructField("run_id", StringType(), True),
     StructField("provider", StringType(), True),
@@ -794,19 +1043,69 @@ batch_job_schema = StructType([
     StructField("submission_error", StringType(), True),
 ])
 
+def persist_batch_job_records(records):
+    if records:
+        batch_jobs_df = spark.createDataFrame(records, batch_job_schema)
+        write_run_scoped(batch_jobs_df, panel_batch_jobs_full)
+        print(f"Wrote {len(records):,} batch-job records to", panel_batch_jobs_full)
+
+
+def existing_batch_job_records():
+    if not (SKIP_EXISTING_SUBMITTED_BATCHES and _table_exists_full(panel_batch_jobs_full)):
+        return []
+    existing = (
+        spark.table(panel_batch_jobs_full)
+        .where(F.col("run_id") == F.lit(RUN_ID))
+    )
+    records = []
+    for row in existing.collect():
+        records.append(tuple(row[f.name] if f.name in row.asDict(recursive=False) else None for f in batch_job_schema.fields))
+    if records:
+        print(f"Found {len(records):,} existing batch-job records for this run.")
+    return records
+
+
 if SUBMIT_BATCHES:
-    batch_job_records = []
+    batch_job_records = existing_batch_job_records()
+    already_submitted = set()
+    for r in batch_job_records:
+        provider = str(r[1])
+        provider_status = str(r[9] or "")
+        submission_status = str(r[10] or "")
+        if (
+            provider in {"anthropic", "gemini", "openai"}
+            and submission_status == "submitted"
+            and r[8] is not None
+            and not re.search("error|failed", provider_status.lower())
+        ):
+            already_submitted.add((provider, str(r[2]), int(r[3])))
+    if already_submitted:
+        print(f"Skipping {len(already_submitted):,} already submitted provider-batch chunks.")
     for rec in batch_file_records:
         _, provider, model, chunk_id, path, n, n_bytes, _ = rec
+        if SUBMIT_PROVIDER_FILTER and str(provider) not in SUBMIT_PROVIDER_FILTER:
+            print(provider, model, chunk_id, "not in submit_provider_filter; skipping")
+            continue
+        if (str(provider), str(model), int(chunk_id)) in already_submitted:
+            print(provider, model, chunk_id, "already submitted; skipping")
+            continue
         submitted_at = datetime.utcnow().isoformat()
         try:
-            res = {"openai": submit_openai_batch, "anthropic": submit_anthropic_batch, "gemini": submit_gemini_batch}[provider](path, model)
+            submitter = {
+                "openai": submit_openai_batch,
+                "anthropic": submit_anthropic_batch,
+                "gemini": submit_gemini_batch,
+                "deepseek": submit_deepseek_direct,
+            }[provider]
+            res = submitter(path, model)
             print(provider, model, chunk_id, "submitted", res)
             batch_job_records.append((
                 RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), res.get("provider_file_id"),
                 res.get("provider_batch_id"), res.get("provider_status"), "submitted",
                 submitted_at, datetime.utcnow().isoformat(), None,
             ))
+            persist_batch_job_records(batch_job_records)
+            already_submitted.add((str(provider), str(model), int(chunk_id)))
         except Exception as e:
             err = repr(e)[:500]
             print(provider, model, chunk_id, "ERROR", err)
@@ -814,10 +1113,7 @@ if SUBMIT_BATCHES:
                 RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), None,
                 None, None, "error", submitted_at, datetime.utcnow().isoformat(), err,
             ))
-    if batch_job_records:
-        batch_jobs_df = spark.createDataFrame(batch_job_records, batch_job_schema)
-        write_run_scoped(batch_jobs_df, panel_batch_jobs_full)
-        print("Wrote batch-job registry to", panel_batch_jobs_full)
+            persist_batch_job_records(batch_job_records)
 else:
     print("submit_batches=false — JSONL files written for external/colleague submission.")
 
@@ -940,6 +1236,47 @@ def extract_first_json_object(text: Optional[str]) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _extract_jsonish_value(text: str, key: str):
+    # Conservative recovery for provider outputs truncated after the label fields but before the
+    # closing JSON brace. This only returns values explicitly present in the text.
+    pattern = r'"' + re.escape(key) + r'"\s*:\s*(null|true|false|"((?:\\.|[^"\\])*)"|\[[^\]]*\])'
+    match = re.search(pattern, text or "", flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        return None
+    token = match.group(1)
+    if token == "null":
+        return None
+    if token == "true":
+        return True
+    if token == "false":
+        return False
+    try:
+        return json.loads(token)
+    except Exception:
+        if token.startswith('"') and token.endswith('"'):
+            return token[1:-1]
+    return None
+
+
+def extract_partial_prediction_object(text: Optional[str]) -> Optional[Dict[str, Any]]:
+    if not text:
+        return None
+    keys = [
+        "status", "primary_language_label", "primary_language_iso639_3", "primary_language_script",
+        "is_romanized", "dialect_or_variant", "is_high_risk_tail", "secondary_language_label",
+        "is_mixed_language", "mixed_languages", "confidence", "evidence",
+    ]
+    recovered = {k: _extract_jsonish_value(text, k) for k in keys}
+    has_label = bool(recovered.get("primary_language_label") or recovered.get("primary_language_iso639_3"))
+    if not has_label:
+        return None
+    if recovered.get("status") is None:
+        recovered["status"] = "classified"
+    if recovered.get("confidence") is None:
+        recovered["confidence"] = "low"
+    return recovered
+
+
 def _base_iso(label, iso):
     if iso:
         return str(iso).split("_")[0].lower()
@@ -978,6 +1315,8 @@ def _string_list(value):
 def normalize_prediction_udf(raw_text: str):
     o = extract_first_json_object(raw_text)
     if not o:
+        o = extract_partial_prediction_object(raw_text)
+    if not o:
         return (None, None, None, None, None, None, None, None, None, [], None, None, "no_json_object")
     label = o.get("primary_language_label")
     iso = o.get("primary_language_iso639_3") or _base_iso(label, None)
@@ -997,9 +1336,15 @@ def normalize_prediction_udf(raw_text: str):
 
 
 if IMPORT_RESULTS:
-    # D4: recurse into results_input_dir (downloaded provider result files may be nested).
+    # D4: recurse through this run's result subtree when available. Falling back to RESULTS_INPUT_DIR keeps
+    # older manual layouts importable while avoiding stale cross-run files in normal runs.
+    if not os.path.exists(local_fs_path(RESULTS_INPUT_DIR)):
+        raise FileNotFoundError(f"results_input_dir does not exist: {RESULTS_INPUT_DIR}")
+    run_results_input_dir = os.path.join(RESULTS_INPUT_DIR.rstrip("/"), RUN_ID)
+    results_read_dir = run_results_input_dir if os.path.exists(local_fs_path(run_results_input_dir)) else RESULTS_INPUT_DIR
+    print("Importing result JSONL files from", results_read_dir)
     raw = (
-        spark.read.option("recursiveFileLookup", "true").text(RESULTS_INPUT_DIR)
+        spark.read.option("recursiveFileLookup", "true").text(spark_path(results_read_dir))
         .withColumnRenamed("value", "line").where(F.length("line") > 2)
     )
     parsed = raw.withColumn("p", extract_provider_text_udf(F.col("line"))).select("p.*")
@@ -1014,6 +1359,7 @@ if IMPORT_RESULTS:
             F.col("run_id").alias("_request_run_id"),
             F.col("provider").alias("_request_provider"),
             F.col("model").alias("_request_model"),
+            F.col("model_tier").alias("_request_model_tier"),
             F.col("channel_id").alias("_request_channel_id"),
         )
         .dropDuplicates(["request_id"])
@@ -1024,8 +1370,9 @@ if IMPORT_RESULTS:
         .withColumn("result_run_id", F.col("_request_run_id"))
         .withColumn("provider", F.col("_request_provider"))
         .withColumn("model", F.col("_request_model"))
+        .withColumn("model_tier", F.col("_request_model_tier"))
         .withColumn("channel_id", F.col("_request_channel_id"))
-        .drop("_request_run_id", "_request_provider", "_request_model", "_request_channel_id")
+        .drop("_request_run_id", "_request_provider", "_request_model", "_request_model_tier", "_request_channel_id")
         .withColumn("_pred_iso_raw", F.lower(F.trim(F.col("primary_language_iso639_3"))))
         .withColumn("_pred_iso_from_label", F.lower(F.trim(F.split("primary_language_label", "_").getItem(0))))
         .withColumn("_pred_iso_raw", F.when(F.col("_pred_iso_raw").isin("", "null", "none"), F.lit(None)).otherwise(F.col("_pred_iso_raw")))
@@ -1071,8 +1418,58 @@ if IMPORT_RESULTS:
     write_run_scoped(parsed, panel_raw_results_full)
     print("Wrote parsed per-model predictions to", panel_raw_results_full)
 
+    valid_model_votes = (
+        parsed.where(F.col("is_valid_panel_vote") == F.lit(True))
+        .select(
+            "channel_id",
+            F.col("provider").alias("provider"),
+            F.col("model").alias("model"),
+            F.col("model_tier").alias("model_tier"),
+            F.col("primary_language_label").alias("language_label"),
+            F.col("pred_base_iso").alias("base_iso"),
+        )
+        .withColumn("model_key", F.concat_ws(":", F.col("provider"), F.col("model")))
+    )
+    if valid_model_votes.limit(1).count() > 0:
+        a = valid_model_votes.alias("a")
+        b = valid_model_votes.alias("b")
+        pairwise_agreement = (
+            a.join(b, on="channel_id", how="inner")
+            .where(F.col("a.model_key") <= F.col("b.model_key"))
+            .groupBy(
+                F.col("a.provider").alias("provider_a"),
+                F.col("a.model").alias("model_a"),
+                F.col("a.model_tier").alias("model_tier_a"),
+                F.col("b.provider").alias("provider_b"),
+                F.col("b.model").alias("model_b"),
+                F.col("b.model_tier").alias("model_tier_b"),
+            )
+            .agg(
+                F.count(F.lit(1)).alias("n_both_classified"),
+                F.sum(F.when(F.col("a.base_iso") == F.col("b.base_iso"), 1).otherwise(0)).alias("n_base_iso_agree"),
+                F.sum(F.when(F.col("a.language_label") == F.col("b.language_label"), 1).otherwise(0)).alias("n_full_label_agree"),
+            )
+            .withColumn("base_iso_agreement_rate", F.col("n_base_iso_agree") / F.col("n_both_classified"))
+            .withColumn("full_label_agreement_rate", F.col("n_full_label_agree") / F.col("n_both_classified"))
+            .withColumn("same_provider", F.col("provider_a") == F.col("provider_b"))
+            .withColumn("same_tier", F.col("model_tier_a") == F.col("model_tier_b"))
+            .withColumn("run_id", F.lit(RUN_ID))
+            .withColumn("computed_at_utc", F.lit(imported_at_utc))
+            .select(
+                "run_id", "provider_a", "model_a", "model_tier_a", "provider_b", "model_b", "model_tier_b",
+                "same_provider", "same_tier", "n_both_classified", "n_base_iso_agree", "base_iso_agreement_rate",
+                "n_full_label_agree", "full_label_agreement_rate", "computed_at_utc",
+            )
+        )
+        write_run_scoped(pairwise_agreement, panel_model_agreement_full)
+        print("Wrote all-model pairwise agreement matrix to", panel_model_agreement_full)
+        display(pairwise_agreement.orderBy("provider_a", "model_a", "provider_b", "model_b"))
+    else:
+        print("No valid per-model votes available; skipping all-model agreement matrix.")
+
     # --- Reconcile: majority vote on base ISO, but PRESERVE the full winning label/script + side fields. ---
     n_models = len(MODELS)
+    configured_majority_threshold = max(MIN_PANEL_VOTES_FOR_MAJORITY, (n_models // 2) + 1)
     votes = parsed.where(F.col("is_valid_panel_vote") == F.lit(True))
     per_iso = votes.groupBy("channel_id", "pred_base_iso").agg(F.count(F.lit(1)).alias("n_votes"))
     w_iso = Window.partitionBy("channel_id").orderBy(F.desc("n_votes"), F.asc("pred_base_iso"))
@@ -1108,6 +1505,7 @@ if IMPORT_RESULTS:
         F.first(F.when((F.col("provider") == "openai") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("openai_label"),
         F.first(F.when((F.col("provider") == "anthropic") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("anthropic_label"),
         F.first(F.when((F.col("provider") == "gemini") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("gemini_label"),
+        F.first(F.when((F.col("provider") == "deepseek") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("deepseek_label"),
         F.sum(F.when(F.col("is_valid_panel_vote") == F.lit(True), 1).otherwise(0)).alias("n_reached"),
         F.collect_set(F.when(F.col("is_valid_panel_vote") == F.lit(True), F.col("model"))).alias("panel_models"),
     )
@@ -1120,8 +1518,23 @@ if IMPORT_RESULTS:
         .withColumn("panel_language_script", F.coalesce(F.col("panel_language_script_from_model"), F.element_at(F.split("panel_language_label", "_"), 2)))
         .withColumn("panel_is_mixed_language", F.coalesce(F.col("_mixed_int") == 1, F.lit(False)))
         .withColumn("panel_is_romanized", F.coalesce(F.col("_romanized_int") == 1, F.lit(False)))
+        .withColumn(
+            "panel_majority_threshold",
+            F.when(
+                F.lit(PANEL_MAJORITY_MODE) == F.lit("reached_models"),
+                F.greatest(
+                    F.lit(MIN_PANEL_VOTES_FOR_MAJORITY),
+                    (F.floor(F.coalesce(F.col("n_reached"), F.lit(0)) / F.lit(2)) + F.lit(1)).cast("int"),
+                ),
+            ).otherwise(F.lit(configured_majority_threshold)),
+        )
+        .withColumn("panel_majority_mode", F.lit(PANEL_MAJORITY_MODE))
         .withColumn("panel_status", F.when(F.col("panel_language_iso").isNull(), F.lit("no_panel_result"))
-                    .when(F.col("n_votes") >= F.lit(max(2, (n_models // 2) + 1)), F.lit("panel_majority"))
+                    .when(
+                        (F.coalesce(F.col("n_reached"), F.lit(0)) >= F.lit(MIN_PANEL_VOTES_FOR_MAJORITY))
+                        & (F.col("n_votes") >= F.col("panel_majority_threshold")),
+                        F.lit("panel_majority"),
+                    )
                     .otherwise(F.lit("needs_human_review")))
         .withColumn("audit_sample", F.col("route_reason") == F.lit("agreement_audit"))
         # Audit rows are measurements: never overwrite consensus unless explicitly promoted later.

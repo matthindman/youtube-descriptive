@@ -1,0 +1,40 @@
+{
+  "run_name": "lid_llm_validation_batch_status_check_20260610",
+  "tasks": [
+    {
+      "task_key": "check_lid_llm_batch_status",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/check_lid_llm_batch_status_20260610",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "too_full_20260609",
+          "batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "status_snapshot_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_status_check",
+          "secret_scope": "youtube-llm-keys",
+          "anthropic_secret_key": "anthropic-api-key",
+          "gemini_secret_key": "gemini-api-key"
+        }
+      }
+    },
+    {
+      "task_key": "terminate_matt_research_gencompute",
+      "depends_on": [
+        {
+          "task_key": "check_lid_llm_batch_status"
+        }
+      ],
+      "run_if": "ALL_DONE",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/99_terminate_cluster_databricks",
+        "base_parameters": {
+          "cluster_id": "0601-203643-bkxsqffg",
+          "reason": "lid_llm_validation_batch_status_check_cleanup"
+        }
+      }
+    }
+  ]
+}

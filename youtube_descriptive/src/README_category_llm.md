@@ -8,7 +8,7 @@ The workflow is:
 
 1. Run the OpenLID-v3 language notebook first.
 2. Build a stratified validation sample within detected-language groups and reference category labels.
-3. Create provider-specific batch JSONL files for OpenAI, Anthropic, and Gemini.
+3. Create provider-specific request JSONL files for OpenAI, Anthropic, Gemini, and DeepSeek.
 4. Optionally submit those files from Databricks Secrets, or hand the files to the colleague managing API access.
 5. Import provider result JSONL files.
 6. Evaluate against reference labels and compute model agreement.
@@ -125,11 +125,18 @@ Default configuration:
 ```json
 [
   {"provider": "openai", "model": "gpt-5.5", "tier": "frontier"},
-  {"provider": "openai", "model": "gpt-5-nano", "tier": "small"},
-  {"provider": "anthropic", "model": "claude-opus-4-7", "tier": "frontier"},
+  {"provider": "openai", "model": "gpt-5.4", "tier": "mid"},
+  {"provider": "openai", "model": "gpt-5.4-mini", "tier": "small"},
+  {"provider": "openai", "model": "gpt-5.4-nano", "tier": "nano"},
+  {"provider": "openai", "model": "gpt-5-nano", "tier": "nano_low_cost"},
+  {"provider": "anthropic", "model": "claude-opus-4-8", "tier": "frontier"},
+  {"provider": "anthropic", "model": "claude-sonnet-4-6", "tier": "mid"},
   {"provider": "anthropic", "model": "claude-haiku-4-5", "tier": "small"},
   {"provider": "gemini", "model": "gemini-3.1-pro-preview", "tier": "frontier"},
-  {"provider": "gemini", "model": "gemini-3.1-flash-lite-preview", "tier": "small"}
+  {"provider": "gemini", "model": "gemini-3.5-flash", "tier": "mid"},
+  {"provider": "gemini", "model": "gemini-3.1-flash-lite", "tier": "small"},
+  {"provider": "deepseek", "model": "deepseek-v4-pro", "tier": "frontier"},
+  {"provider": "deepseek", "model": "deepseek-v4-flash", "tier": "small"}
 ]
 ```
 
@@ -137,15 +144,18 @@ Leave `temperature` blank by default:
 
 ```text
 temperature =
+max_output_tokens = 600
+submit_batches = false
+skip_existing_submitted_batches = true
 ```
 
-The notebook omits temperature unless you explicitly set it. This avoids provider/model-specific failures and follows the current provider guidance more closely than forcing `temperature=0.0`.
+The notebook omits temperature unless you explicitly set it. This avoids provider/model-specific failures and follows the current provider guidance more closely than forcing `temperature=0.0`. Category outputs are also requested as compact one-line JSON; the 600-token default gives enough headroom for valid JSON without materially changing the prompt size.
 
 OpenAI-specific widgets:
 
 ```text
 openai_endpoint_mode = auto          # auto, responses, chat_completions
-openai_reasoning_effort = minimal    # blank to omit
+openai_reasoning_effort =            # blank to omit
 ```
 
 In `auto` mode, models whose names start with `gpt-5` or common o-series prefixes are routed to `/v1/responses`; other OpenAI models use `/v1/chat/completions`. Responses API requests use `max_output_tokens`; Chat Completions requests use `max_tokens` or `max_completion_tokens` as appropriate.
@@ -153,30 +163,39 @@ In `auto` mode, models whose names start with `gpt-5` or common o-series prefixe
 Gemini-specific widget:
 
 ```text
-gemini_thinking_level = low
+gemini_thinking_level =
 ```
 
-The Gemini request file uses native Batch API JSONL with a `key` and a `request` object, plus structured JSON output through `response_format`.
+The Gemini request file uses native Batch API JSONL with a `key` and a `request` object, plus JSON output through `response_mime_type=application/json`.
+
+DeepSeek-specific widgets:
+
+```text
+deepseek_thinking_type =
+deepseek_reasoning_effort =
+```
+
+DeepSeek uses the OpenAI-compatible `https://api.deepseek.com/chat/completions` path directly and writes
+parser-compatible result JSONL under `results_input_dir`.
 
 ## Databricks secrets
 
 If submitting batches from the notebook:
 
-```bash
-databricks secrets create-scope llm-api-keys
-databricks secrets put-secret llm-api-keys openai_api_key
-databricks secrets put-secret llm-api-keys anthropic_api_key
-databricks secrets put-secret llm-api-keys gemini_api_key
-```
+Use the shared Databricks scope configured for this project:
 
 Notebook defaults:
 
 ```text
-secret_scope = llm-api-keys
-openai_secret_key = openai_api_key
-anthropic_secret_key = anthropic_api_key
-gemini_secret_key = gemini_api_key
+secret_scope = youtube-llm-keys
+openai_secret_key = openai-api-key
+anthropic_secret_key = anthropic-api-key
+gemini_secret_key = gemini-api-key
+deepseek_secret_key = deepseek-api-key
 ```
+
+The notebook submits OpenAI, Anthropic, and Gemini through their provider batch APIs. DeepSeek is executed
+as direct OpenAI-compatible chat-completion calls and imported through the same result parser.
 
 ## Recommended first run
 
@@ -237,6 +256,8 @@ results_input_dir = /dbfs/FileStore/youtube_category_batches/results
 ```
 
 The parser handles OpenAI Responses, OpenAI Chat Completions, Anthropic Message Batches, and common Gemini Batch output shapes. It joins results back through `request_id` / `custom_id` / `key`.
+
+Category output tables are written by `run_id`. Re-running the same `run_id` replaces that run's prompt, request, raw-result, parsed-prediction, metric, and agreement rows without overwriting other runs. Parsed predictions also dedupe duplicate result files to one row per request.
 
 ## Evaluation outputs
 
