@@ -143,19 +143,22 @@ Default configuration:
 Leave `temperature` blank by default:
 
 ```text
+run_id = default
 temperature =
-max_output_tokens = 600
+max_output_tokens = 2000
+openai_reasoning_effort = minimal
+gemini_thinking_level = low
 submit_batches = false
 skip_existing_submitted_batches = true
 ```
 
-The notebook omits temperature unless you explicitly set it. This avoids provider/model-specific failures and follows the current provider guidance more closely than forcing `temperature=0.0`. Category outputs are also requested as compact one-line JSON; the 600-token default gives enough headroom for valid JSON without materially changing the prompt size.
+The notebook omits temperature unless you explicitly set it. This avoids provider/model-specific failures and follows the current provider guidance more closely than forcing `temperature=0.0`. Category outputs are also requested as compact one-line JSON; the 2000-token default gives enough headroom for valid JSON plus provider reasoning/thinking tokens.
 
 OpenAI-specific widgets:
 
 ```text
 openai_endpoint_mode = auto          # auto, responses, chat_completions
-openai_reasoning_effort =            # blank to omit
+openai_reasoning_effort = minimal    # blank to omit
 ```
 
 In `auto` mode, models whose names start with `gpt-5` or common o-series prefixes are routed to `/v1/responses`; other OpenAI models use `/v1/chat/completions`. Responses API requests use `max_output_tokens`; Chat Completions requests use `max_tokens` or `max_completion_tokens` as appropriate.
@@ -163,7 +166,7 @@ In `auto` mode, models whose names start with `gpt-5` or common o-series prefixe
 Gemini-specific widget:
 
 ```text
-gemini_thinking_level =
+gemini_thinking_level = low
 ```
 
 The Gemini request file uses native Batch API JSONL with a `key` and a `request` object, plus JSON output through `response_mime_type=application/json`.
@@ -200,6 +203,7 @@ as direct OpenAI-compatible chat-completion calls and imported through the same 
 ## Recommended first run
 
 ```text
+run_id = category_labeled_validation_YYYYMMDD
 run_mode = labeled_validation
 n_per_language_category = 25
 max_total_channels = 50000
@@ -208,7 +212,9 @@ submit_batches = false
 import_results = false
 ```
 
-This writes prompt inputs and JSONL batch files without submitting them.
+This writes prompt inputs and JSONL batch files without submitting them. Reuse the same `run_id` for
+submission and import; request IDs include `run_id`, so changing it between sessions will orphan provider
+results.
 
 Batch files are written under:
 
@@ -255,7 +261,7 @@ import_results = true
 results_input_dir = /dbfs/FileStore/youtube_category_batches/results
 ```
 
-The parser handles OpenAI Responses, OpenAI Chat Completions, Anthropic Message Batches, and common Gemini Batch output shapes. It joins results back through `request_id` / `custom_id` / `key`.
+The parser handles OpenAI Responses, OpenAI Chat Completions, Anthropic Message Batches, and common Gemini Batch output shapes. It joins results back through `request_id` / `custom_id` / `key` and drops rows that do not match the active run's request registry.
 
 Category output tables are written by `run_id`. Re-running the same `run_id` replaces that run's prompt, request, raw-result, parsed-prediction, metric, and agreement rows without overwriting other runs. Parsed predictions also dedupe duplicate result files to one row per request.
 

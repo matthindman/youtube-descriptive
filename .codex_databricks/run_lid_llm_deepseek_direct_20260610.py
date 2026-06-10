@@ -61,7 +61,7 @@ _create_text_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batc
 _create_text_widget("models_csv", "deepseek-v4-flash,deepseek-v4-pro")
 _create_text_widget("deepseek_max_workers", "4")
 _create_text_widget("deepseek_request_timeout_seconds", "45")
-_create_text_widget("deepseek_max_retries", "0")
+_create_text_widget("deepseek_max_retries", "1")
 _create_text_widget("resume_existing_results", "true")
 _create_text_widget("process_pending_requests", "true")
 _create_text_widget("deepseek_transport", "urllib")
@@ -77,7 +77,7 @@ RESULTS_INPUT_DIR = _get_widget("results_input_dir", "/dbfs/FileStore/youtube_li
 MODELS = [m.strip() for m in _get_widget("models_csv", "deepseek-v4-flash,deepseek-v4-pro").split(",") if m.strip()]
 DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 4)
 DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _get_float_widget("deepseek_request_timeout_seconds", 45.0)
-DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 0)
+DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 1)
 RESUME_EXISTING_RESULTS = _get_widget("resume_existing_results", "true").strip().lower() in {"1", "true", "t", "yes", "y"}
 PROCESS_PENDING_REQUESTS = _get_widget("process_pending_requests", "true").strip().lower() in {"1", "true", "t", "yes", "y"}
 DEEPSEEK_TRANSPORT = _get_widget("deepseek_transport", "urllib").strip().lower()
@@ -336,6 +336,18 @@ def _custom_id_from_line(line: str):
         return None
 
 
+def _successful_existing_result(line: str):
+    try:
+        obj = json.loads(line)
+        custom_id = obj.get("custom_id")
+        status_code = int(obj.get("response", {}).get("status_code", 500))
+        if custom_id and not obj.get("error") and 200 <= status_code < 300:
+            return custom_id, line if line.endswith("\n") else line + "\n"
+    except Exception:
+        return None, None
+    return None, None
+
+
 def _process_worker(line: str, output_queue):
     output_queue.put(call_line(line))
 
@@ -380,17 +392,20 @@ def run_model(model: str):
         lines = [line for line in src if line.strip()]
 
     completed_ids = set()
-    existing_result_lines = []
+    existing_success_lines = []
+    existing_all_lines = []
     if RESUME_EXISTING_RESULTS and os.path.exists(result_path):
         with open(result_path, "r", encoding="utf-8") as existing:
             for line in existing:
                 if not line.strip():
                     continue
+                normalized_line = line if line.endswith("\n") else line + "\n"
+                existing_all_lines.append(normalized_line)
                 try:
-                    obj = json.loads(line)
-                    if obj.get("custom_id"):
-                        completed_ids.add(obj["custom_id"])
-                        existing_result_lines.append(line if line.endswith("\n") else line + "\n")
+                    custom_id, success_line = _successful_existing_result(line)
+                    if custom_id:
+                        completed_ids.add(custom_id)
+                        existing_success_lines.append(success_line)
                 except Exception:
                     pass
 
@@ -406,9 +421,12 @@ def run_model(model: str):
     if not PROCESS_PENDING_REQUESTS:
         print(f"DeepSeek direct {model}: process_pending_requests=false; preserving existing rows only")
         pending_lines = []
+        existing_result_lines = existing_all_lines
+    else:
+        existing_result_lines = existing_success_lines
 
     if completed_ids:
-        print(f"DeepSeek direct {model}: resuming with {len(completed_ids):,} existing result rows")
+        print(f"DeepSeek direct {model}: resuming with {len(completed_ids):,} successful existing result rows")
 
     n_ok = 0
     n_error = 0

@@ -107,7 +107,7 @@ _create_text_widget("eval_metrics_table", "yt_category_llm_eval_metrics")
 _create_text_widget("agreement_table", "yt_category_llm_model_agreement")
 
 # Sampling and prompt construction.
-_create_text_widget("run_id", "")
+_create_text_widget("run_id", "default")
 _create_text_widget("run_mode", "labeled_validation")  # labeled_validation, unlabeled_pilot, full_unlabeled, all_channels
 _create_text_widget("n_per_language_category", "25")
 _create_text_widget("n_per_language_unlabeled", "100")
@@ -123,7 +123,7 @@ _create_text_widget("random_seed", "20260511")
 # Batch generation.
 _create_text_widget("batch_output_dir", "/dbfs/FileStore/youtube_category_batches")
 _create_text_widget("max_requests_per_file", "10000")
-_create_text_widget("max_output_tokens", "600")
+_create_text_widget("max_output_tokens", "2000")
 _create_text_widget("temperature", "")  # blank/omit = provider default; do not set 0.0 for GPT-5/Gemini-3 unless explicitly tested
 
 # Model list. Defaults cover current size/cost brackets across the configured providers.
@@ -144,8 +144,8 @@ DEFAULT_MODELS_JSON = json.dumps([
 ], ensure_ascii=False)
 _create_text_widget("models_json", DEFAULT_MODELS_JSON)
 _create_text_widget("openai_endpoint_mode", "auto")  # auto, responses, or chat_completions
-_create_text_widget("openai_reasoning_effort", "")  # blank = omit reasoning/thinking controls
-_create_text_widget("gemini_thinking_level", "")  # blank = omit thinking controls
+_create_text_widget("openai_reasoning_effort", "minimal")  # blank = omit reasoning controls
+_create_text_widget("gemini_thinking_level", "low")  # blank = omit thinking controls
 _create_text_widget("deepseek_thinking_type", "")  # disabled | enabled | blank to omit
 _create_text_widget("deepseek_reasoning_effort", "")  # high | max; only used with enabled thinking
 _create_text_widget("deepseek_max_workers", "8")
@@ -189,7 +189,7 @@ PARSED_PREDICTIONS_TABLE = _get_widget("parsed_predictions_table", "yt_category_
 EVAL_METRICS_TABLE = _get_widget("eval_metrics_table", "yt_category_llm_eval_metrics")
 AGREEMENT_TABLE = _get_widget("agreement_table", "yt_category_llm_model_agreement")
 
-RUN_ID = _get_widget("run_id", "").strip() or datetime.utcnow().strftime("ytcat_%Y%m%d_%H%M%S")
+RUN_ID = _get_widget("run_id", "default").strip() or "default"
 RUN_MODE = _get_widget("run_mode", "labeled_validation").strip().lower()
 N_PER_LANGUAGE_CATEGORY = _get_int_widget("n_per_language_category", 25)
 N_PER_LANGUAGE_UNLABELED = _get_int_widget("n_per_language_unlabeled", 100)
@@ -204,12 +204,12 @@ RANDOM_SEED = _get_int_widget("random_seed", 20260511)
 
 BATCH_OUTPUT_DIR = _get_widget("batch_output_dir", "/dbfs/FileStore/youtube_category_batches").rstrip("/")
 MAX_REQUESTS_PER_FILE = _get_int_widget("max_requests_per_file", 10000)
-MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 600)
+MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 2000)
 TEMPERATURE = _get_optional_float_widget("temperature", None)
 MODELS = json.loads(_get_widget("models_json", DEFAULT_MODELS_JSON))
 OPENAI_ENDPOINT_MODE = _get_widget("openai_endpoint_mode", "auto").strip().lower()
-OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "").strip().lower()
-GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "").strip().lower()
+OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "minimal").strip().lower()
+GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "low").strip().lower()
 DEEPSEEK_THINKING_TYPE = _get_widget("deepseek_thinking_type", "").strip().lower()
 DEEPSEEK_REASONING_EFFORT = _get_widget("deepseek_reasoning_effort", "").strip().lower()
 DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 8)
@@ -325,6 +325,14 @@ def _table_exists_full(table_full: str) -> bool:
         return False
 
 
+def _table_partition_columns(table_full: str):
+    try:
+        row = spark.sql(f"DESCRIBE DETAIL {table_full}").select("partitionColumns").collect()[0]
+        return list(row["partitionColumns"] or [])
+    except Exception:
+        return []
+
+
 def _sql_string(value: str) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
@@ -359,6 +367,17 @@ def write_run_scoped(df, table_full: str):
             write_df = write_df.withColumn(field.name, F.lit(None).cast(field.dataType))
     write_df = write_df.select(*existing.columns)
 
+    if _table_partition_columns(table_full) == ["run_id"]:
+        (
+            write_df.write.format("delta")
+            .mode("overwrite")
+            .option("replaceWhere", f"run_id = {_sql_string(RUN_ID)}")
+            .partitionBy("run_id")
+            .saveAsTable(table_full)
+        )
+        return
+
+    print(f"{table_full} is not partitioned by run_id; using DELETE plus append for scoped overwrite.")
     spark.sql(f"DELETE FROM {table_full} WHERE run_id = {_sql_string(RUN_ID)}")
     (
         write_df.write.format("delta")
@@ -1208,11 +1227,12 @@ if SUBMIT_BATCHES:
     already_submitted = set()
     if SKIP_EXISTING_SUBMITTED_BATCHES and _table_exists_full(batch_jobs_full):
         existing_jobs_for_run = spark.table(batch_jobs_full).where(F.col("run_id") == F.lit(RUN_ID))
+        provider_status_l = F.lower(F.coalesce(F.col("provider_status"), F.lit("")))
         already_rows = (
             existing_jobs_for_run
             .where(F.col("submission_status") == F.lit("submitted"))
             .where(F.col("provider_batch_id").isNotNull())
-            .where(~F.lower(F.coalesce(F.col("provider_status"), F.lit(""))).rlike("error|failed"))
+            .where(~provider_status_l.rlike("failed|failure|partial_or_errors|completed_with_errors|error=[1-9]"))
             .select("provider", "model", "chunk_id")
             .collect()
         )
@@ -1468,6 +1488,13 @@ if IMPORT_RESULTS:
         .withColumn("run_id", F.lit(RUN_ID))
         .withColumn("imported_at", F.current_timestamp())
     )
+    request_ids_for_run = (
+        spark.table(request_full)
+        .where(F.col("run_id") == F.lit(RUN_ID))
+        .select("request_id")
+        .dropDuplicates(["request_id"])
+    )
+    raw_results = raw_results.join(request_ids_for_run, on="request_id", how="inner")
     write_run_scoped(raw_results, raw_results_full)
     print("Wrote raw results to", raw_results_full)
 else:
@@ -1491,7 +1518,7 @@ if have_results:
         raw_results_loaded
         .withColumn("pred", normalize_category_prediction_udf(F.col("raw_text")))
         .select("run_id", "request_id", "provider_result_model", "result_status", "input_tokens", "output_tokens", "raw_text", "parse_error", "pred.*", "imported_at")
-        .join(req_map, on=["run_id", "request_id"], how="left")
+        .join(req_map, on=["run_id", "request_id"], how="inner")
         .withColumn("correct_vs_reference", F.when(F.col("reference_category_id").isNotNull() & F.col("category_id").isNotNull(), F.col("reference_category_id") == F.col("category_id")))
         .withColumn("prediction_timestamp", F.current_timestamp())
     )

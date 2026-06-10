@@ -14,6 +14,7 @@
           "batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
           "status_snapshot_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_status_check",
           "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
           "anthropic_secret_key": "anthropic-api-key",
           "gemini_secret_key": "gemini-api-key"
         }

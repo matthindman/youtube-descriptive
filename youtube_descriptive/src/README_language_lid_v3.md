@@ -238,7 +238,9 @@ Then set the validation controls:
 routing_mode = random_validation
 random_validation_sample_size = 1000
 random_validation_seed = 20260610
-max_output_tokens = 800
+max_output_tokens = 2000
+openai_reasoning_effort = minimal
+gemini_thinking_level = low
 submit_batches = false
 import_results = false
 panel_majority_mode = reached_models
@@ -257,9 +259,9 @@ Recommended sequence:
 2. Set `submit_batches=true` for the provider/API smoke. OpenAI, Anthropic, and Gemini will create provider
    batch jobs; DeepSeek will run direct requests and write result JSONL immediately under `results_input_dir`.
 3. Check provider batch status before import. The helper notebook
-   `.codex_databricks/check_lid_llm_batch_status_20260610.py` writes the latest Anthropic/Gemini status
+   `.codex_databricks/check_lid_llm_batch_status_20260610.py` writes the latest OpenAI/Anthropic/Gemini status
    snapshot to `yt_lid_v3_too_full_20260609_llm_validation_batch_status_check`.
-4. Download completed Anthropic/Gemini result files with
+4. Download completed OpenAI/Anthropic/Gemini result files with
    `.codex_databricks/download_lid_llm_batch_results_20260610.py`. It writes JSONL under
    `results_input_dir/<run_id>/<provider>/<model>/` and records file counts in
    `yt_lid_v3_too_full_20260609_llm_validation_result_files`.
@@ -270,9 +272,11 @@ Recommended sequence:
    `yt_lid_v3_too_full_20260609_llm_validation_verdicts` for majority coverage and panel-vs-fastText
    top-line agreement.
 
-The language panel asks models for compact one-line JSON and defaults to `max_output_tokens=800`. This is
-intentional: the June 10 validation showed that Gemini frequently truncated pretty-printed JSON at 400
-tokens, which reduced valid parsed votes even though the batch jobs themselves succeeded.
+The language panel asks models for compact one-line JSON and defaults to `max_output_tokens=2000`,
+`openai_reasoning_effort=minimal`, and `gemini_thinking_level=low`. The larger cap is intentional:
+reasoning/thinking tokens share the output budget on some providers, and the June 10 validation showed
+that Gemini frequently truncated JSON at lower caps, reducing valid parsed votes even though the batch
+jobs themselves succeeded.
 
 ## 11. GlotLID preprocessing caveat
 

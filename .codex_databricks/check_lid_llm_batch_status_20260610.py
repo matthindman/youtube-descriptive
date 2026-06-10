@@ -38,6 +38,7 @@ _create_text_widget("run_id", "too_full_20260609")
 _create_text_widget("batch_jobs_table", "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs")
 _create_text_widget("status_snapshot_table", "yt_lid_v3_too_full_20260609_llm_validation_batch_status_check")
 _create_text_widget("secret_scope", "youtube-llm-keys")
+_create_text_widget("openai_secret_key", "openai-api-key")
 _create_text_widget("anthropic_secret_key", "anthropic-api-key")
 _create_text_widget("gemini_secret_key", "gemini-api-key")
 
@@ -47,6 +48,7 @@ RUN_ID = _get_widget("run_id", "too_full_20260609")
 BATCH_JOBS_TABLE = _get_widget("batch_jobs_table", "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs")
 STATUS_SNAPSHOT_TABLE = _get_widget("status_snapshot_table", "yt_lid_v3_too_full_20260609_llm_validation_batch_status_check")
 SECRET_SCOPE = _get_widget("secret_scope", "youtube-llm-keys")
+OPENAI_SECRET_KEY = _get_widget("openai_secret_key", "openai-api-key")
 ANTHROPIC_SECRET_KEY = _get_widget("anthropic_secret_key", "anthropic-api-key")
 GEMINI_SECRET_KEY = _get_widget("gemini_secret_key", "gemini-api-key")
 
@@ -137,7 +139,7 @@ jobs = (
     spark.table(fqtn(BATCH_JOBS_TABLE))
     .where(F.col("run_id") == F.lit(RUN_ID))
     .where(F.col("submission_status") == F.lit("submitted"))
-    .where(F.col("provider").isin("anthropic", "gemini"))
+    .where(F.col("provider").isin("anthropic", "gemini", "openai"))
     .where(F.col("provider_batch_id").isNotNull())
     .select("provider", "model", "chunk_id", "n_requests", "provider_batch_id", "provider_file_id")
     .dropDuplicates(["provider", "model", "chunk_id", "provider_batch_id"])
@@ -145,11 +147,12 @@ jobs = (
     .collect()
 )
 
-print(f"Checking {len(jobs)} submitted Anthropic/Gemini batches for run_id={RUN_ID}")
+print(f"Checking {len(jobs)} submitted OpenAI/Anthropic/Gemini batches for run_id={RUN_ID}")
 
 checked_at = datetime.now(timezone.utc).isoformat()
 records = []
 
+openai_client = None
 anthropic_client = None
 gemini_client = None
 
@@ -167,7 +170,29 @@ for row in jobs:
     error = None
 
     try:
-        if provider == "anthropic":
+        if provider == "openai":
+            from openai import OpenAI
+
+            if openai_client is None:
+                openai_client = OpenAI(api_key=get_secret(OPENAI_SECRET_KEY))
+            batch = openai_client.batches.retrieve(provider_batch_id)
+            provider_status = getattr(batch, "status", None)
+            request_counts_json = json.dumps(as_jsonable({
+                "request_counts": getattr(batch, "request_counts", None),
+                "created_at": getattr(batch, "created_at", None),
+                "in_progress_at": getattr(batch, "in_progress_at", None),
+                "finalizing_at": getattr(batch, "finalizing_at", None),
+                "completed_at": getattr(batch, "completed_at", None),
+                "failed_at": getattr(batch, "failed_at", None),
+                "expired_at": getattr(batch, "expired_at", None),
+                "cancelled_at": getattr(batch, "cancelled_at", None),
+            }), ensure_ascii=False, sort_keys=True)
+            output_ref = json.dumps(as_jsonable({
+                "output_file_id": getattr(batch, "output_file_id", None),
+                "error_file_id": getattr(batch, "error_file_id", None),
+                "errors": getattr(batch, "errors", None),
+            }), ensure_ascii=False, sort_keys=True)
+        elif provider == "anthropic":
             import anthropic
 
             if anthropic_client is None:

@@ -2,11 +2,11 @@
 # MAGIC %md
 # MAGIC # LID LLM validation batch result download
 # MAGIC
-# MAGIC Downloads completed Anthropic/Gemini batch outputs for the validation run into the common
+# MAGIC Downloads completed OpenAI/Anthropic/Gemini batch outputs for the validation run into the common
 # MAGIC `results_input_dir` tree used by `03_language_llm_panel_databricks.py`.
 
 # COMMAND ----------
-# MAGIC %pip install anthropic "google-genai>=1.51.0" pandas pyarrow
+# MAGIC %pip install "openai>=2.0.0" anthropic "google-genai>=1.51.0" pandas pyarrow
 
 # COMMAND ----------
 dbutils.library.restartPython()
@@ -45,9 +45,10 @@ _create_text_widget("status_snapshot_table", "yt_lid_v3_too_full_20260609_llm_va
 _create_text_widget("result_files_table", "yt_lid_v3_too_full_20260609_llm_validation_result_files")
 _create_text_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batches/results")
 _create_text_widget("secret_scope", "youtube-llm-keys")
+_create_text_widget("openai_secret_key", "openai-api-key")
 _create_text_widget("anthropic_secret_key", "anthropic-api-key")
 _create_text_widget("gemini_secret_key", "gemini-api-key")
-_create_text_widget("provider_filter", "anthropic,gemini")
+_create_text_widget("provider_filter", "anthropic,gemini,openai")
 
 CATALOG = _get_widget("catalog", "dev_sean")
 SCHEMA = _get_widget("schema", "matt")
@@ -57,11 +58,12 @@ STATUS_SNAPSHOT_TABLE = _get_widget("status_snapshot_table", "yt_lid_v3_too_full
 RESULT_FILES_TABLE = _get_widget("result_files_table", "yt_lid_v3_too_full_20260609_llm_validation_result_files")
 RESULTS_INPUT_DIR = _get_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batches/results").rstrip("/")
 SECRET_SCOPE = _get_widget("secret_scope", "youtube-llm-keys")
+OPENAI_SECRET_KEY = _get_widget("openai_secret_key", "openai-api-key")
 ANTHROPIC_SECRET_KEY = _get_widget("anthropic_secret_key", "anthropic-api-key")
 GEMINI_SECRET_KEY = _get_widget("gemini_secret_key", "gemini-api-key")
 PROVIDER_FILTER = {
     p.strip().lower()
-    for p in _get_widget("provider_filter", "anthropic,gemini").split(",")
+    for p in _get_widget("provider_filter", "anthropic,gemini,openai").split(",")
     if p.strip()
 }
 
@@ -98,6 +100,23 @@ def enum_name(value: Any):
 
 def get_secret(key: str) -> str:
     return dbutils.secrets.get(scope=SECRET_SCOPE, key=key)
+
+
+def openai_file_content_text(file_content: Any) -> str:
+    text = getattr(file_content, "text", None)
+    if isinstance(text, str):
+        return text
+    if isinstance(file_content, str):
+        return file_content
+    if isinstance(file_content, bytes):
+        return file_content.decode("utf-8")
+    if hasattr(file_content, "read"):
+        data = file_content.read()
+        return data.decode("utf-8") if isinstance(data, bytes) else str(data)
+    try:
+        return bytes(file_content).decode("utf-8")
+    except Exception:
+        return str(file_content)
 
 
 def _table_exists_full(table_full: str) -> bool:
@@ -172,7 +191,8 @@ completed = (
     )
     .where(F.col("provider").isin(*sorted(PROVIDER_FILTER)))
     .where(
-        ((F.col("provider") == F.lit("anthropic")) & (F.col("provider_status") == F.lit("ended")))
+        ((F.col("provider") == F.lit("openai")) & (F.col("provider_status") == F.lit("completed")))
+        | ((F.col("provider") == F.lit("anthropic")) & (F.col("provider_status") == F.lit("ended")))
         | ((F.col("provider") == F.lit("gemini")) & (F.col("provider_status") == F.lit("JOB_STATE_SUCCEEDED")))
     )
     .select(
@@ -185,6 +205,7 @@ completed = (
 
 print(f"Completed downloadable batches for run_id={RUN_ID}: {len(completed)}")
 
+openai_client = None
 anthropic_client = None
 gemini_client = None
 downloaded_at = datetime.now(timezone.utc).isoformat()
@@ -203,7 +224,29 @@ for row in completed:
     error = None
 
     try:
-        if provider == "anthropic":
+        if provider == "openai":
+            from openai import OpenAI
+
+            if openai_client is None:
+                openai_client = OpenAI(api_key=get_secret(OPENAI_SECRET_KEY))
+            output_ref = {}
+            try:
+                output_ref = json.loads(row["output_ref_json"] or "{}")
+            except Exception:
+                output_ref = {}
+            output_file_id = output_ref.get("output_file_id")
+            if not output_file_id:
+                batch = openai_client.batches.retrieve(provider_batch_id)
+                output_file_id = getattr(batch, "output_file_id", None)
+            if not output_file_id:
+                raise RuntimeError("OpenAI batch has no output_file_id")
+            text = openai_file_content_text(openai_client.files.content(output_file_id))
+            with open(out_path, "w", encoding="utf-8") as dst:
+                dst.write(text)
+                if text and not text.endswith("\n"):
+                    dst.write("\n")
+            n_lines = len([line for line in text.splitlines() if line.strip()])
+        elif provider == "anthropic":
             import anthropic
 
             if anthropic_client is None:

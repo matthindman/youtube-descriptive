@@ -16,9 +16,10 @@
           "result_files_table": "yt_lid_v3_too_full_20260609_llm_validation_result_files",
           "results_input_dir": "/dbfs/FileStore/youtube_lid_panel_batches/results",
           "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
           "anthropic_secret_key": "anthropic-api-key",
           "gemini_secret_key": "gemini-api-key",
-          "provider_filter": "anthropic,gemini"
+          "provider_filter": "anthropic,gemini,openai"
         }
       }
     },

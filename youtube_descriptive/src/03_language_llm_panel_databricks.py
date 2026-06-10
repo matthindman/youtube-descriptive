@@ -141,11 +141,11 @@ DEFAULT_MODELS_JSON = json.dumps([
     {"provider": "deepseek", "model": "deepseek-v4-flash", "tier": "small"},
 ], ensure_ascii=False)
 _create_text_widget("models_json", DEFAULT_MODELS_JSON)
-_create_text_widget("max_output_tokens", "800")
+_create_text_widget("max_output_tokens", "2000")
 _create_text_widget("temperature", "")  # blank = provider default
 _create_text_widget("openai_endpoint_mode", "auto")
-_create_text_widget("openai_reasoning_effort", "")  # blank = omit reasoning/thinking controls
-_create_text_widget("gemini_thinking_level", "")  # blank = omit thinking controls
+_create_text_widget("openai_reasoning_effort", "minimal")  # blank = omit reasoning controls
+_create_text_widget("gemini_thinking_level", "low")  # blank = omit thinking controls
 _create_text_widget("deepseek_thinking_type", "")  # disabled | enabled | blank to omit
 _create_text_widget("deepseek_reasoning_effort", "")  # high | max; only used with enabled thinking
 _create_text_widget("deepseek_max_workers", "8")
@@ -202,11 +202,11 @@ MAX_SEGMENT_CHARS = _get_int_widget("max_segment_chars", 350)
 PROMPT_MAX_CHARS = _get_int_widget("prompt_max_chars", 6000)
 
 MODELS = json.loads(_get_widget("models_json", DEFAULT_MODELS_JSON))
-MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 800)
+MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 2000)
 TEMPERATURE = _get_optional_float_widget("temperature", None)
 OPENAI_ENDPOINT_MODE = _get_widget("openai_endpoint_mode", "auto").strip().lower()
-OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "").strip()
-GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "").strip()
+OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "minimal").strip()
+GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "low").strip()
 DEEPSEEK_THINKING_TYPE = _get_widget("deepseek_thinking_type", "").strip().lower()
 DEEPSEEK_REASONING_EFFORT = _get_widget("deepseek_reasoning_effort", "").strip().lower()
 DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 8)
@@ -440,7 +440,7 @@ Base the judgment ONLY on the supplied text. NEVER invent content. Return ONE co
 on one line, nothing else. Keep evidence <=160 characters and quote only the shortest decisive text:
 {"status":"classified|insufficient_text","primary_language_label":"iso_Script|null","primary_language_iso639_3":"iso|null","primary_language_script":"Script|null","is_romanized":true|false,"dialect_or_variant":"iso|null","is_high_risk_tail":true|false,"secondary_language_label":"iso_Script|null","is_mixed_language":true|false,"mixed_languages":["iso_Script"],"confidence":"high|medium|low","evidence":"<=160 chars"}"""
 
-# Response JSON schema for providers that enforce structured output (OpenAI Responses / Gemini).
+# Response JSON schema for providers that enforce structured output. Gemini requests JSON MIME type only.
 LANG_RESPONSE_JSON_SCHEMA = {
     "type": "object",
     "additionalProperties": False,
@@ -999,14 +999,53 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
             out = {"custom_id": custom_id, "response": {"status_code": 500, "error": repr(e)[:2000]}, "error": repr(e)[:2000]}
             return out, False
 
+    def _successful_existing_result(line: str):
+        try:
+            obj = json.loads(line)
+            custom_id = obj.get("custom_id")
+            status_code = int(obj.get("response", {}).get("status_code", 500))
+            if custom_id and not obj.get("error") and 200 <= status_code < 300:
+                return custom_id, line if line.endswith("\n") else line + "\n"
+        except Exception:
+            return None, None
+        return None, None
+
     with open(path, "r", encoding="utf-8") as src:
         lines = [line for line in src if line.strip()]
 
+    completed_ids = set()
+    existing_success_lines = []
+    if os.path.exists(result_path):
+        with open(result_path, "r", encoding="utf-8") as existing:
+            for existing_line in existing:
+                if not existing_line.strip():
+                    continue
+                custom_id, normalized_line = _successful_existing_result(existing_line)
+                if custom_id:
+                    completed_ids.add(custom_id)
+                    existing_success_lines.append(normalized_line)
+
+    pending_lines = []
+    for line in lines:
+        try:
+            req = json.loads(line)
+            custom_id = req.get("custom_id") or req.get("key")
+        except Exception:
+            custom_id = None
+        if custom_id not in completed_ids:
+            pending_lines.append(line)
+
     total = len(lines)
-    print(f"DeepSeek direct {model}: {total:,} requests with {DEEPSEEK_MAX_WORKERS} workers")
+    print(
+        f"DeepSeek direct {model}: {len(pending_lines):,}/{total:,} pending requests "
+        f"with {DEEPSEEK_MAX_WORKERS} workers; preserved_success={len(existing_success_lines):,}"
+    )
     with open(result_path, "w", encoding="utf-8") as dst:
+        for line in existing_success_lines:
+            dst.write(line)
+        dst.flush()
         with ThreadPoolExecutor(max_workers=DEEPSEEK_MAX_WORKERS) as pool:
-            futures = [pool.submit(_call_line, line) for line in lines]
+            futures = [pool.submit(_call_line, line) for line in pending_lines]
             for i, fut in enumerate(as_completed(futures), start=1):
                 out, ok = fut.result()
                 if ok:
@@ -1014,15 +1053,30 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
                 else:
                     n_error += 1
                 dst.write(json.dumps(out, ensure_ascii=False) + "\n")
-                if i % 100 == 0 or i == total:
+                if i % 100 == 0 or i == len(pending_lines):
                     dst.flush()
-                    print(f"DeepSeek direct {model}: {i:,}/{total:,} done; ok={n_ok:,}; error={n_error:,}")
+                    print(f"DeepSeek direct {model}: {i:,}/{len(pending_lines):,} pending done; ok={n_ok:,}; error={n_error:,}")
 
-    status = "completed" if n_error == 0 else "completed_with_errors"
+    total_rows = 0
+    total_errors = 0
+    with open(result_path, "r", encoding="utf-8") as final:
+        for line in final:
+            if not line.strip():
+                continue
+            total_rows += 1
+            try:
+                obj = json.loads(line)
+                status_code = int(obj.get("response", {}).get("status_code", 500))
+                if obj.get("error") or not (200 <= status_code < 300):
+                    total_errors += 1
+            except Exception:
+                total_errors += 1
+
+    status = "completed" if total_errors == 0 and total_rows == total else "partial_or_errors"
     return {
         "provider_file_id": result_path,
         "provider_batch_id": f"deepseek-direct:{RUN_ID}:{safe_model_dir(model)}:{os.path.basename(path)}",
-        "provider_status": f"{status}; ok={n_ok}; error={n_error}",
+        "provider_status": f"{status}; ok={total_rows - total_errors}; error={total_errors}",
     }
 
 
@@ -1065,6 +1119,15 @@ def existing_batch_job_records():
     return records
 
 
+def provider_status_is_successful(provider_status: str) -> bool:
+    status_l = (provider_status or "").lower()
+    if re.search(r"failed|failure|partial_or_errors|completed_with_errors|error=[1-9]", status_l):
+        return False
+    if status_l.strip() in {"error", "errored"}:
+        return False
+    return True
+
+
 if SUBMIT_BATCHES:
     batch_job_records = existing_batch_job_records()
     already_submitted = set()
@@ -1073,14 +1136,28 @@ if SUBMIT_BATCHES:
         provider_status = str(r[9] or "")
         submission_status = str(r[10] or "")
         if (
-            provider in {"anthropic", "gemini", "openai"}
+            provider in {"anthropic", "gemini", "openai", "deepseek"}
             and submission_status == "submitted"
             and r[8] is not None
-            and not re.search("error|failed", provider_status.lower())
+            and provider_status_is_successful(provider_status)
         ):
             already_submitted.add((provider, str(r[2]), int(r[3])))
     if already_submitted:
         print(f"Skipping {len(already_submitted):,} already submitted provider-batch chunks.")
+
+    def replace_batch_job_record(record):
+        nonlocal_records = []
+        for existing_record in batch_job_records:
+            if (
+                str(existing_record[1]) == str(record[1])
+                and str(existing_record[2]) == str(record[2])
+                and int(existing_record[3]) == int(record[3])
+            ):
+                continue
+            nonlocal_records.append(existing_record)
+        nonlocal_records.append(record)
+        return nonlocal_records
+
     for rec in batch_file_records:
         _, provider, model, chunk_id, path, n, n_bytes, _ = rec
         if SUBMIT_PROVIDER_FILTER and str(provider) not in SUBMIT_PROVIDER_FILTER:
@@ -1099,7 +1176,7 @@ if SUBMIT_BATCHES:
             }[provider]
             res = submitter(path, model)
             print(provider, model, chunk_id, "submitted", res)
-            batch_job_records.append((
+            batch_job_records = replace_batch_job_record((
                 RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), res.get("provider_file_id"),
                 res.get("provider_batch_id"), res.get("provider_status"), "submitted",
                 submitted_at, datetime.utcnow().isoformat(), None,
@@ -1109,7 +1186,7 @@ if SUBMIT_BATCHES:
         except Exception as e:
             err = repr(e)[:500]
             print(provider, model, chunk_id, "ERROR", err)
-            batch_job_records.append((
+            batch_job_records = replace_batch_job_record((
                 RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), None,
                 None, None, "error", submitted_at, datetime.utcnow().isoformat(), err,
             ))
@@ -1435,7 +1512,7 @@ if IMPORT_RESULTS:
         b = valid_model_votes.alias("b")
         pairwise_agreement = (
             a.join(b, on="channel_id", how="inner")
-            .where(F.col("a.model_key") <= F.col("b.model_key"))
+            .where(F.col("a.model_key") < F.col("b.model_key"))
             .groupBy(
                 F.col("a.provider").alias("provider_a"),
                 F.col("a.model").alias("model_a"),

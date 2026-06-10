@@ -17,7 +17,7 @@
           "models_csv": "deepseek-v4-flash,deepseek-v4-pro",
           "deepseek_max_workers": "2",
           "deepseek_request_timeout_seconds": "45",
-          "deepseek_max_retries": "0",
+          "deepseek_max_retries": "1",
           "resume_existing_results": "true",
           "secret_scope": "youtube-llm-keys",
           "deepseek_secret_key": "deepseek-api-key"
