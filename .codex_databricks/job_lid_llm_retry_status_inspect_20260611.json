@@ -1,0 +1,22 @@
+{
+  "run_name": "lid_llm_retry_status_inspect_20260611",
+  "tasks": [
+    {
+      "task_key": "inspect_lid_llm_retry_status",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_lid_llm_retry_status_20260611",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "too_full_20260609_retry_incomplete_20260611",
+          "requests_table": "yt_lid_v3_too_full_20260609_llm_validation_requests",
+          "batch_files_table": "yt_lid_v3_too_full_20260609_llm_validation_requests_batch_files",
+          "batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "status_snapshot_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_status_check"
+        }
+      }
+    }
+  ]
+}

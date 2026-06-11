@@ -109,10 +109,10 @@ def write_run_scoped(df, table_full: str):
         return
 
     actual_partitions = _table_partition_columns(table_full)
-    if actual_partitions != ["run_id"]:
-        raise RuntimeError(f"{table_full} partition columns are {actual_partitions}, expected ['run_id'].")
 
     existing = spark.table(table_full)
+    if "run_id" not in existing.columns:
+        raise RuntimeError(f"{table_full} has no run_id column and cannot be safely overwritten by run scope.")
     existing_cols = set(existing.columns)
     new_cols = sorted(set(df.columns) - existing_cols)
     if new_cols:
@@ -125,6 +125,17 @@ def write_run_scoped(df, table_full: str):
         if field.name not in write_df.columns:
             write_df = write_df.withColumn(field.name, F.lit(None).cast(field.dataType))
     write_df = write_df.select(*existing.columns)
+
+    if actual_partitions != ["run_id"]:
+        print(f"{table_full} is not partitioned by run_id; using DELETE plus append for scoped overwrite.")
+        spark.sql(f"DELETE FROM {table_full} WHERE run_id = {_sql_string(RUN_ID)}")
+        (
+            write_df.write.format("delta")
+            .mode("append")
+            .option("mergeSchema", "true")
+            .saveAsTable(table_full)
+        )
+        return
 
     (
         write_df.write.format("delta")

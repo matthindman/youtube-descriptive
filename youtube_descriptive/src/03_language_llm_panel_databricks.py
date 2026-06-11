@@ -89,6 +89,7 @@ _create_text_widget("segments_input_table", "yt_lid_v3_segments_input")
 _create_text_widget("channel_text_features_table", "yt_lid_v3_channel_text_features")
 _create_text_widget("hindi_indic_audit_table", "yt_lid_v3_hindi_indic_audit_candidates")
 _create_text_widget("run_id", "default")
+_create_text_widget("source_run_id", "")  # blank = use run_id; set for retry/output-only runs
 _create_text_widget("inference_hash_buckets", "4096")
 
 # Output tables.
@@ -176,6 +177,7 @@ SEGMENTS_INPUT_TABLE = _get_widget("segments_input_table", "yt_lid_v3_segments_i
 CHANNEL_TEXT_FEATURES_TABLE = _get_widget("channel_text_features_table", "yt_lid_v3_channel_text_features")
 HINDI_INDIC_AUDIT_TABLE = _get_widget("hindi_indic_audit_table", "yt_lid_v3_hindi_indic_audit_candidates")
 RUN_ID = _get_widget("run_id", "default").strip() or "default"
+SOURCE_RUN_ID = _get_widget("source_run_id", "").strip() or RUN_ID
 INFERENCE_HASH_BUCKETS = _get_int_widget("inference_hash_buckets", 4096)
 
 PANEL_REQUESTS_TABLE = _get_widget("panel_requests_table", "yt_lid_v3_llm_panel_requests")
@@ -398,7 +400,7 @@ if PANEL_MAJORITY_MODE not in {"reached_models", "configured_models"}:
 if MIN_PANEL_VOTES_FOR_MAJORITY < 1:
     raise ValueError("min_panel_votes_for_majority must be positive")
 
-print("Source comparison table:", comparison_full, "| run_id:", RUN_ID)
+print("Source comparison table:", comparison_full, "| source_run_id:", SOURCE_RUN_ID, "| output run_id:", RUN_ID)
 print("Panel models:", ", ".join(f"{m['provider']}:{m['model']}[{m.get('tier', 'unspecified')}]" for m in MODELS))
 print("Routing mode:", ROUTING_MODE)
 if ROUTING_MODE == "random_validation":
@@ -468,7 +470,7 @@ LANG_RESPONSE_JSON_SCHEMA = {
 
 # COMMAND ----------
 cmp_df = spark.table(comparison_full).where(
-    (F.col("run_id") == F.lit(RUN_ID)) & (F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
+    (F.col("run_id") == F.lit(SOURCE_RUN_ID)) & (F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
 )
 
 ol_iso = F.col("openlid_primary_language_iso639_3")
@@ -527,7 +529,7 @@ else:
             # row per channel, so we never pull rows from another run or fan out the comparison rows.
             tf = spark.table(channel_text_features_full)
             if "run_id" in text_feat_cols:
-                tf = tf.where(F.col("run_id") == F.lit(RUN_ID))
+                tf = tf.where(F.col("run_id") == F.lit(SOURCE_RUN_ID))
             if "inference_hash_buckets" in text_feat_cols:
                 tf = tf.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
             tf_select = ["channel_id"]
@@ -546,7 +548,7 @@ else:
             # channel_text_features, so this preserves the D3 source-code trigger.
             hi = spark.table(hindi_indic_audit_full)
             if "run_id" in hindi_audit_cols:
-                hi = hi.where(F.col("run_id") == F.lit(RUN_ID))
+                hi = hi.where(F.col("run_id") == F.lit(SOURCE_RUN_ID))
             if "inference_hash_buckets" in hindi_audit_cols:
                 hi = hi.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
             hi_select = ["channel_id"]
@@ -620,7 +622,7 @@ segments_tbl = spark.table(segments_input_full)
 segment_cols = set(segments_tbl.columns)
 seg = (
     segments_tbl
-    .where((F.col("run_id") == F.lit(RUN_ID)) & (F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS)))
+    .where((F.col("run_id") == F.lit(SOURCE_RUN_ID)) & (F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS)))
     .join(routed.select("channel_id"), on="channel_id", how="inner")
     .select(
         "channel_id", "segment_type",
@@ -1158,7 +1160,15 @@ if SUBMIT_BATCHES:
         nonlocal_records.append(record)
         return nonlocal_records
 
-    for rec in batch_file_records:
+    # Submit asynchronous batch providers before direct providers so long direct calls do not delay batch
+    # provider processing, and keep each provider/model in a stable order for reproducibility.
+    _submit_priority = {"openai": 0, "anthropic": 1, "gemini": 2, "deepseek": 3}
+    submission_records = sorted(
+        batch_file_records,
+        key=lambda r: (_submit_priority.get(str(r[1]), 99), str(r[2]), int(r[3])),
+    )
+
+    for rec in submission_records:
         _, provider, model, chunk_id, path, n, n_bytes, _ = rec
         if SUBMIT_PROVIDER_FILTER and str(provider) not in SUBMIT_PROVIDER_FILTER:
             print(provider, model, chunk_id, "not in submit_provider_filter; skipping")
@@ -1167,6 +1177,11 @@ if SUBMIT_BATCHES:
             print(provider, model, chunk_id, "already submitted; skipping")
             continue
         submitted_at = datetime.utcnow().isoformat()
+        batch_job_records = replace_batch_job_record((
+            RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), None,
+            None, "running", "running", submitted_at, datetime.utcnow().isoformat(), None,
+        ))
+        persist_batch_job_records(batch_job_records)
         try:
             submitter = {
                 "openai": submit_openai_batch,
