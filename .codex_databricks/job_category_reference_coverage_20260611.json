@@ -1,0 +1,12 @@
+{
+  "run_name": "category_reference_coverage_20260611",
+  "tasks": [
+    {
+      "task_key": "inspect_category_reference_coverage",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_category_reference_coverage_20260611"
+      }
+    }
+  ]
+}

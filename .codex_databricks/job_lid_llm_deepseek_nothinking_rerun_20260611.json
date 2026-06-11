@@ -1,8 +1,8 @@
 {
-  "run_name": "lid_llm_validation_1000_20260610_submit_deepseek",
+  "run_name": "lid_llm_deepseek_nothinking_rerun_20260611",
   "tasks": [
     {
-      "task_key": "submit_lid_llm_validation_deepseek",
+      "task_key": "submit_lid_llm_deepseek_nothinking_rerun",
       "existing_cluster_id": "0601-203643-bkxsqffg",
       "timeout_seconds": 7200,
       "notebook_task": {
@@ -14,7 +14,8 @@
           "segments_input_table": "yt_lid_v3_too_full_20260609_segments_input",
           "channel_text_features_table": "yt_lid_v3_too_full_20260609_channel_text_features",
           "hindi_indic_audit_table": "yt_lid_v3_too_full_20260609_hindi_indic_audit_candidates",
-          "run_id": "too_full_20260609",
+          "run_id": "too_full_20260609_deepseek_nothinking_20260611",
+          "source_run_id": "too_full_20260609",
           "inference_hash_buckets": "4096",
           "routing_mode": "random_validation",
           "random_validation_sample_size": "1000",
@@ -25,6 +26,7 @@
           "panel_raw_results_table": "yt_lid_v3_too_full_20260609_llm_validation_raw_results",
           "panel_verdicts_table": "yt_lid_v3_too_full_20260609_llm_validation_verdicts",
           "panel_model_agreement_table": "yt_lid_v3_too_full_20260609_llm_validation_model_agreement",
+          "models_json": "[{\"provider\":\"deepseek\",\"model\":\"deepseek-v4-flash\",\"tier\":\"small\"},{\"provider\":\"deepseek\",\"model\":\"deepseek-v4-pro\",\"tier\":\"frontier\"}]",
           "batch_output_dir": "/dbfs/FileStore/youtube_lid_panel_batches",
           "results_input_dir": "/dbfs/FileStore/youtube_lid_panel_batches/results",
           "max_requests_per_file": "10000",
@@ -38,10 +40,10 @@
           "min_panel_votes_for_majority": "2",
           "submit_batches": "true",
           "submit_provider_filter": "deepseek",
-          "skip_existing_submitted_batches": "true",
+          "skip_existing_submitted_batches": "false",
           "deepseek_max_workers": "16",
-          "deepseek_request_timeout_seconds": "20",
-          "deepseek_max_retries": "0",
+          "deepseek_request_timeout_seconds": "45",
+          "deepseek_max_retries": "1",
           "import_results": "false",
           "secret_scope": "youtube-llm-keys",
           "openai_secret_key": "openai-api-key",

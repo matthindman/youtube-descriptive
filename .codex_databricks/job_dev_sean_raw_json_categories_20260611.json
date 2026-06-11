@@ -1,0 +1,12 @@
+{
+  "run_name": "codex_dev_sean_raw_json_categories_20260611",
+  "tasks": [
+    {
+      "task_key": "inspect_dev_sean_raw_json_categories",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_dev_sean_raw_json_categories_20260611"
+      }
+    }
+  ]
+}

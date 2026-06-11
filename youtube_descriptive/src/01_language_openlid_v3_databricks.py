@@ -10,11 +10,11 @@
 # MAGIC language fields are preserved as audit fields, never as ground truth.
 # MAGIC
 # MAGIC **Source tables (Unity Catalog):**
-# MAGIC - `prod_tads.youtube.yt_sl_channels`
-# MAGIC - `prod_tads.youtube.yt_sl_videos`
+# MAGIC - `prod_tads.youtube_too.yt_sl_channels`
+# MAGIC - `prod_tads.youtube_too.yt_sl_videos`
 # MAGIC
-# MAGIC **Output table family:** a new `yt_lid_v3_*` family (see section 1). The legacy
-# MAGIC `yt_lid_openlid_v3_*` tables are never overwritten.
+# MAGIC **Output table family:** a new `yt_lid_v3_*` family under `dev_sean.matt` by default (see section 1).
+# MAGIC The legacy `yt_lid_openlid_v3_*` tables are never overwritten.
 # MAGIC
 # MAGIC **Implementation status:** the v3 dual-model workflow is implemented:
 # MAGIC scaffolding/widgets/constants/models, deterministic dedup + smoke sampling, canonical segment-input
@@ -104,9 +104,14 @@ def _get_float_widget(name: str, default: float) -> float:
 # COMMAND ----------
 # Source table parameters.
 _create_text_widget("catalog", "prod_tads")
-_create_text_widget("schema", "youtube")
+_create_text_widget("schema", "youtube_too")
 _create_text_widget("channels_table", "yt_sl_channels")
 _create_text_widget("videos_table", "yt_sl_videos")
+
+# Output table location. These are deliberately separate from the source so production runs can read from
+# prod_tads while writing results to the writable analysis schema.
+_create_text_widget("output_catalog", "dev_sean")
+_create_text_widget("output_schema", "matt")
 
 # Output table parameters (v3 family, §2). Override any name here.
 _create_text_widget("output_segments_input_table", "yt_lid_v3_segments_input")
@@ -136,6 +141,7 @@ _create_text_widget("output_source_language_confusion_table", "yt_lid_v3_source_
 _create_text_widget("output_dedupe_qa_table", "yt_lid_v3_dedupe_qa")
 _create_text_widget("output_preflight_estimate_table", "yt_lid_v3_preflight_estimate")
 _create_text_widget("output_ablation_summary_table", "yt_lid_v3_ablation_summary")
+_create_text_widget("output_run_progress_table", "yt_lid_v3_run_progress")
 
 # OpenLID-v3 model parameters.
 _create_text_widget("model_repo", "HPLT/OpenLID-v3")
@@ -234,9 +240,12 @@ _create_text_widget("video_tags_column", "")
 # COMMAND ----------
 # Resolve widget values.
 CATALOG = _get_widget("catalog", "prod_tads")
-SCHEMA = _get_widget("schema", "youtube")
+SCHEMA = _get_widget("schema", "youtube_too")
 CHANNELS_TABLE = _get_widget("channels_table", "yt_sl_channels")
 VIDEOS_TABLE = _get_widget("videos_table", "yt_sl_videos")
+
+OUTPUT_CATALOG = _get_widget("output_catalog", "dev_sean")
+OUTPUT_SCHEMA = _get_widget("output_schema", "matt")
 
 OUTPUT_SEGMENTS_INPUT_TABLE = _get_widget("output_segments_input_table", "yt_lid_v3_segments_input")
 OUTPUT_OPENLID_SEGMENTS_TABLE = _get_widget("output_openlid_segments_table", "yt_lid_v3_openlid_segments")
@@ -264,6 +273,7 @@ OUTPUT_SOURCE_LANGUAGE_CONFUSION_TABLE = _get_widget("output_source_language_con
 OUTPUT_DEDUPE_QA_TABLE = _get_widget("output_dedupe_qa_table", "yt_lid_v3_dedupe_qa")
 OUTPUT_PREFLIGHT_ESTIMATE_TABLE = _get_widget("output_preflight_estimate_table", "yt_lid_v3_preflight_estimate")
 OUTPUT_ABLATION_SUMMARY_TABLE = _get_widget("output_ablation_summary_table", "yt_lid_v3_ablation_summary")
+OUTPUT_RUN_PROGRESS_TABLE = _get_widget("output_run_progress_table", "yt_lid_v3_run_progress")
 
 MODEL_REPO = _get_widget("model_repo", "HPLT/OpenLID-v3")
 MODEL_FILENAME = _get_widget("model_filename", "openlid-v3.bin")
@@ -491,16 +501,25 @@ if GLOTLID_ACTIVE and GLOTLID_MODE == "audit_segments" and not ENABLE_OPENLID:
     raise ValueError("glotlid_mode=audit_segments requires enable_openlid=true because it audits OpenLID outputs.")
 
 
-def fqtn(table: str) -> str:
+def source_fqtn(table: str) -> str:
     return f"`{CATALOG}`.`{SCHEMA}`.`{table}`"
+
+
+def output_fqtn(table: str) -> str:
+    return f"`{OUTPUT_CATALOG}`.`{OUTPUT_SCHEMA}`.`{table}`"
+
+
+# Most downstream helper calls refer to output tables.
+def fqtn(table: str) -> str:
+    return output_fqtn(table)
 
 
 def local_dir_for(path: str) -> str:
     return os.path.dirname(path.replace("dbfs:/", "/dbfs/"))
 
 
-channels_full = fqtn(CHANNELS_TABLE)
-videos_full = fqtn(VIDEOS_TABLE)
+channels_full = source_fqtn(CHANNELS_TABLE)
+videos_full = source_fqtn(VIDEOS_TABLE)
 segments_input_full = fqtn(OUTPUT_SEGMENTS_INPUT_TABLE)
 dedupe_qa_full = fqtn(OUTPUT_DEDUPE_QA_TABLE)
 openlid_segments_full = fqtn(OUTPUT_OPENLID_SEGMENTS_TABLE)
@@ -527,13 +546,16 @@ unclassified_audit_full = fqtn(OUTPUT_UNCLASSIFIED_AUDIT_TABLE)
 source_language_confusion_full = fqtn(OUTPUT_SOURCE_LANGUAGE_CONFUSION_TABLE)
 preflight_estimate_full = fqtn(OUTPUT_PREFLIGHT_ESTIMATE_TABLE)
 ablation_summary_full = fqtn(OUTPUT_ABLATION_SUMMARY_TABLE)
+run_progress_full = fqtn(OUTPUT_RUN_PROGRESS_TABLE)
 
 print("Source channels table:", channels_full)
 print("Source videos table:", videos_full)
+print("Output schema:", f"`{OUTPUT_CATALOG}`.`{OUTPUT_SCHEMA}`")
 print("Segments-input output table:", segments_input_full)
 print("Compact prediction tables:", openlid_compact_full, glotlid_compact_full)
 print("Dedupe QA output table:", dedupe_qa_full)
 print("Preflight estimate output table:", preflight_estimate_full)
+print("Run-progress output table:", run_progress_full)
 print("enable_openlid:", ENABLE_OPENLID, "| enable_glotlid:", ENABLE_GLOTLID, "| glotlid_mode:", GLOTLID_MODE)
 print("min_clean_chars:", MIN_CLEAN_CHARS, "| min_clean_chars_non_latin:", MIN_CLEAN_CHARS_NON_LATIN,
       "| non_latin_dominant_script_share:", NON_LATIN_DOMINANT_SCRIPT_SHARE, "| top_k:", TOP_K)
@@ -545,6 +567,8 @@ try:
     spark.conf.set("spark.databricks.delta.replaceWhere.dataColumns.enabled", "true")
 except Exception as exc:  # noqa: BLE001 - non-Databricks Spark may not expose this config
     print(f"WARNING: could not enable Delta data-column replaceWhere support: {exc}")
+spark.conf.set("spark.sql.shuffle.partitions", str(MIN_NUM_PARTITIONS))
+print("Initial Spark shuffle partitions:", MIN_NUM_PARTITIONS)
 
 
 def _channel_hash_bucket_col(channel_col):
@@ -724,6 +748,53 @@ def write_delta(df, table_full: str, partition_cols: Optional[List[str]] = None,
             spark.sql(f"OPTIMIZE {table_full} ZORDER BY ({', '.join(zorder_cols)})")
         except Exception as exc:  # noqa: BLE001 - optimization is optional and Databricks-specific
             print(f"WARNING: OPTIMIZE failed for {table_full}: {exc}")
+
+
+def record_progress(stage: str, status: str = "ok", metrics: Optional[Dict[str, object]] = None) -> None:
+    rows = [
+        (
+            RUN_ID,
+            INFERENCE_HASH_BUCKETS,
+            BUCKET_START,
+            BUCKET_END,
+            IS_FULL_BUCKET_RANGE,
+            stage,
+            status,
+            str(k),
+            None if v is None else str(v),
+        )
+        for k, v in (metrics or {"event": "1"}).items()
+    ]
+    progress_df = (
+        spark.createDataFrame(
+            rows,
+            "run_id string, inference_hash_buckets int, bucket_start int, bucket_end int, "
+            "is_full_bucket_range boolean, stage string, status string, metric string, value string",
+        )
+        .withColumn("event_timestamp", F.current_timestamp())
+    )
+    (
+        progress_df.write
+        .format("delta")
+        .mode("append")
+        .option("mergeSchema", "true")
+        .saveAsTable(run_progress_full)
+    )
+    print(f"Progress: {stage} [{status}] -> {run_progress_full}")
+
+
+record_progress(
+    "configured",
+    metrics={
+        "source_channels_table": channels_full,
+        "source_videos_table": videos_full,
+        "output_schema": f"{OUTPUT_CATALOG}.{OUTPUT_SCHEMA}",
+        "run_id": RUN_ID,
+        "bucket_start": BUCKET_START,
+        "bucket_end": BUCKET_END,
+        "inference_hash_buckets": INFERENCE_HASH_BUCKETS,
+    },
+)
 
 # COMMAND ----------
 # MAGIC %md
@@ -1081,7 +1152,7 @@ else:
     n_duplicate_video_keys = None
 videos_dedup = deterministic_dedup(
     videos_for_dedup, video_partition_cols, video_ts_col, "_lid_video_row_hash"
-).persist(StorageLevel.DISK_ONLY)
+)
 n_videos_out = videos_dedup.count() if RUN_HEAVY_QA else None
 
 # COMMAND ----------
@@ -1113,6 +1184,18 @@ if VIDEOS_PER_CHANNEL > 0:
         .drop("_video_rank_for_lid")
     )
 
+# The source video rows can be very wide. From this point on the LID workflow only needs the ID/rank
+# fields and the text fields used for segment fanout, so trim the lineage before materializing counts.
+video_lid_cols = [CHANNEL_ID_COLUMN, "_lid_video_row_hash"]
+for c in [video_id_col, rank_col, video_title_col, video_description_col, video_tags_col]:
+    if c and c in videos_selected.columns and c not in video_lid_cols:
+        video_lid_cols.append(c)
+videos_selected = videos_selected.select(*video_lid_cols)
+for _video_text_col in [video_title_col, video_description_col, video_tags_col]:
+    if _video_text_col and _video_text_col in videos_selected.columns:
+        videos_selected = videos_selected.withColumn(_video_text_col, truncate_col(_video_text_col, MAX_SEGMENT_CHARS))
+print("Video columns retained for segment fanout:", video_lid_cols)
+
 # Stable video key used in segment IDs. If the source has no video_id, use a deterministic post-dedup row hash
 # so distinct same-text videos from the same channel do not collapse to the same segment_id.
 if video_id_col:
@@ -1127,9 +1210,23 @@ else:
         "_lid_video_key",
         F.concat(F.lit("rowhash:"), F.col("_lid_video_row_hash")),
     )
-videos_selected = videos_selected.persist(StorageLevel.DISK_ONLY)
+videos_selected = videos_selected.select(*video_lid_cols, "_lid_video_key").persist(StorageLevel.DISK_ONLY)
+record_progress(
+    "video_selection_started",
+    metrics={
+        "videos_per_channel": VIDEOS_PER_CHANNEL,
+        "rank_column": rank_col or "<none>",
+        "retained_columns": ",".join(video_lid_cols),
+    },
+)
 n_videos_selected_for_segments = videos_selected.count()
 print(f"Videos selected for segment fanout: {n_videos_selected_for_segments:,}")
+record_progress(
+    "video_selection_completed",
+    metrics={
+        "videos_selected_for_segments": n_videos_selected_for_segments,
+    },
+)
 
 # COMMAND ----------
 # Write dedupe QA (§4.1/§4.2). Exact raw source and duplicate-key counts are heavy-QA only in production.
@@ -1180,6 +1277,16 @@ write_delta(
     replace_where_cols=_run_scope_required_cols(),
 )
 print("Wrote dedupe QA to", dedupe_qa_full)
+record_progress(
+    "dedupe_qa_written",
+    metrics={
+        "channels_after_dedup": n_channels_after_dedup,
+        "channels_pipeline": n_channels_pipeline,
+        "videos_selected_for_segments": n_videos_selected_for_segments,
+        "channel_timestamp_column": channel_ts_col or "<none>",
+        "video_timestamp_column": video_ts_col or "<none>",
+    },
+)
 _maybe_display(current_run_scope_table(dedupe_qa_full))
 
 # COMMAND ----------
@@ -1491,6 +1598,16 @@ print(
     f"segments={n_segment_input_rows:,}",
     f"valid_segments={n_valid_segments:,}",
     f"known_compact_prediction_rows={projected_known_compact_prediction_rows:,}",
+)
+record_progress(
+    "preflight_estimate_written",
+    metrics={
+        "selected_channels_after_dedup_and_sampling": n_channels_pipeline,
+        "selected_videos_after_dedup_and_cap": n_videos_selected_for_segments,
+        "segment_input_rows": n_segment_input_rows,
+        "expected_valid_segments": n_valid_segments,
+        "projected_known_compact_prediction_rows": projected_known_compact_prediction_rows,
+    },
 )
 _maybe_display(current_run_scope_table(preflight_estimate_full).orderBy("metric"))
 
@@ -1818,6 +1935,14 @@ def write_optional_long_segments(compact_df, table_full: str, model_name: str) -
 
 def write_compact_predictions(input_df, worker_path: str, model_name: str, table_full: str,
                               text_col: str = "clean_text", input_is_partitioned: bool = False):
+    record_progress(
+        f"{model_name}_inference_started",
+        metrics={
+            "valid_segments": n_valid_segments,
+            "effective_num_partitions": EFFECTIVE_NUM_PARTITIONS,
+            "output_table": table_full,
+        },
+    )
     inference_input = input_df if input_is_partitioned else repartition_for_bucketed_parallelism(input_df, EFFECTIVE_NUM_PARTITIONS)
     compact = predict_segments_compact(
         inference_input,
@@ -1835,6 +1960,13 @@ def write_compact_predictions(input_df, worker_path: str, model_name: str, table
         zorder_cols=["segment_id", "channel_id"],
     )
     print("Wrote compact segment predictions to", table_full)
+    record_progress(
+        f"{model_name}_inference_completed",
+        metrics={
+            "valid_segments": n_valid_segments,
+            "output_table": table_full,
+        },
+    )
     return current_run_table(table_full)
 
 # COMMAND ----------
@@ -3928,7 +4060,7 @@ else:
 # COMMAND ----------
 def _table_exists(table_name: str) -> bool:
     try:
-        return spark.catalog.tableExists(f"{CATALOG}.{SCHEMA}.{table_name}")
+        return spark.catalog.tableExists(f"{OUTPUT_CATALOG}.{OUTPUT_SCHEMA}.{table_name}")
     except Exception:
         return False
 
@@ -4036,6 +4168,16 @@ print(
     "aggregations, #9 legacy+prefixed+consensus fields, #10 consensus rules, #11 screen-vs-credible, "
     "#12 high-risk flagged not recoded, #13-15 Hindi/Indic + redirect diagnostics, #16 validation sample, "
     "#17 ablation churn, #19 README) are satisfied by sections 3-15 and README_language_lid_v3.md."
+)
+record_progress(
+    "completed",
+    status="success",
+    metrics={
+        "final_channels_rows": n_rows,
+        "final_channels_universe": n_universe,
+        "openlid_compact_rows": N_OPENLID_COMPACT_ROWS,
+        "glotlid_compact_rows": N_GLOTLID_COMPACT_ROWS,
+    },
 )
 
 # COMMAND ----------

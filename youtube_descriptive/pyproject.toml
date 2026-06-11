@@ -16,8 +16,10 @@ dev = [
     "pytest",
     "ruff",
     "databricks-dlt",
-    "databricks-connect>=15.4,<15.5",
+    "databricks-connect>=17.3,<17.4",
     "ipykernel",
+    "matplotlib",
+    "pandas",
 ]
 
 [project.scripts]

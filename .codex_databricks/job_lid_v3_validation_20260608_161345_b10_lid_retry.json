@@ -1,0 +1,112 @@
+{
+  "run_name": "codex_lid_v3_10k_validation_20260608_161345_b10_lid_retry",
+  "tasks": [
+    {
+      "task_key": "run_openlid_glotlid",
+      "existing_cluster_id": "0303-193859-1ff54asc",
+      "notebook_task": {
+        "notebook_path": "/Users/hindman.gmail.com@auth.researchaccelerator.org/codex_lid_v3_validation_20260608_161345/01_language_openlid_v3_databricks",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "channels_table": "yt_lid_v3_validation_10k_20260608_161345_b10_source_channels",
+          "videos_table": "yt_lid_v3_validation_10k_20260608_161345_b10_source_videos",
+          "output_segments_input_table": "yt_lid_v3_validation_10k_20260608_161345_b10_segments_input",
+          "output_openlid_segments_table": "yt_lid_v3_validation_10k_20260608_161345_b10_openlid_segments",
+          "output_glotlid_segments_table": "yt_lid_v3_validation_10k_20260608_161345_b10_glotlid_segments",
+          "output_glotlid_native_segments_table": "yt_lid_v3_validation_10k_20260608_161345_b10_glotlid_native_segments",
+          "output_openlid_compact_table": "yt_lid_v3_validation_10k_20260608_161345_b10_openlid_predictions_compact",
+          "output_glotlid_compact_table": "yt_lid_v3_validation_10k_20260608_161345_b10_glotlid_predictions_compact",
+          "output_glotlid_native_compact_table": "yt_lid_v3_validation_10k_20260608_161345_b10_glotlid_native_predictions_compact",
+          "output_channel_text_features_table": "yt_lid_v3_validation_10k_20260608_161345_b10_channel_text_features",
+          "output_segment_model_comparison_table": "yt_lid_v3_validation_10k_20260608_161345_b10_segment_model_comparison",
+          "output_channel_votes_table": "yt_lid_v3_validation_10k_20260608_161345_b10_channel_votes",
+          "output_channel_model_aggregation_table": "yt_lid_v3_validation_10k_20260608_161345_b10_channel_model_aggregation",
+          "output_channel_model_comparison_table": "yt_lid_v3_validation_10k_20260608_161345_b10_channel_model_comparison",
+          "output_channels_table": "yt_lid_v3_validation_10k_20260608_161345_b10_channels",
+          "output_language_summary_full_table": "yt_lid_v3_validation_10k_20260608_161345_b10_language_summary_full",
+          "output_language_summary_rollup_table": "yt_lid_v3_validation_10k_20260608_161345_b10_language_summary_rollup",
+          "output_model_agreement_summary_table": "yt_lid_v3_validation_10k_20260608_161345_b10_model_agreement_summary",
+          "output_mixed_language_candidates_table": "yt_lid_v3_validation_10k_20260608_161345_b10_mixed_language_candidates",
+          "output_hindi_indic_audit_table": "yt_lid_v3_validation_10k_20260608_161345_b10_hindi_indic_audit_candidates",
+          "output_suspect_tail_audit_table": "yt_lid_v3_validation_10k_20260608_161345_b10_suspect_tail_audit_sample",
+          "output_high_risk_redirect_table": "yt_lid_v3_validation_10k_20260608_161345_b10_high_risk_redirect_diagnostic",
+          "output_manual_validation_sample_table": "yt_lid_v3_validation_10k_20260608_161345_b10_manual_validation_sample",
+          "output_unclassified_audit_table": "yt_lid_v3_validation_10k_20260608_161345_b10_unclassified_audit",
+          "output_source_language_confusion_table": "yt_lid_v3_validation_10k_20260608_161345_b10_source_language_confusion",
+          "output_dedupe_qa_table": "yt_lid_v3_validation_10k_20260608_161345_b10_dedupe_qa",
+          "output_preflight_estimate_table": "yt_lid_v3_validation_10k_20260608_161345_b10_preflight_estimate",
+          "output_ablation_summary_table": "yt_lid_v3_validation_10k_20260608_161345_b10_ablation_summary",
+          "model_repo": "HPLT/OpenLID-v3",
+          "model_filename": "openlid-v3.bin",
+          "model_local_path": "/Volumes/dev_sean/matt/models/openlid-v3.bin",
+          "download_model_if_missing": "true",
+          "model_distribution_mode": "direct_path",
+          "glotlid_repo": "cis-lmu/glotlid",
+          "glotlid_filename": "model.bin",
+          "glotlid_local_path": "/Volumes/dev_sean/matt/models/glotlid.bin",
+          "enable_openlid": "true",
+          "enable_glotlid": "true",
+          "glotlid_mode": "all_valid_segments",
+          "glotlid_preprocessing_mode": "match_openlid",
+          "glotlid_native_audit_sample_fraction": "0.00",
+          "production_mode": "false",
+          "prediction_output_mode": "compact",
+          "long_segment_sample_fraction": "0.001",
+          "run_id": "codex_10k_20260608_161345_b10",
+          "inference_hash_buckets": "256",
+          "bucket_start": "0",
+          "bucket_end": "255",
+          "target_segments_per_partition": "50000",
+          "min_num_partitions": "32",
+          "max_num_partitions": "256",
+          "run_heavy_qa": "true",
+          "create_validation_samples": "true",
+          "validation_sample_seed": "20260608",
+          "validation_max_per_stratum": "100",
+          "validation_min_per_stratum": "30",
+          "run_ablation_aggregations": "true",
+          "enable_notebook_displays": "false",
+          "allow_full_native_audit": "false",
+          "optimize_after_write": "false",
+          "limit_channels": "0",
+          "videos_per_channel": "10",
+          "allow_unbounded_videos_per_channel": "false",
+          "video_rank_column": "",
+          "max_segment_chars": "2000",
+          "score_threshold": "0.0",
+          "checkpoint_dir": "dbfs:/tmp/yt_lid_v3/codex_validation/codex_10k_20260608_161345_b10/checkpoints",
+          "source_update_format": "label",
+          "update_source_detected_language": "false",
+          "channel_id_column": "channel_id",
+          "video_id_column": "video_id",
+          "channel_name_column": "",
+          "channel_description_column": "",
+          "video_title_column": "",
+          "video_description_column": "",
+          "video_tags_column": ""
+        }
+      }
+    },
+    {
+      "task_key": "analyze_validation_outputs",
+      "depends_on": [
+        {
+          "task_key": "run_openlid_glotlid"
+        }
+      ],
+      "existing_cluster_id": "0303-193859-1ff54asc",
+      "notebook_task": {
+        "notebook_path": "/Users/hindman.gmail.com@auth.researchaccelerator.org/codex_lid_v3_validation_20260608_161345/02_analyze_lid_v3_validation_outputs",
+        "base_parameters": {
+          "scratch_catalog": "dev_sean",
+          "scratch_schema": "matt",
+          "output_prefix": "yt_lid_v3_validation_10k_20260608_161345_b10",
+          "run_id": "codex_10k_20260608_161345_b10",
+          "figures_dbfs_dir": "",
+          "top_language_n": "20"
+        }
+      }
+    }
+  ]
+}

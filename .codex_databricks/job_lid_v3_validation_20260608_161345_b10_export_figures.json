@@ -1,0 +1,20 @@
+{
+  "run_name": "codex_lid_v3_10k_validation_20260608_161345_b10_export_figures",
+  "tasks": [
+    {
+      "task_key": "export_analysis_figures",
+      "existing_cluster_id": "0303-193859-1ff54asc",
+      "notebook_task": {
+        "notebook_path": "/Users/hindman.gmail.com@auth.researchaccelerator.org/codex_lid_v3_validation_20260608_161345/03_export_lid_v3_analysis_figures",
+        "base_parameters": {
+          "scratch_catalog": "dev_sean",
+          "scratch_schema": "matt",
+          "output_prefix": "yt_lid_v3_validation_10k_20260608_161345_b10",
+          "run_id": "codex_10k_20260608_161345_b10",
+          "figure_local_dir": "/local_disk0/tmp/yt_lid_v3_figures/yt_lid_v3_validation_10k_20260608_161345_b10/codex_10k_20260608_161345_b10",
+          "volume_figure_dir": "/Volumes/dev_sean/matt/models/codex_lid_v3_validation_20260608_161345_b10_figures"
+        }
+      }
+    }
+  ]
+}

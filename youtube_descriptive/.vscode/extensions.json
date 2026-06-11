@@ -1,6 +1,8 @@
 {
     "recommendations": [
         "databricks.databricks",
+        "ms-python.python",
+        "ms-toolsai.jupyter",
         "redhat.vscode-yaml",
         "charliermarsh.ruff"
     ]

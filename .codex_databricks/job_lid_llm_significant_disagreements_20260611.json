@@ -1,0 +1,31 @@
+{
+  "run_name": "lid_llm_significant_disagreements_20260611",
+  "tasks": [
+    {
+      "task_key": "inspect_lid_llm_significant_disagreements",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_lid_llm_significant_disagreements_20260611",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "raw_results_table": "yt_lid_v3_too_full_20260609_llm_validation_raw_results",
+          "requests_table": "yt_lid_v3_too_full_20260609_llm_validation_requests",
+          "segments_input_table": "yt_lid_v3_too_full_20260609_segments_input",
+          "comparison_table": "yt_lid_v3_too_full_20260609_channel_model_comparison",
+          "original_run_id": "too_full_20260609",
+          "retry_run_id": "too_full_20260609_retry_incomplete_20260611",
+          "source_run_id": "too_full_20260609",
+          "exclude_providers": "openai",
+          "retry_providers": "gemini,deepseek",
+          "min_valid_votes": "5",
+          "min_dissenting_models": "2",
+          "max_segments_per_channel": "24",
+          "max_segment_chars": "500",
+          "prompt_chars": "9000"
+        }
+      }
+    }
+  ]
+}

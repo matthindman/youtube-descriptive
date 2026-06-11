@@ -1,4 +1,5 @@
 .databricks/
+.env.local
 build/
 dist/
 __pycache__/

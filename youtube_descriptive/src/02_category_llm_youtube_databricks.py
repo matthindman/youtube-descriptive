@@ -146,9 +146,10 @@ _create_text_widget("models_json", DEFAULT_MODELS_JSON)
 _create_text_widget("openai_endpoint_mode", "auto")  # auto, responses, or chat_completions
 _create_text_widget("openai_reasoning_effort", "minimal")  # blank = omit reasoning controls
 _create_text_widget("gemini_thinking_level", "low")  # blank = omit thinking controls
-_create_text_widget("deepseek_thinking_type", "")  # disabled | enabled | blank to omit
+_create_text_widget("deepseek_thinking_type", "disabled")  # disabled | enabled | blank to omit
 _create_text_widget("deepseek_reasoning_effort", "")  # high | max; only used with enabled thinking
-_create_text_widget("deepseek_max_workers", "8")
+_create_text_widget("deepseek_max_output_tokens", "600")
+_create_text_widget("deepseek_max_workers", "16")
 _create_text_widget("deepseek_request_timeout_seconds", "60")
 _create_text_widget("deepseek_max_retries", "1")
 
@@ -210,9 +211,10 @@ MODELS = json.loads(_get_widget("models_json", DEFAULT_MODELS_JSON))
 OPENAI_ENDPOINT_MODE = _get_widget("openai_endpoint_mode", "auto").strip().lower()
 OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "minimal").strip().lower()
 GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "low").strip().lower()
-DEEPSEEK_THINKING_TYPE = _get_widget("deepseek_thinking_type", "").strip().lower()
+DEEPSEEK_THINKING_TYPE = _get_widget("deepseek_thinking_type", "disabled").strip().lower()
 DEEPSEEK_REASONING_EFFORT = _get_widget("deepseek_reasoning_effort", "").strip().lower()
-DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 8)
+DEEPSEEK_MAX_OUTPUT_TOKENS = _get_int_widget("deepseek_max_output_tokens", 600)
+DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 16)
 DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _get_float_widget("deepseek_request_timeout_seconds", 60.0)
 DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 1)
 
@@ -261,12 +263,24 @@ if DEEPSEEK_THINKING_TYPE not in {"", "enabled", "disabled"}:
     raise ValueError("deepseek_thinking_type must be blank, enabled, or disabled")
 if DEEPSEEK_REASONING_EFFORT and DEEPSEEK_REASONING_EFFORT not in {"high", "max"}:
     raise ValueError("deepseek_reasoning_effort must be blank, high, or max")
+if DEEPSEEK_REASONING_EFFORT and DEEPSEEK_THINKING_TYPE != "enabled":
+    raise ValueError("deepseek_reasoning_effort requires deepseek_thinking_type=enabled")
+if DEEPSEEK_MAX_OUTPUT_TOKENS < 1:
+    raise ValueError("deepseek_max_output_tokens must be at least 1")
 if DEEPSEEK_MAX_WORKERS < 1:
     raise ValueError("deepseek_max_workers must be at least 1")
 if DEEPSEEK_REQUEST_TIMEOUT_SECONDS <= 0:
     raise ValueError("deepseek_request_timeout_seconds must be positive")
 if DEEPSEEK_MAX_RETRIES < 0:
     raise ValueError("deepseek_max_retries must be non-negative")
+print(
+    "DeepSeek direct controls:",
+    f"thinking_type={DEEPSEEK_THINKING_TYPE or 'omitted'}",
+    f"max_output_tokens={DEEPSEEK_MAX_OUTPUT_TOKENS}",
+    f"workers={DEEPSEEK_MAX_WORKERS}",
+    f"timeout_seconds={DEEPSEEK_REQUEST_TIMEOUT_SECONDS}",
+    f"max_retries={DEEPSEEK_MAX_RETRIES}",
+)
 
 # COMMAND ----------
 def fqtn(table: str) -> str:
@@ -916,6 +930,7 @@ def make_batch_line(provider: str, model: str, request_id: str, system_prompt: s
             },
         }
     elif provider == "deepseek":
+        deepseek_max_out = int(DEEPSEEK_MAX_OUTPUT_TOKENS or max_out)
         body = {
             "model": model,
             "response_format": {"type": "json_object"},
@@ -923,13 +938,12 @@ def make_batch_line(provider: str, model: str, request_id: str, system_prompt: s
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "max_tokens": max_out,
+            "max_tokens": deepseek_max_out,
             "stream": False,
         }
         if DEEPSEEK_THINKING_TYPE:
-            if DEEPSEEK_THINKING_TYPE != "disabled":
-                body["extra_body"] = {"thinking": {"type": DEEPSEEK_THINKING_TYPE}}
-        if DEEPSEEK_REASONING_EFFORT:
+            body.setdefault("extra_body", {})["thinking"] = {"type": DEEPSEEK_THINKING_TYPE}
+        if DEEPSEEK_REASONING_EFFORT and DEEPSEEK_THINKING_TYPE == "enabled":
             body.setdefault("extra_body", {})["reasoning_effort"] = DEEPSEEK_REASONING_EFFORT
         if temp is not None:
             body["temperature"] = temp
@@ -1128,6 +1142,8 @@ def submit_deepseek_direct(local_jsonl_path: str, model: str) -> Dict[str, Any]:
 
     def _call_line(line: str):
         req = {}
+        request_started_perf = time.perf_counter()
+        attempt_records = []
         try:
             req = json.loads(line)
             custom_id = req.get("custom_id") or req.get("key")
@@ -1137,6 +1153,7 @@ def submit_deepseek_direct(local_jsonl_path: str, model: str) -> Dict[str, Any]:
                 body.update(extra_body)
             last_error = None
             for attempt in range(DEEPSEEK_MAX_RETRIES + 1):
+                attempt_started_perf = time.perf_counter()
                 try:
                     response = _session().post(
                         "https://api.deepseek.com/chat/completions",
@@ -1147,12 +1164,25 @@ def submit_deepseek_direct(local_jsonl_path: str, model: str) -> Dict[str, Any]:
                         json=body,
                         timeout=DEEPSEEK_REQUEST_TIMEOUT_SECONDS,
                     )
+                    elapsed_ms = round((time.perf_counter() - attempt_started_perf) * 1000, 1)
                     response_body = _parse_response_body(response)
+                    attempt_records.append({
+                        "attempt": attempt + 1,
+                        "status_code": response.status_code,
+                        "duration_ms": elapsed_ms,
+                    })
                     out = {
                         "custom_id": custom_id,
                         "response": {
                             "status_code": response.status_code,
                             "body": response_body,
+                        },
+                        "_deepseek_direct_metadata": {
+                            "attempts": len(attempt_records),
+                            "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
+                            "attempts_detail": attempt_records,
+                            "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+                            "max_tokens": body.get("max_tokens"),
                         },
                     }
                     if 200 <= response.status_code < 300:
@@ -1163,15 +1193,39 @@ def submit_deepseek_direct(local_jsonl_path: str, model: str) -> Dict[str, Any]:
                         return out, False
                 except Exception as e:
                     last_error = repr(e)[:2000]
+                    attempt_records.append({
+                        "attempt": attempt + 1,
+                        "status_code": 500,
+                        "duration_ms": round((time.perf_counter() - attempt_started_perf) * 1000, 1),
+                        "error": last_error,
+                    })
                     if attempt >= DEEPSEEK_MAX_RETRIES:
                         out = {
                             "custom_id": custom_id,
                             "response": {"status_code": 500, "error": last_error},
+                            "_deepseek_direct_metadata": {
+                                "attempts": len(attempt_records),
+                                "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
+                                "attempts_detail": attempt_records,
+                                "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+                                "max_tokens": body.get("max_tokens"),
+                            },
                             "error": last_error,
                         }
                         return out, False
                 time.sleep(min(2 ** attempt, 8))
-            out = {"custom_id": custom_id, "response": {"status_code": 500, "error": last_error}, "error": last_error}
+            out = {
+                "custom_id": custom_id,
+                "response": {"status_code": 500, "error": last_error},
+                "_deepseek_direct_metadata": {
+                    "attempts": len(attempt_records),
+                    "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
+                    "attempts_detail": attempt_records,
+                    "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+                    "max_tokens": body.get("max_tokens"),
+                },
+                "error": last_error,
+            }
             return out, False
         except Exception as e:
             custom_id = None
@@ -1179,7 +1233,17 @@ def submit_deepseek_direct(local_jsonl_path: str, model: str) -> Dict[str, Any]:
                 custom_id = req.get("custom_id") or req.get("key")
             except Exception:
                 pass
-            out = {"custom_id": custom_id, "response": {"status_code": 500, "error": repr(e)[:2000]}, "error": repr(e)[:2000]}
+            out = {
+                "custom_id": custom_id,
+                "response": {"status_code": 500, "error": repr(e)[:2000]},
+                "_deepseek_direct_metadata": {
+                    "attempts": len(attempt_records),
+                    "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
+                    "attempts_detail": attempt_records,
+                    "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+                },
+                "error": repr(e)[:2000],
+            }
             return out, False
 
     with open(local_jsonl_path, "r", encoding="utf-8") as src:

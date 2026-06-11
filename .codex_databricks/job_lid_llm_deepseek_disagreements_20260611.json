@@ -1,0 +1,13 @@
+{
+  "run_name": "lid_llm_deepseek_disagreements_20260611",
+  "tasks": [
+    {
+      "task_key": "inspect_lid_llm_deepseek_disagreements",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1200,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_lid_llm_deepseek_disagreements_20260611"
+      }
+    }
+  ]
+}

@@ -273,10 +273,42 @@ Recommended sequence:
    top-line agreement.
 
 The language panel asks models for compact one-line JSON and defaults to `max_output_tokens=2000`,
-`openai_reasoning_effort=minimal`, and `gemini_thinking_level=low`. The larger cap is intentional:
-reasoning/thinking tokens share the output budget on some providers, and the June 10 validation showed
-that Gemini frequently truncated JSON at lower caps, reducing valid parsed votes even though the batch
-jobs themselves succeeded.
+`openai_reasoning_effort=minimal`, `gemini_thinking_level=low`, `deepseek_thinking_type=disabled`,
+and `deepseek_max_output_tokens=600`. The larger global cap is intentional: reasoning/thinking tokens
+share the output budget on some providers, and the June 10 validation showed that Gemini frequently
+truncated JSON at lower caps, reducing valid parsed votes even though the batch jobs themselves
+succeeded. DeepSeek is handled separately because it runs through direct synchronous calls rather than a
+provider batch API; keeping thinking disabled and capping its classification response avoids hidden
+reasoning output dominating latency/cost while preserving enough budget for the required JSON.
+
+DeepSeek direct result JSONL now includes `_deepseek_direct_metadata` with per-request duration,
+attempt count, status codes, transport, thinking setting, and max-token setting. Use this metadata for
+runtime diagnosis before inferring provider slowness from total job wall time. The focused DeepSeek
+retry notebook also normalizes stale request JSONL at call time, so older request files with omitted
+thinking controls or the global 2,000-token cap will still submit with the current DeepSeek defaults.
+
+Panel reconciliation now keeps both raw and normalized language judgments. Raw model labels are preserved,
+but majority status defaults to `panel_majority_vote_basis=normalized_base_iso`, which collapses known
+project-level taxonomy aliases (`zho`→`cmn`, `tgl`→`fil`, `ori`→`ory`, `uzn`→`uzb`, `msa`→`zsm`,
+`nep`→`npi`, Arabic dialects→`ara`)
+and treats Chinese `Hans`/`Hant`/`Hani` as the same script family for agreement diagnostics. The raw
+agreement matrix still reports exact base-ISO and full-label agreement, and additionally reports normalized
+base-ISO and normalized-label agreement. Use normalized base-language disagreement for human-review routing;
+treat raw script/taxonomy-only splits as QA/taxonomy instability unless the exact script is itself the
+question.
+
+Prompt construction defaults to `strip_prompt_boilerplate=true` and `dedupe_prompt_segments=true`. The
+panel prompt lists video titles before descriptions, removes common provider/release/link boilerplate such
+as auto-generated music metadata, copyright/fair-use boilerplate, support/download/social boilerplate, and
+generic URLs, collapses duplicate segment text, and includes compact field, segment-script, text-script, and
+non-decisive language-hint summaries for candidate segments after cleanup. Prompt caps preserve representative
+non-Latin-script examples before filling with the highest-priority remaining text. Short fields that failed
+the fastText validity threshold are still shown with diagnostics because repeated short titles can be decisive
+evidence for an LLM.
+
+Panel verdicts include the winning vote count plus `panel_second_votes`, `panel_vote_margin`,
+`n_distinct_panel_vote_iso`, and `panel_vote_distribution_json`. Use those columns to route close or genuinely
+mixed channels to review without re-joining the raw model-result table.
 
 ## 11. GlotLID preprocessing caveat
 

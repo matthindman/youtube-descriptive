@@ -1,0 +1,132 @@
+{
+  "name": "lid_v3_full_too_20260609",
+  "tasks": [
+    {
+      "task_key": "run_lid_too_full",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/01_language_openlid_v3_databricks",
+        "base_parameters": {
+          "catalog": "prod_tads",
+          "schema": "youtube_too",
+          "channels_table": "yt_sl_channels",
+          "videos_table": "yt_sl_videos",
+          "output_catalog": "dev_sean",
+          "output_schema": "matt",
+          "output_segments_input_table": "yt_lid_v3_too_full_20260609_segments_input",
+          "output_openlid_segments_table": "yt_lid_v3_too_full_20260609_openlid_segments",
+          "output_glotlid_segments_table": "yt_lid_v3_too_full_20260609_glotlid_segments",
+          "output_glotlid_native_segments_table": "yt_lid_v3_too_full_20260609_glotlid_native_segments",
+          "output_openlid_compact_table": "yt_lid_v3_too_full_20260609_openlid_predictions_compact",
+          "output_glotlid_compact_table": "yt_lid_v3_too_full_20260609_glotlid_predictions_compact",
+          "output_glotlid_native_compact_table": "yt_lid_v3_too_full_20260609_glotlid_native_predictions_compact",
+          "output_channel_text_features_table": "yt_lid_v3_too_full_20260609_channel_text_features",
+          "output_segment_model_comparison_table": "yt_lid_v3_too_full_20260609_segment_model_comparison",
+          "output_channel_votes_table": "yt_lid_v3_too_full_20260609_channel_votes",
+          "output_channel_model_aggregation_table": "yt_lid_v3_too_full_20260609_channel_model_aggregation",
+          "output_channel_model_comparison_table": "yt_lid_v3_too_full_20260609_channel_model_comparison",
+          "output_channels_table": "yt_lid_v3_too_full_20260609_channels",
+          "output_language_summary_full_table": "yt_lid_v3_too_full_20260609_language_summary_full",
+          "output_language_summary_rollup_table": "yt_lid_v3_too_full_20260609_language_summary_rollup",
+          "output_model_agreement_summary_table": "yt_lid_v3_too_full_20260609_model_agreement_summary",
+          "output_mixed_language_candidates_table": "yt_lid_v3_too_full_20260609_mixed_language_candidates",
+          "output_hindi_indic_audit_table": "yt_lid_v3_too_full_20260609_hindi_indic_audit_candidates",
+          "output_suspect_tail_audit_table": "yt_lid_v3_too_full_20260609_suspect_tail_audit_sample",
+          "output_high_risk_redirect_table": "yt_lid_v3_too_full_20260609_high_risk_redirect_diagnostic",
+          "output_manual_validation_sample_table": "yt_lid_v3_too_full_20260609_manual_validation_sample",
+          "output_unclassified_audit_table": "yt_lid_v3_too_full_20260609_unclassified_audit",
+          "output_source_language_confusion_table": "yt_lid_v3_too_full_20260609_source_language_confusion",
+          "output_dedupe_qa_table": "yt_lid_v3_too_full_20260609_dedupe_qa",
+          "output_preflight_estimate_table": "yt_lid_v3_too_full_20260609_preflight_estimate",
+          "output_ablation_summary_table": "yt_lid_v3_too_full_20260609_ablation_summary",
+          "output_run_progress_table": "yt_lid_v3_too_full_20260609_run_progress",
+          "model_local_path": "/Volumes/dev_sean/matt/models/openlid-v3.bin",
+          "glotlid_local_path": "/Volumes/dev_sean/matt/models/glotlid.bin",
+          "download_model_if_missing": "false",
+          "model_distribution_mode": "direct_path",
+          "enable_openlid": "true",
+          "enable_glotlid": "true",
+          "glotlid_mode": "all_valid_segments",
+          "glotlid_preprocessing_mode": "match_openlid",
+          "glotlid_native_audit_sample_fraction": "0.00",
+          "production_mode": "true",
+          "prediction_output_mode": "compact",
+          "long_segment_sample_fraction": "0.001",
+          "run_id": "too_full_20260609",
+          "inference_hash_buckets": "4096",
+          "bucket_start": "0",
+          "bucket_end": "4095",
+          "target_segments_per_partition": "250000",
+          "min_num_partitions": "800",
+          "max_num_partitions": "20000",
+          "run_heavy_qa": "false",
+          "create_validation_samples": "true",
+          "validation_sample_seed": "20260609",
+          "validation_max_per_stratum": "100",
+          "validation_min_per_stratum": "30",
+          "run_ablation_aggregations": "false",
+          "enable_notebook_displays": "false",
+          "allow_full_native_audit": "false",
+          "optimize_after_write": "false",
+          "limit_channels": "0",
+          "videos_per_channel": "10",
+          "allow_unbounded_videos_per_channel": "false",
+          "video_rank_column": "",
+          "max_segment_chars": "2000",
+          "score_threshold": "0.0",
+          "checkpoint_dir": "dbfs:/tmp/yt_lid_v3/too_full_20260609/checkpoints",
+          "source_update_format": "label",
+          "update_source_detected_language": "false",
+          "channel_id_column": "channel_id",
+          "video_id_column": "video_id",
+          "channel_name_column": "",
+          "channel_description_column": "",
+          "video_title_column": "",
+          "video_description_column": "",
+          "video_tags_column": ""
+        }
+      }
+    },
+    {
+      "task_key": "analyze_too_outputs",
+      "depends_on": [
+        {
+          "task_key": "run_lid_too_full"
+        }
+      ],
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/02_analyze_lid_v3_full_too_outputs_databricks",
+        "base_parameters": {
+          "output_catalog": "dev_sean",
+          "output_schema": "matt",
+          "output_prefix": "yt_lid_v3_too_full_20260609",
+          "run_id": "too_full_20260609",
+          "top_language_n": "30",
+          "review_queue_limit": "5000",
+          "count_large_tables": "false"
+        }
+      }
+    },
+    {
+      "task_key": "terminate_matt_research_gencompute",
+      "depends_on": [
+        {
+          "task_key": "run_lid_too_full"
+        },
+        {
+          "task_key": "analyze_too_outputs"
+        }
+      ],
+      "run_if": "ALL_DONE",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/99_terminate_cluster_databricks",
+        "base_parameters": {
+          "cluster_id": "0601-203643-bkxsqffg",
+          "reason": "lid_v3_full_too_20260609_cleanup"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "run_name": "codex_lid_v3_10k_validation_20260608_161345_b10_summary",
+  "tasks": [
+    {
+      "task_key": "summarize_validation_tables",
+      "existing_cluster_id": "0303-193859-1ff54asc",
+      "notebook_task": {
+        "notebook_path": "/Users/hindman.gmail.com@auth.researchaccelerator.org/codex_lid_v3_validation_20260608_161345/04_summarize_lid_v3_validation_tables",
+        "base_parameters": {
+          "scratch_catalog": "dev_sean",
+          "scratch_schema": "matt",
+          "output_prefix": "yt_lid_v3_validation_10k_20260608_161345_b10",
+          "run_id": "codex_10k_20260608_161345_b10",
+          "top_language_n": "10"
+        }
+      }
+    }
+  ]
+}

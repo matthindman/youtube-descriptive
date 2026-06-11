@@ -23,7 +23,7 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://adb-1335559103600339.19.azuredatabricks.net
+      host: https://adb-7405612174002821.1.azuredatabricks.net
     variables:
       catalog: dev_sean
       schema: dev

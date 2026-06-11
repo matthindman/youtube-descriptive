@@ -59,9 +59,11 @@ _create_text_widget("panel_batch_jobs_table", "yt_lid_v3_too_full_20260609_llm_v
 _create_text_widget("request_base_dir", "/dbfs/FileStore/youtube_lid_panel_batches")
 _create_text_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batches/results")
 _create_text_widget("models_csv", "deepseek-v4-flash,deepseek-v4-pro")
-_create_text_widget("deepseek_max_workers", "4")
-_create_text_widget("deepseek_request_timeout_seconds", "45")
-_create_text_widget("deepseek_max_retries", "1")
+_create_text_widget("deepseek_thinking_type", "disabled")
+_create_text_widget("deepseek_max_output_tokens", "600")
+_create_text_widget("deepseek_max_workers", "16")
+_create_text_widget("deepseek_request_timeout_seconds", "20")
+_create_text_widget("deepseek_max_retries", "0")
 _create_text_widget("resume_existing_results", "true")
 _create_text_widget("process_pending_requests", "true")
 _create_text_widget("deepseek_transport", "urllib")
@@ -75,15 +77,21 @@ PANEL_BATCH_JOBS_TABLE = _get_widget("panel_batch_jobs_table", "yt_lid_v3_too_fu
 REQUEST_BASE_DIR = _get_widget("request_base_dir", "/dbfs/FileStore/youtube_lid_panel_batches").rstrip("/")
 RESULTS_INPUT_DIR = _get_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batches/results").rstrip("/")
 MODELS = [m.strip() for m in _get_widget("models_csv", "deepseek-v4-flash,deepseek-v4-pro").split(",") if m.strip()]
-DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 4)
-DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _get_float_widget("deepseek_request_timeout_seconds", 45.0)
-DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 1)
+DEEPSEEK_THINKING_TYPE = _get_widget("deepseek_thinking_type", "disabled").strip().lower()
+DEEPSEEK_MAX_OUTPUT_TOKENS = _get_int_widget("deepseek_max_output_tokens", 600)
+DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 16)
+DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _get_float_widget("deepseek_request_timeout_seconds", 20.0)
+DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 0)
 RESUME_EXISTING_RESULTS = _get_widget("resume_existing_results", "true").strip().lower() in {"1", "true", "t", "yes", "y"}
 PROCESS_PENDING_REQUESTS = _get_widget("process_pending_requests", "true").strip().lower() in {"1", "true", "t", "yes", "y"}
 DEEPSEEK_TRANSPORT = _get_widget("deepseek_transport", "urllib").strip().lower()
 SECRET_SCOPE = _get_widget("secret_scope", "youtube-llm-keys")
 DEEPSEEK_SECRET_KEY = _get_widget("deepseek_secret_key", "deepseek-api-key")
 
+if DEEPSEEK_THINKING_TYPE not in {"", "enabled", "disabled"}:
+    raise ValueError("deepseek_thinking_type must be blank, enabled, or disabled")
+if DEEPSEEK_MAX_OUTPUT_TOKENS < 1:
+    raise ValueError("deepseek_max_output_tokens must be at least 1")
 if DEEPSEEK_MAX_WORKERS < 1:
     raise ValueError("deepseek_max_workers must be at least 1")
 if DEEPSEEK_REQUEST_TIMEOUT_SECONDS <= 0:
@@ -92,6 +100,15 @@ if DEEPSEEK_MAX_RETRIES < 0:
     raise ValueError("deepseek_max_retries must be non-negative")
 if DEEPSEEK_TRANSPORT not in {"curl", "requests", "urllib"}:
     raise ValueError("deepseek_transport must be curl, requests, or urllib")
+print(
+    "DeepSeek direct controls:",
+    f"thinking_type={DEEPSEEK_THINKING_TYPE or 'omitted'}",
+    f"max_output_tokens={DEEPSEEK_MAX_OUTPUT_TOKENS}",
+    f"workers={DEEPSEEK_MAX_WORKERS}",
+    f"timeout_seconds={DEEPSEEK_REQUEST_TIMEOUT_SECONDS}",
+    f"max_retries={DEEPSEEK_MAX_RETRIES}",
+    f"transport={DEEPSEEK_TRANSPORT}",
+)
 
 # COMMAND ----------
 def fqtn(table: str) -> str:
@@ -282,25 +299,57 @@ def _post_deepseek(body: Dict[str, Any]):
     return status_code, _parse_json(text), text or stderr
 
 
+def _prepare_deepseek_body(raw_body: Dict[str, Any]) -> Dict[str, Any]:
+    body = dict(raw_body)
+    extra_body = body.pop("extra_body", None)
+    if isinstance(extra_body, dict):
+        body.update(extra_body)
+    if DEEPSEEK_THINKING_TYPE:
+        body["thinking"] = {"type": DEEPSEEK_THINKING_TYPE}
+    else:
+        body.pop("thinking", None)
+    if DEEPSEEK_THINKING_TYPE != "enabled":
+        body.pop("reasoning_effort", None)
+    body["max_tokens"] = DEEPSEEK_MAX_OUTPUT_TOKENS
+    return body
+
+
+def _metadata(started_perf: float, attempts: list, body: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "attempts": len(attempts),
+        "duration_ms": round((time.perf_counter() - started_perf) * 1000, 1),
+        "attempts_detail": attempts,
+        "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+        "max_tokens": body.get("max_tokens"),
+        "transport": DEEPSEEK_TRANSPORT,
+    }
+
+
 def call_line(line: str):
     req = {}
+    request_started_perf = time.perf_counter()
+    attempt_records = []
     try:
         req = json.loads(line)
         custom_id = req.get("custom_id") or req.get("key")
-        body = dict(req["body"])
-        extra_body = body.pop("extra_body", None)
-        if isinstance(extra_body, dict):
-            body.update(extra_body)
+        body = _prepare_deepseek_body(req["body"])
         last_error = None
         for attempt in range(DEEPSEEK_MAX_RETRIES + 1):
+            attempt_started_perf = time.perf_counter()
             try:
                 status_code, response_body, raw_text = _post_deepseek(body)
+                attempt_records.append({
+                    "attempt": attempt + 1,
+                    "status_code": status_code,
+                    "duration_ms": round((time.perf_counter() - attempt_started_perf) * 1000, 1),
+                })
                 out = {
                     "custom_id": custom_id,
                     "response": {
                         "status_code": status_code,
                         "body": response_body,
                     },
+                    "_deepseek_direct_metadata": _metadata(request_started_perf, attempt_records, body),
                 }
                 if 200 <= status_code < 300:
                     return out, True
@@ -310,14 +359,26 @@ def call_line(line: str):
                     return out, False
             except Exception as e:
                 last_error = repr(e)[:2000]
+                attempt_records.append({
+                    "attempt": attempt + 1,
+                    "status_code": 500,
+                    "duration_ms": round((time.perf_counter() - attempt_started_perf) * 1000, 1),
+                    "error": last_error,
+                })
                 if attempt >= DEEPSEEK_MAX_RETRIES:
                     return {
                         "custom_id": custom_id,
                         "response": {"status_code": 500, "error": last_error},
+                        "_deepseek_direct_metadata": _metadata(request_started_perf, attempt_records, body),
                         "error": last_error,
                     }, False
             time.sleep(min(2 ** attempt, 8))
-        return {"custom_id": custom_id, "response": {"status_code": 500, "error": last_error}, "error": last_error}, False
+        return {
+            "custom_id": custom_id,
+            "response": {"status_code": 500, "error": last_error},
+            "_deepseek_direct_metadata": _metadata(request_started_perf, attempt_records, body),
+            "error": last_error,
+        }, False
     except Exception as e:
         custom_id = None
         try:
@@ -325,7 +386,17 @@ def call_line(line: str):
         except Exception:
             pass
         error = repr(e)[:2000]
-        return {"custom_id": custom_id, "response": {"status_code": 500, "error": error}, "error": error}, False
+        return {
+            "custom_id": custom_id,
+            "response": {"status_code": 500, "error": error},
+            "_deepseek_direct_metadata": {
+                "attempts": len(attempt_records),
+                "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
+                "attempts_detail": attempt_records,
+                "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+            },
+            "error": error,
+        }, False
 
 
 def _custom_id_from_line(line: str):

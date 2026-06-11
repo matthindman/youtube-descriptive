@@ -148,11 +148,13 @@ temperature =
 max_output_tokens = 2000
 openai_reasoning_effort = minimal
 gemini_thinking_level = low
+deepseek_thinking_type = disabled
+deepseek_max_output_tokens = 600
 submit_batches = false
 skip_existing_submitted_batches = true
 ```
 
-The notebook omits temperature unless you explicitly set it. This avoids provider/model-specific failures and follows the current provider guidance more closely than forcing `temperature=0.0`. Category outputs are also requested as compact one-line JSON; the 2000-token default gives enough headroom for valid JSON plus provider reasoning/thinking tokens.
+The notebook omits temperature unless you explicitly set it. This avoids provider/model-specific failures and follows the current provider guidance more closely than forcing `temperature=0.0`. Category outputs are also requested as compact one-line JSON; the 2000-token global default gives enough headroom for providers whose reasoning/thinking tokens share the output budget. DeepSeek is capped separately because it runs as synchronous direct requests, and hidden reasoning output can dominate latency.
 
 OpenAI-specific widgets:
 
@@ -174,12 +176,16 @@ The Gemini request file uses native Batch API JSONL with a `key` and a `request`
 DeepSeek-specific widgets:
 
 ```text
-deepseek_thinking_type =
+deepseek_thinking_type = disabled
 deepseek_reasoning_effort =
+deepseek_max_output_tokens = 600
+deepseek_max_workers = 16
 ```
 
 DeepSeek uses the OpenAI-compatible `https://api.deepseek.com/chat/completions` path directly and writes
-parser-compatible result JSONL under `results_input_dir`.
+parser-compatible result JSONL under `results_input_dir`. Result rows include `_deepseek_direct_metadata`
+with per-request duration, attempts, status codes, thinking setting, and max-token setting for runtime
+diagnosis.
 
 ## Databricks secrets
 
@@ -198,7 +204,8 @@ deepseek_secret_key = deepseek-api-key
 ```
 
 The notebook submits OpenAI, Anthropic, and Gemini through their provider batch APIs. DeepSeek is executed
-as direct OpenAI-compatible chat-completion calls and imported through the same result parser.
+as direct OpenAI-compatible chat-completion calls and imported through the same result parser. By default,
+DeepSeek requests explicitly set non-thinking mode.
 
 ## Recommended first run
 

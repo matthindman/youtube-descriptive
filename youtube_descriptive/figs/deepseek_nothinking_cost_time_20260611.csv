@@ -1,0 +1,3 @@
+model,labels,prompt_tokens,prompt_cache_hit_tokens,prompt_cache_miss_tokens,completion_tokens,reasoning_tokens,cache_hit_input_price_per_1m_usd,cache_miss_input_price_per_1m_usd,output_price_per_1m_usd,cache_hit_input_cost_usd_per_1000_labels,cache_miss_input_cost_usd_per_1000_labels,output_cost_usd_per_1000_labels,total_cost_usd_per_1000_labels,mean_request_seconds,api_wall_seconds_per_1000_labels,api_wall_minutes_per_1000_labels
+deepseek-v4-flash,1000,1628883,874624,754259,125340,0,0.0028,0.14,0.28,0.0024489472,0.10559626000000001,0.03509520000000001,0.1431404072,1.9673824000000006,122,2.033333333333333
+deepseek-v4-pro,1000,1628883,873344,755539,136816,0,0.003625,0.435,0.87,0.003165872,0.328659465,0.11902992,0.450855257,2.317175000000002,143,2.3833333333333333

@@ -1,0 +1,24 @@
+{
+  "run_name": "codex_lid_v3_10k_validation_20260608_161345_b10_field_source_ablation",
+  "tasks": [
+    {
+      "task_key": "field_source_ablation",
+      "existing_cluster_id": "0303-193859-1ff54asc",
+      "notebook_task": {
+        "notebook_path": "/Users/hindman.gmail.com@auth.researchaccelerator.org/codex_lid_v3_validation_20260608_161345/05_field_source_ablation_analysis",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "output_prefix": "yt_lid_v3_validation_10k_20260608_161345_b10",
+          "run_id": "codex_10k_20260608_161345_b10",
+          "primary_min_score": "0.20",
+          "secondary_min_score": "0.35",
+          "secondary_min_score_ratio": "0.50",
+          "secondary_label_vote_weight": "0.20",
+          "mixed_screen_ratio_threshold": "0.40",
+          "mixed_screen_min_secondary_segments": "2"
+        }
+      }
+    }
+  ]
+}

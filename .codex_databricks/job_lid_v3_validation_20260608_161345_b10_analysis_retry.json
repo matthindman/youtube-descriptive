@@ -1,0 +1,20 @@
+{
+  "run_name": "codex_lid_v3_10k_validation_20260608_161345_b10_lid_retry_analysis_retry",
+  "tasks": [
+    {
+      "task_key": "analyze_validation_outputs",
+      "existing_cluster_id": "0303-193859-1ff54asc",
+      "notebook_task": {
+        "notebook_path": "/Users/hindman.gmail.com@auth.researchaccelerator.org/codex_lid_v3_validation_20260608_161345/02_analyze_lid_v3_validation_outputs",
+        "base_parameters": {
+          "scratch_catalog": "dev_sean",
+          "scratch_schema": "matt",
+          "output_prefix": "yt_lid_v3_validation_10k_20260608_161345_b10",
+          "run_id": "codex_10k_20260608_161345_b10",
+          "figures_dbfs_dir": "",
+          "top_language_n": "20"
+        }
+      }
+    }
+  ]
+}

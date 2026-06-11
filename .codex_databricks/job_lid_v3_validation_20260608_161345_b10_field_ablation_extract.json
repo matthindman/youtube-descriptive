@@ -1,0 +1,17 @@
+{
+  "run_name": "codex_lid_v3_10k_validation_20260608_161345_b10_field_ablation_extract",
+  "tasks": [
+    {
+      "task_key": "extract_field_ablation_summary",
+      "existing_cluster_id": "0303-193859-1ff54asc",
+      "notebook_task": {
+        "notebook_path": "/Users/hindman.gmail.com@auth.researchaccelerator.org/codex_lid_v3_validation_20260608_161345/06_extract_field_ablation_summary",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "output_prefix": "yt_lid_v3_validation_10k_20260608_161345_b10"
+        }
+      }
+    }
+  ]
+}

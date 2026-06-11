@@ -1,0 +1,6 @@
+{
+  "warehouse_id": "86100da4e1fe8713",
+  "wait_timeout": "10s",
+  "on_wait_timeout": "CONTINUE",
+  "statement": "SELECT provider, model, submission_status, left(coalesce(submission_error, provider_status, ''), 500) AS error_or_status FROM dev_sean.matt.yt_lid_v3_too_full_20260609_llm_validation_batch_jobs WHERE run_id = 'too_full_20260609' ORDER BY provider, model"
+}
