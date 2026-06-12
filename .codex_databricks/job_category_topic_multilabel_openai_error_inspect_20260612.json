@@ -1,0 +1,20 @@
+{
+  "run_name": "category_topic_multilabel_random_1000_openai_error_inspect_20260612",
+  "tasks": [
+    {
+      "task_key": "inspect_category_topic_multilabel_openai_errors",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_category_topic_multilabel_openai_errors_20260612",
+        "base_parameters": {
+          "run_id": "category_topic_multilabel_random_1000_20260612",
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "status_snapshot_table": "yt_category_topic_multilabel_1000_batch_status_check",
+          "error_samples_table": "yt_category_topic_multilabel_1000_openai_error_samples",
+          "sample_lines_per_model": "25"
+        }
+      }
+    }
+  ]
+}

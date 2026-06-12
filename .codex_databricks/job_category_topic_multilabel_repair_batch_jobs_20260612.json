@@ -1,0 +1,19 @@
+{
+  "run_name": "category_topic_multilabel_random_1000_repair_batch_jobs_20260612",
+  "tasks": [
+    {
+      "task_key": "repair_category_topic_multilabel_batch_jobs",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/repair_category_topic_multilabel_batch_jobs_20260612",
+        "base_parameters": {
+          "run_id": "category_topic_multilabel_random_1000_20260612",
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "batch_files_table": "yt_category_topic_multilabel_1000_batch_files",
+          "batch_jobs_table": "yt_category_topic_multilabel_1000_batch_jobs"
+        }
+      }
+    }
+  ]
+}

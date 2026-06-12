@@ -1,0 +1,22 @@
+{
+  "run_name": "lid_llm_hardcase_openai_errors_20260611",
+  "tasks": [
+    {
+      "task_key": "inspect_openai_errors",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1200,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_lid_llm_openai_errors_20260611",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "too_full_20260609_lid_iso_disagree_1k_20260611",
+          "status_snapshot_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_status_check",
+          "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
+          "max_lines_per_model": "5"
+        }
+      }
+    }
+  ]
+}

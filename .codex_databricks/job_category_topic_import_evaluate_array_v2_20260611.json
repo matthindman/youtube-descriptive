@@ -1,0 +1,19 @@
+{
+  "run_name": "category_topic_random_1000_array_v2_import_evaluate_20260611",
+  "tasks": [
+    {
+      "task_key": "import_evaluate_category_topic_array_v2_results",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/import_evaluate_category_topic_results_20260611",
+        "base_parameters": {
+          "run_id": "category_topic_random_1000_array_v2_20260611",
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "output_prefix": "yt_category_topic_random_1000",
+          "results_input_dir": "/dbfs/FileStore/youtube_category_topic_batches/results"
+        }
+      }
+    }
+  ]
+}

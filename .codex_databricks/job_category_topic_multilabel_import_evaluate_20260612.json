@@ -1,0 +1,24 @@
+{
+  "run_name": "category_topic_multilabel_random_1000_import_evaluate_20260612",
+  "tasks": [
+    {
+      "task_key": "import_evaluate_category_topic_multilabel_results",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/import_evaluate_category_topic_multilabel_20260612",
+        "base_parameters": {
+          "run_id": "category_topic_multilabel_random_1000_20260612",
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "output_prefix": "yt_category_topic_multilabel_1000",
+          "results_input_dir": "/dbfs/FileStore/youtube_category_topic_multilabel_batches/results",
+          "min_label_threshold_calibration_positives": "3",
+          "min_label_threshold_calibration_negatives": "10",
+          "enable_closure_postprocess": "true",
+          "closure_edges_table": "dev_sean.matt.yt_channel_topic_taxonomy_inferred_edges_20260612",
+          "closure_edge_strengths": "strong_empirical_parent"
+        }
+      }
+    }
+  ]
+}

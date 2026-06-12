@@ -1,0 +1,20 @@
+{
+  "run_name": "category_topic_multilabel_random_1000_status_20260612",
+  "tasks": [
+    {
+      "task_key": "check_category_topic_multilabel_batch_status",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/check_category_topic_batch_status_20260611",
+        "base_parameters": {
+          "run_id": "category_topic_multilabel_random_1000_20260612",
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "batch_jobs_table": "yt_category_topic_multilabel_1000_batch_jobs",
+          "batch_files_table": "yt_category_topic_multilabel_1000_batch_files",
+          "status_snapshot_table": "yt_category_topic_multilabel_1000_batch_status_check"
+        }
+      }
+    }
+  ]
+}

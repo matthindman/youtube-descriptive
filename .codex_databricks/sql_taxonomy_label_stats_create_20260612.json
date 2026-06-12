@@ -1,0 +1,7 @@
+{
+  "warehouse_id": "86100da4e1fe8713",
+  "wait_timeout": "50s",
+  "disposition": "INLINE",
+  "format": "JSON_ARRAY",
+  "statement": "CREATE OR REPLACE TABLE dev_sean.matt.yt_channel_topic_taxonomy_label_stats_20260612 AS WITH base AS (SELECT * FROM dev_sean.matt.yt_channel_topic_taxonomy_channel_labels_20260612), exploded AS (SELECT split, channel_id, pos, topic_category FROM base LATERAL VIEW posexplode(topic_categories) e AS pos, topic_category), totals AS (SELECT split, COUNT(*) AS n_channels, SUM(CASE WHEN topic_category_count > 0 THEN 1 ELSE 0 END) AS n_nonempty_channels, AVG(topic_category_count) AS avg_label_cardinality FROM base GROUP BY split) SELECT e.split, e.topic_category, COUNT(DISTINCT e.channel_id) AS n_label_channels, MAX(t.n_channels) AS n_channels, MAX(t.n_nonempty_channels) AS n_nonempty_channels, ROUND(100.0 * COUNT(DISTINCT e.channel_id) / MAX(t.n_nonempty_channels), 4) AS pct_nonempty_channels, SUM(CASE WHEN e.pos = 0 THEN 1 ELSE 0 END) AS n_first_position, ROUND(100.0 * SUM(CASE WHEN e.pos = 0 THEN 1 ELSE 0 END) / COUNT(DISTINCT e.channel_id), 4) AS pct_label_instances_first, AVG(e.pos) AS avg_zero_based_position FROM exploded e INNER JOIN totals t ON e.split = t.split GROUP BY e.split, e.topic_category"
+}

@@ -4,6 +4,8 @@
 
 `02_category_llm_youtube_databricks.py` prepares and evaluates LLM-based classification of YouTube channels into a 15-category YouTube-style taxonomy. It is a validation-first bake-off across model families and model sizes. It should be run on labeled/reference data before any full-corpus classification.
 
+This is separate from the newer multi-label YouTube API `topic_categories` validation workflow. The 15-category workflow benchmarks against sources such as `yt_sl_videos.ai_label`; the multi-label workflow predicts the exact observed `dev_sean.default.channel_category.topic_categories` array as a 62-label binary target. Do not compare metrics across these two workflows as if they used the same category system.
+
 The workflow is:
 
 1. Run the OpenLID-v3 language notebook first.
@@ -25,6 +27,26 @@ The workflow is:
 - Parsed predictions: `prod_tads.youtube.yt_category_llm_predictions`
 - Evaluation metrics: `prod_tads.youtube.yt_category_llm_eval_metrics`
 - Pairwise agreement: `prod_tads.youtube.yt_category_llm_model_agreement`
+
+## Related multi-label `topic_categories` workflow
+
+For predicting the current YouTube API channel topic labels, use the Databricks notebooks under `.codex_databricks`:
+
+```text
+run_category_topic_multilabel_1000_20260612.py
+import_evaluate_category_topic_multilabel_20260612.py
+analyze_category_topic_multilabel_20260612.py
+```
+
+That workflow:
+
+- uses `dev_sean.default.channel_category.topic_categories` as the exact observed target;
+- treats the target as a multi-label set, not a primary category;
+- excludes the held-out labels from prompts;
+- requests per-label probabilities for all observed topic labels;
+- calibrates thresholds on a calibration split;
+- reports raw exact-label multi-label metrics first;
+- treats co-label/closure rules only as diagnostic or post-processing ablations.
 
 ## Source tables expected
 

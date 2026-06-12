@@ -1,0 +1,61 @@
+{
+  "run_name": "lid_llm_hardcase_deepseek_lowthink_2k_import_20260611",
+  "tasks": [
+    {
+      "task_key": "import_lid_llm_hardcase_deepseek_lowthink_2k",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 7200,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/03_language_llm_panel_databricks",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "comparison_table": "yt_lid_v3_too_full_20260609_channel_model_comparison",
+          "segments_input_table": "yt_lid_v3_too_full_20260609_segments_input",
+          "channel_text_features_table": "yt_lid_v3_too_full_20260609_channel_text_features",
+          "hindi_indic_audit_table": "yt_lid_v3_too_full_20260609_hindi_indic_audit_candidates",
+          "run_id": "too_full_20260609_lid_iso_disagree_1k_deepseek_lowthink_2k_20260611",
+          "source_run_id": "too_full_20260609",
+          "inference_hash_buckets": "4096",
+          "routing_mode": "random_validation",
+          "random_validation_scope": "lid_iso_disagreement",
+          "random_validation_sample_size": "1000",
+          "random_validation_seed": "2026061101",
+          "max_routed_channels": "0",
+          "panel_requests_table": "yt_lid_v3_too_full_20260609_llm_validation_requests",
+          "panel_batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "panel_raw_results_table": "yt_lid_v3_too_full_20260609_llm_validation_raw_results",
+          "panel_verdicts_table": "yt_lid_v3_too_full_20260609_llm_validation_verdicts",
+          "panel_model_agreement_table": "yt_lid_v3_too_full_20260609_llm_validation_model_agreement",
+          "models_json": "[{\"provider\":\"deepseek\",\"model\":\"deepseek-v4-pro\",\"tier\":\"frontier_low_thinking_2k\"},{\"provider\":\"deepseek\",\"model\":\"deepseek-v4-flash\",\"tier\":\"small_low_thinking_2k\"}]",
+          "batch_output_dir": "/dbfs/FileStore/youtube_lid_panel_batches",
+          "results_input_dir": "/dbfs/FileStore/youtube_lid_panel_batches/results",
+          "max_requests_per_file": "10000",
+          "max_output_tokens": "2000",
+          "openai_reasoning_effort": "none",
+          "openai_reasoning_effort_by_model_json": "{\"gpt-5-nano\":\"minimal\"}",
+          "gemini_thinking_level": "low",
+          "deepseek_thinking_type": "enabled",
+          "deepseek_reasoning_effort": "low",
+          "deepseek_max_output_tokens": "2000",
+          "deepseek_max_workers": "16",
+          "deepseek_request_timeout_seconds": "180",
+          "deepseek_max_retries": "1",
+          "panel_majority_mode": "reached_models",
+          "min_panel_votes_for_majority": "2",
+          "panel_majority_vote_basis": "normalized_base_iso",
+          "submit_batches": "false",
+          "submit_provider_filter": "deepseek",
+          "submit_model_filter": "deepseek-v4-pro,deepseek-v4-flash",
+          "reuse_existing_requests_on_import": "true",
+          "import_results": "true",
+          "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
+          "anthropic_secret_key": "anthropic-api-key",
+          "gemini_secret_key": "gemini-api-key",
+          "deepseek_secret_key": "deepseek-api-key"
+        }
+      }
+    }
+  ]
+}

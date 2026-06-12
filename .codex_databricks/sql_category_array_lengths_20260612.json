@@ -1,0 +1,7 @@
+{
+  "warehouse_id": "86100da4e1fe8713",
+  "wait_timeout": "50s",
+  "disposition": "INLINE",
+  "format": "JSON_ARRAY",
+  "statement": "WITH channels AS (SELECT DISTINCT CAST(channel_id AS STRING) AS channel_id FROM prod_tads.youtube_too.yt_sl_channels WHERE channel_id IS NOT NULL), raw_categories AS (SELECT CAST(canonical_id AS STRING) AS channel_id, topic_categories, collected_at, collected_date FROM dev_sean.default.channel_category WHERE canonical_id IS NOT NULL), latest AS (SELECT channel_id, topic_categories, collected_at, collected_date FROM (SELECT r.*, ROW_NUMBER() OVER (PARTITION BY r.channel_id ORDER BY r.collected_at DESC, r.collected_date DESC) AS rn FROM raw_categories r INNER JOIN channels c ON r.channel_id = c.channel_id) WHERE rn = 1), joined AS (SELECT c.channel_id, l.collected_at, size(array_distinct(filter(coalesce(l.topic_categories, CAST(array() AS ARRAY<STRING>)), x -> x IS NOT NULL AND length(trim(x)) > 0))) AS topic_category_count FROM channels c LEFT JOIN latest l ON c.channel_id = l.channel_id) SELECT topic_category_count, COUNT(DISTINCT channel_id) AS n_channels, ROUND(100.0 * COUNT(DISTINCT channel_id) / SUM(COUNT(DISTINCT channel_id)) OVER (), 4) AS pct_channels FROM joined GROUP BY topic_category_count ORDER BY topic_category_count ASC"
+}

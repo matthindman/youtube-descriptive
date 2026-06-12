@@ -1,0 +1,18 @@
+{
+  "run_name": "category_array_reanalysis_need_20260611",
+  "tasks": [
+    {
+      "task_key": "summarize_category_array_reanalysis_need",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/summarize_category_array_reanalysis_need_20260611",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "category_topic_random_1000_20260611",
+          "output_prefix": "yt_category_topic_random_1000"
+        }
+      }
+    }
+  ]
+}

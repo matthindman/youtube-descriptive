@@ -1,0 +1,24 @@
+{
+  "run_name": "lid_llm_deepseek_lowthink_2k_compare_20260611",
+  "tasks": [
+    {
+      "task_key": "compare_lid_llm_deepseek_lowthink_2k",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_lid_llm_deepseek_lowthink_compare_20260611",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "baseline_run_id": "too_full_20260609_lid_iso_disagree_1k_20260611",
+          "thinking_run_id": "too_full_20260609_lid_iso_disagree_1k_deepseek_lowthink_2k_20260611",
+          "requests_table": "yt_lid_v3_too_full_20260609_llm_validation_requests",
+          "raw_results_table": "yt_lid_v3_too_full_20260609_llm_validation_raw_results",
+          "batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "results_input_dir": "/dbfs/FileStore/youtube_lid_panel_batches/results",
+          "min_majority_votes": "2"
+        }
+      }
+    }
+  ]
+}

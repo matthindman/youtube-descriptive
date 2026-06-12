@@ -8,7 +8,9 @@
 # MAGIC **What it does:** by default, routes the small subset of channels where the two fastText models
 # MAGIC *disagree* (plus a tiny blind *audit* sample of the agreement bucket) to a multi-model LLM panel.
 # MAGIC For API/secrets validation, set `routing_mode=random_validation` to classify a reproducible random
-# MAGIC sample from the notebook 01 comparison table. The panel adjudicates written-metadata language and
+# MAGIC sample from the notebook 01 comparison table. Set `random_validation_scope=lid_iso_disagreement` to
+# MAGIC draw that sample only from cases where OpenLID and GlotLID disagree after ISO normalization.
+# MAGIC The panel adjudicates written-metadata language and
 # MAGIC writes per-model outputs, a majority verdict, and an all-model agreement matrix.
 # MAGIC
 # MAGIC **Inputs (from notebook 01):** `yt_lid_v3_channel_model_comparison`, `yt_lid_v3_segments_input`,
@@ -34,7 +36,7 @@ import re
 import time
 import unicodedata
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from pyspark.sql import functions as F
 from pyspark.sql import Window
@@ -103,6 +105,7 @@ _create_text_widget("panel_model_agreement_table", "yt_lid_v3_llm_panel_model_ag
 
 # --- Routing controls ---
 _create_text_widget("routing_mode", "residual_panel")  # residual_panel | random_validation
+_create_text_widget("random_validation_scope", "all")  # all | lid_iso_disagreement
 _create_text_widget("random_validation_sample_size", "1000")
 _create_text_widget("random_validation_seed", "20260610")
 # Residual-panel routes. Ignored when routing_mode=random_validation.
@@ -132,7 +135,6 @@ _create_text_widget("dedupe_prompt_segments", "true")
 # Models: mix frontier/mid/small providers by default for validation agreement matrices.
 DEFAULT_MODELS_JSON = json.dumps([
     {"provider": "openai", "model": "gpt-5.5", "tier": "frontier"},
-    {"provider": "openai", "model": "gpt-5.4", "tier": "mid"},
     {"provider": "openai", "model": "gpt-5.4-mini", "tier": "small"},
     {"provider": "openai", "model": "gpt-5.4-nano", "tier": "nano"},
     {"provider": "openai", "model": "gpt-5-nano", "tier": "nano_low_cost"},
@@ -149,10 +151,11 @@ _create_text_widget("models_json", DEFAULT_MODELS_JSON)
 _create_text_widget("max_output_tokens", "2000")
 _create_text_widget("temperature", "")  # blank = provider default
 _create_text_widget("openai_endpoint_mode", "auto")
-_create_text_widget("openai_reasoning_effort", "minimal")  # blank = omit reasoning controls
+_create_text_widget("openai_reasoning_effort", "none")  # blank = omit reasoning controls; none = thinking off
+_create_text_widget("openai_reasoning_effort_by_model_json", "{}")
 _create_text_widget("gemini_thinking_level", "low")  # blank = omit thinking controls
 _create_text_widget("deepseek_thinking_type", "disabled")  # disabled | enabled | blank to omit
-_create_text_widget("deepseek_reasoning_effort", "")  # high | max; only used with enabled thinking
+_create_text_widget("deepseek_reasoning_effort", "")  # low | medium | high | max | xhigh; only used with enabled thinking
 _create_text_widget("deepseek_max_output_tokens", "600")
 _create_text_widget("deepseek_max_workers", "16")
 _create_text_widget("deepseek_request_timeout_seconds", "60")
@@ -163,8 +166,13 @@ _create_text_widget("batch_output_dir", "/dbfs/FileStore/youtube_lid_panel_batch
 _create_text_widget("max_requests_per_file", "10000")
 _create_text_widget("submit_batches", "false")
 _create_text_widget("submit_provider_filter", "")  # blank = all; comma-separated provider names
+_create_text_widget("submit_model_filter", "")  # blank = all; comma-separated model names
 _create_text_widget("skip_existing_submitted_batches", "true")
 _create_text_widget("import_results", "false")
+_create_text_widget("reuse_existing_requests_on_import", "true")
+_create_text_widget("reuse_existing_requests_on_submit", "true")
+_create_text_widget("refresh_request_provider_filter", "")  # blank = none; comma-separated providers to rebuild batch_line from stored prompts
+_create_text_widget("refresh_request_model_filter", "")  # blank = all models for refreshed providers
 _create_text_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batches/results")
 _create_text_widget("panel_majority_mode", "reached_models")  # reached_models | configured_models
 _create_text_widget("min_panel_votes_for_majority", "2")
@@ -193,6 +201,7 @@ PANEL_VERDICTS_TABLE = _get_widget("panel_verdicts_table", "yt_lid_v3_llm_panel_
 PANEL_MODEL_AGREEMENT_TABLE = _get_widget("panel_model_agreement_table", "yt_lid_v3_llm_panel_model_agreement")
 
 ROUTING_MODE = _get_widget("routing_mode", "residual_panel").strip().lower()
+RANDOM_VALIDATION_SCOPE = _get_widget("random_validation_scope", "all").strip().lower()
 RANDOM_VALIDATION_SAMPLE_SIZE = _get_int_widget("random_validation_sample_size", 1000)
 RANDOM_VALIDATION_SEED = _get_widget("random_validation_seed", "20260610").strip()
 ROUTE_DISAGREEMENT = _get_bool_widget("route_disagreement", True)
@@ -215,7 +224,8 @@ MODELS = json.loads(_get_widget("models_json", DEFAULT_MODELS_JSON))
 MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 2000)
 TEMPERATURE = _get_optional_float_widget("temperature", None)
 OPENAI_ENDPOINT_MODE = _get_widget("openai_endpoint_mode", "auto").strip().lower()
-OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "minimal").strip()
+OPENAI_REASONING_EFFORT = _get_widget("openai_reasoning_effort", "none").strip().lower()
+OPENAI_REASONING_EFFORT_BY_MODEL_JSON = _get_widget("openai_reasoning_effort_by_model_json", "{}").strip()
 GEMINI_THINKING_LEVEL = _get_widget("gemini_thinking_level", "low").strip()
 DEEPSEEK_THINKING_TYPE = _get_widget("deepseek_thinking_type", "disabled").strip().lower()
 DEEPSEEK_REASONING_EFFORT = _get_widget("deepseek_reasoning_effort", "").strip().lower()
@@ -229,8 +239,20 @@ MAX_REQUESTS_PER_FILE = _get_int_widget("max_requests_per_file", 10000)
 SUBMIT_BATCHES = _get_bool_widget("submit_batches", False)
 SUBMIT_PROVIDER_FILTER_RAW = _get_widget("submit_provider_filter", "").strip().lower()
 SUBMIT_PROVIDER_FILTER = {p.strip() for p in SUBMIT_PROVIDER_FILTER_RAW.split(",") if p.strip()}
+SUBMIT_MODEL_FILTER_RAW = _get_widget("submit_model_filter", "").strip()
+SUBMIT_MODEL_FILTER = {p.strip() for p in SUBMIT_MODEL_FILTER_RAW.split(",") if p.strip()}
 SKIP_EXISTING_SUBMITTED_BATCHES = _get_bool_widget("skip_existing_submitted_batches", True)
 IMPORT_RESULTS = _get_bool_widget("import_results", False)
+REUSE_EXISTING_REQUESTS_ON_IMPORT = _get_bool_widget("reuse_existing_requests_on_import", True)
+REUSE_EXISTING_REQUESTS_ON_SUBMIT = _get_bool_widget("reuse_existing_requests_on_submit", True)
+REFRESH_REQUEST_PROVIDER_FILTER_RAW = _get_widget("refresh_request_provider_filter", "").strip().lower()
+REFRESH_REQUEST_PROVIDER_FILTER = {
+    p.strip() for p in REFRESH_REQUEST_PROVIDER_FILTER_RAW.split(",") if p.strip()
+}
+REFRESH_REQUEST_MODEL_FILTER_RAW = _get_widget("refresh_request_model_filter", "").strip()
+REFRESH_REQUEST_MODEL_FILTER = {
+    p.strip() for p in REFRESH_REQUEST_MODEL_FILTER_RAW.split(",") if p.strip()
+}
 RESULTS_INPUT_DIR = _get_widget("results_input_dir", "/dbfs/FileStore/youtube_lid_panel_batches/results")
 PANEL_MAJORITY_MODE = _get_widget("panel_majority_mode", "reached_models").strip().lower()
 MIN_PANEL_VOTES_FOR_MAJORITY = _get_int_widget("min_panel_votes_for_majority", 2)
@@ -385,11 +407,78 @@ def write_run_scoped(df, table_full, extra_partitions=None):
     )
 
 # Arabic macrolanguage + dialects collapsed to one family for the "exclude taxonomy artifact" filter.
-ARABIC_FAMILY_ISO = {"ara", "arb", "ary", "arz", "apc", "ars", "ajp", "aeb", "acm", "acq", "aec", "afb", "ayl", "ayn"}
+ARABIC_FAMILY_ISO = {"ara", "arb", "ary", "arz", "arq", "apc", "ars", "ajp", "aeb", "acm", "acq", "aec", "afb", "ayl", "ayn"}
+# Codes such as und/zxx/mul are abstentions for this panel. `inc` is a collective
+# Indo-Aryan family code, not a specific channel-language label.
+NON_LANGUAGE_BASE_ISO = {"und", "zxx", "mul", "mis", "inc"}
 # South-Asian source language codes used to flag the romanized-Indic shared-bias route (D3).
 SOURCE_INDIC_CODES = {"hi", "hi-in", "hin", "ne", "ne-np", "nep", "npi", "bho", "ur", "ur-pk", "pa", "gu", "mr", "bn", "ta", "te", "kn", "ml", "or", "si"}
 CANONICAL_BASE_ISO = {
     # Project-level taxonomy aliases surfaced in the 1k LLM validation disagreement audit.
+    "ar": "ara",
+    "arabic": "ara",
+    "bengali": "ben",
+    "bosnian": "bos",
+    "braj": "bra",
+    "brij": "bra",
+    "bundeli": "bns",
+    "bundelkhandi": "bns",
+    "bundleli": "bns",
+    "cantonese": "yue",
+    "chinese": "cmn",
+    "croatian": "hrv",
+    "deutsch": "deu",
+    "english": "eng",
+    "filipino": "fil",
+    "french": "fra",
+    "german": "deu",
+    "hindi": "hin",
+    "haryanvi": "bgc",
+    "gujarati": "guj",
+    "guj": "guj",
+    "hindko": "hnd",
+    "hnd": "hnd",
+    "indonesian": "ind",
+    "javanese": "jav",
+    "jv": "jav",
+    "jw": "jav",
+    "japanese": "jpn",
+    "kannada": "kan",
+    "kashmiri": "kas",
+    "kas": "kas",
+    "khasi": "kha",
+    "korean": "kor",
+    "kumaoni": "kfy",
+    "garhwali": "gbm",
+    "kutchi": "kfr",
+    "kachchi": "kfr",
+    "kutch": "kfr",
+    "kfr": "kfr",
+    "marwari": "mwr",
+    "malay": "zsm",
+    "mandarin": "cmn",
+    "marathi": "mar",
+    "nagpuri": "sck",
+    "odia": "ory",
+    "pashtun": "pus",
+    "sadani": "sck",
+    "sadri": "sck",
+    "pashto": "pus",
+    "portuguese": "por",
+    "punjabi": "pan",
+    "rajasthani": "raj",
+    "russian": "rus",
+    "serbian": "srp",
+    "serbo-croatian": "hbs",
+    "serbocroatian": "hbs",
+    "bcs": "hbs",
+    "spanish": "spa",
+    "tamil": "tam",
+    "telugu": "tel",
+    "tulu": "tcy",
+    "tcy": "tcy",
+    "ukrainian": "ukr",
+    "urdu": "urd",
     "zho": "cmn",
     "cmn": "cmn",
     "fil": "fil",
@@ -402,6 +491,59 @@ CANONICAL_BASE_ISO = {
     "zsm": "zsm",
     "nep": "npi",
     "npi": "npi",
+    "pas": "pus",
+    "zh": "cmn",
+    "ku": "kmr",
+    "kur": "kmr",
+    "kmr": "kmr",
+}
+
+SCRIPT_FAMILY_CANONICAL = {
+    "arab": "Arab",
+    "arabic": "Arab",
+    "beng": "Beng",
+    "bengali": "Beng",
+    "cyrl": "Cyrl",
+    "cyrillic": "Cyrl",
+    "deva": "Deva",
+    "devanagari": "Deva",
+    "greek": "Grek",
+    "grek": "Grek",
+    "gujr": "Gujr",
+    "gujarati": "Gujr",
+    "guru": "Guru",
+    "gurmukhi": "Guru",
+    "han": "Hani",
+    "hani": "Hani",
+    "hans": "Hani",
+    "hant": "Hani",
+    "hang": "Hang",
+    "hangul": "Hang",
+    "hebr": "Hebr",
+    "hebrew": "Hebr",
+    "jpan": "Jpan",
+    "kana": "Jpan",
+    "kannada": "Knda",
+    "khmer": "Khmr",
+    "khmr": "Khmr",
+    "knda": "Knda",
+    "korean": "Hang",
+    "lao": "Laoo",
+    "laoo": "Laoo",
+    "latin": "Latn",
+    "latn": "Latn",
+    "malayalam": "Mlym",
+    "mlym": "Mlym",
+    "odia": "Orya",
+    "oriya": "Orya",
+    "orya": "Orya",
+    "sinh": "Sinh",
+    "sinhala": "Sinh",
+    "tamil": "Taml",
+    "taml": "Taml",
+    "telugu": "Telu",
+    "telu": "Telu",
+    "thai": "Thai",
 }
 
 
@@ -410,29 +552,35 @@ def canonical_base_iso_expr(col):
     iso = F.when(iso.isin("", "null", "none"), F.lit(None).cast("string")).otherwise(iso)
     iso = F.when(iso.isin(*sorted(ARABIC_FAMILY_ISO)), F.lit("ara")).otherwise(iso)
     mapping = F.create_map(*sum([[F.lit(k), F.lit(v)] for k, v in CANONICAL_BASE_ISO.items()], []))
-    return F.coalesce(F.element_at(mapping, iso), iso)
+    mapped = F.coalesce(F.element_at(mapping, iso), iso)
+    return (
+        F.when(mapped.isin(*sorted(NON_LANGUAGE_BASE_ISO)), F.lit(None).cast("string"))
+        .when(mapped.rlike("^[a-z]{3}$"), mapped)
+        .otherwise(F.lit(None).cast("string"))
+    )
+
+
+def safe_split_get_expr(col, pattern: str, zero_based_index: int):
+    padding = F.array(*[F.lit(None).cast("string") for _ in range(zero_based_index + 1)])
+    parts = F.concat(F.split(col.cast("string"), pattern), padding)
+    return parts.getItem(zero_based_index)
 
 
 def script_from_label_expr(label_col):
-    script = F.element_at(F.split(label_col.cast("string"), "_"), 2)
+    script = safe_split_get_expr(label_col, "_", 1)
     return F.when(script.isin("", "null", "none"), F.lit(None).cast("string")).otherwise(script)
 
 
 def script_family_expr(script_col):
     raw = F.trim(script_col.cast("string"))
     raw_l = F.lower(raw)
+    mapping = F.create_map(*sum([[F.lit(k), F.lit(v)] for k, v in SCRIPT_FAMILY_CANONICAL.items()], []))
+    mapped = F.element_at(mapping, raw_l)
     return (
         F.when(raw_l.isin("", "null", "none"), F.lit(None).cast("string"))
-        .when(raw_l.isin("hani", "hans", "hant", "han"), F.lit("Hani"))
-        .when(raw_l.isin("arab", "arabic"), F.lit("Arab"))
-        .when(raw_l.isin("latn", "latin"), F.lit("Latn"))
-        .when(raw_l.isin("cyrl", "cyrillic"), F.lit("Cyrl"))
-        .when(raw_l.isin("deva", "devanagari"), F.lit("Deva"))
-        .when(raw_l.isin("orya", "odia"), F.lit("Orya"))
-        .when(raw_l.isin("thai"), F.lit("Thai"))
-        .when(raw_l.isin("jpan", "kana"), F.lit("Jpan"))
-        .when(raw_l.isin("hang", "korean"), F.lit("Hang"))
-        .otherwise(raw)
+        .when(mapped.isNotNull(), mapped)
+        .when(raw.rlike("^[A-Z][a-z]{3}$"), raw)
+        .otherwise(F.lit(None).cast("string"))
     )
 
 
@@ -447,16 +595,49 @@ def normalized_language_label_expr(iso_col, script_col):
 
 if ROUTING_MODE not in {"residual_panel", "random_validation"}:
     raise ValueError("routing_mode must be residual_panel or random_validation")
+if RANDOM_VALIDATION_SCOPE not in {"all", "lid_iso_disagreement"}:
+    raise ValueError("random_validation_scope must be all or lid_iso_disagreement")
 if RANDOM_VALIDATION_SAMPLE_SIZE < 1:
     raise ValueError("random_validation_sample_size must be positive")
+OPENAI_REASONING_EFFORT_VALUES = {"none", "minimal", "low", "medium", "high", "xhigh"}
+try:
+    OPENAI_REASONING_EFFORT_BY_MODEL = {
+        str(k): str(v).strip().lower()
+        for k, v in json.loads(OPENAI_REASONING_EFFORT_BY_MODEL_JSON or "{}").items()
+        if str(v).strip()
+    }
+except Exception as exc:
+    raise ValueError(f"openai_reasoning_effort_by_model_json must be a JSON object: {exc}") from exc
+if OPENAI_REASONING_EFFORT and OPENAI_REASONING_EFFORT not in OPENAI_REASONING_EFFORT_VALUES:
+    raise ValueError("openai_reasoning_effort must be blank, none, minimal, low, medium, high, or xhigh")
+bad_openai_model_efforts = {
+    model: effort for model, effort in OPENAI_REASONING_EFFORT_BY_MODEL.items()
+    if effort not in OPENAI_REASONING_EFFORT_VALUES
+}
+if bad_openai_model_efforts:
+    raise ValueError(f"Unsupported openai_reasoning_effort_by_model_json values: {bad_openai_model_efforts}")
 if DEEPSEEK_THINKING_TYPE not in {"", "enabled", "disabled"}:
     raise ValueError("deepseek_thinking_type must be blank, enabled, or disabled")
-if DEEPSEEK_REASONING_EFFORT and DEEPSEEK_REASONING_EFFORT not in {"high", "max"}:
-    raise ValueError("deepseek_reasoning_effort must be blank, high, or max")
+DEEPSEEK_REASONING_EFFORT_VALUES = {"low", "medium", "high", "max", "xhigh"}
+if DEEPSEEK_REASONING_EFFORT and DEEPSEEK_REASONING_EFFORT not in DEEPSEEK_REASONING_EFFORT_VALUES:
+    raise ValueError("deepseek_reasoning_effort must be blank, low, medium, high, max, or xhigh")
 if DEEPSEEK_REASONING_EFFORT and DEEPSEEK_THINKING_TYPE != "enabled":
     raise ValueError("deepseek_reasoning_effort requires deepseek_thinking_type=enabled")
 if DEEPSEEK_MAX_OUTPUT_TOKENS < 1:
     raise ValueError("deepseek_max_output_tokens must be at least 1")
+DEEPSEEK_MODELS_IN_PANEL = [
+    str(m.get("model", "")).strip()
+    for m in MODELS
+    if str(m.get("provider", "")).strip().lower() == "deepseek"
+]
+if DEEPSEEK_THINKING_TYPE == "enabled":
+    deepseek_thinking_min_tokens = 4000 if any("pro" in m.lower() for m in DEEPSEEK_MODELS_IN_PANEL) else 2000
+    if DEEPSEEK_MAX_OUTPUT_TOKENS < deepseek_thinking_min_tokens:
+        raise ValueError(
+            f"deepseek_max_output_tokens must be at least {deepseek_thinking_min_tokens} when "
+            "deepseek_thinking_type=enabled for the selected DeepSeek models; reasoning tokens share "
+            "the output cap and lower caps truncate the final JSON."
+        )
 if DEEPSEEK_MAX_WORKERS < 1:
     raise ValueError("deepseek_max_workers must be at least 1")
 if DEEPSEEK_REQUEST_TIMEOUT_SECONDS <= 0:
@@ -486,7 +667,7 @@ print(
 )
 print("Routing mode:", ROUTING_MODE)
 if ROUTING_MODE == "random_validation":
-    print(f"Random validation sample: n={RANDOM_VALIDATION_SAMPLE_SIZE:,}, seed={RANDOM_VALIDATION_SEED}")
+    print(f"Random validation sample: n={RANDOM_VALIDATION_SAMPLE_SIZE:,}, seed={RANDOM_VALIDATION_SEED}, scope={RANDOM_VALIDATION_SCOPE}")
 else:
     print("Routes -> disagreement:", ROUTE_DISAGREEMENT, "| unresolved_tail:", ROUTE_UNRESOLVED_TAIL,
           "| shared_bias_english_indic:", ROUTE_SHARED_BIAS, "| agreement_audit:", ROUTE_AGREEMENT_AUDIT,
@@ -504,24 +685,35 @@ SYSTEM_PROMPT = """You are an independent, evidence-driven language classifier f
 
 OBJECTIVE: determine the dominant WRITTEN-METADATA language — the language of the channel name, description, and video titles/descriptions provided. This is NOT the spoken language and NOT the creator's nationality. A channel filmed in Hindi can have English-written metadata; classify the WRITING.
 
-LABEL FORMAT: a "<ISO 639-3>_<ISO 15924 script>" tag, e.g. eng_Latn, spa_Latn, hin_Deva, ara_Arab, cmn_Hani, tha_Thai, kor_Hang. Always include the script. If a non-Latin language is written in Latin letters (romanization), label it with _Latn and set is_romanized=true (e.g. romanized Hindi = hin_Latn).
+LABEL FORMAT: a "<ISO 639-3>_<ISO 15924 script>" tag, e.g. eng_Latn, spa_Latn, hin_Deva, ara_Arab, cmn_Hani, tha_Thai, kor_Hang. Always include the script. If a non-Latin language is written in Latin letters (romanization), label it with _Latn and set is_romanized=true (e.g. romanized Hindi = hin_Latn). Use ISO codes only; never output English names such as hindi_Deva, korean_Hangul, or punjabi_Latn.
 
-WEIGH the evidence by field, highest first: video_title (2.0), video_description (1.0), channel_description (1.0), channel_name (0.25). A field is decisive only with enough clean letters (>=40 Latin / >=12 non-Latin), but repeated short titles can still be strong evidence. Treat generic provider metadata, release metadata, URLs, social links, and English scaffolding like "Official Video" as weak evidence.
+WEIGH the evidence by field, highest first: video_title (2.0), video_description (1.0), channel_description (1.0), channel_name (0.25). A field is decisive only with enough clean letters (>=40 Latin / >=12 non-Latin), but repeated short titles can still be strong evidence. Treat generic provider metadata, release metadata, production credits, URLs, social links, query/tag lists, repeated near-duplicate template descriptions, title translations, proper-name credit blocks, episode/review/fancam/game/cartoon shell labels, and English scaffolding like "Official Video", "Full Natok", "Clip Officiel", "Presenting the new drama", "Cast", or "Produced by" as weak evidence. Count repeated boilerplate/template descriptions once, not once per video.
 
-USE SUMMARIES CAREFULLY: FIELD SUMMARY, SEGMENT SCRIPT SUMMARY, TEXT SCRIPT SUMMARY, and LANGUAGE HINTS describe the supplied prompt after cleanup. Use them to notice mixed-script or romanized evidence, but do not classify from a single hint, hashtag, location, artist name, or channel name without supporting natural-language title/description text.
+USE SUMMARIES CAREFULLY: FIELD SUMMARY, SEGMENT SCRIPT SUMMARY, TEXT SCRIPT SUMMARY, LANGUAGE HINTS, and weak hashtag cue summaries describe the supplied prompt after cleanup. Use them to notice mixed-script or romanized evidence, but do not classify from a single hint, hashtag, location, artist name, or channel name without supporting natural-language title/description text.
 
 GUARD against known failure modes:
 - LATIN-NAME TRAP: do not let an English/Latin channel NAME override video titles that are mostly non-Latin. If titles are mostly Thai/Korean/Arabic/etc., that is the language even when the brand name is Latin.
-- ROMANIZED NON-LATIN: detect romanized Hindi/Urdu/Punjabi/Arabic/Bengali/Tamil/Telugu/Malayalam/Bhojpuri/Haryanvi; label the underlying language with _Latn, is_romanized=true; do not default to English when the title phrases are clearly non-English.
-- SPARSE CUES: do not let a single channel name, one short non-English item, hashtags, locations, artist names, or topic labels override repeated English natural-language titles/descriptions. Preserve recurring secondary evidence with secondary_language_label/is_mixed_language instead.
+- ROMANIZED NON-LATIN: detect romanized Hindi/Urdu/Punjabi/Pashto/Arabic/Bengali/Tamil/Telugu/Malayalam/Bhojpuri/Haryanvi/Bundeli; label the underlying language with _Latn, is_romanized=true; do not default to English when the title phrases are clearly non-English. Hindi/Hinglish cues include "ke", "ki", "ka", "me/mei/main", "hai", "hoga/hogi", "hone", "ne", "se", "par", "ye/yeh", "kya", "kyu/kyun", "kaise/kase", "apka/aapka", "dil", and "sabko"; these are not Bengali. Urdu-in-Latin cues include "ki/ka/main", "duniya", "subse/sabse", "pyari", "awaz", "kase/kaise", "hoi/hui", "tabdil", "dua", "wazifa", "ishq", "naat", and explicit "Urdu translation", especially with Pakistan/Islamic context; do not call such text Arabic unless there is Arabic script or grammatical Arabic. Punjabi cues include "da/di/de", "sanu", "sade", "noo/nu", "ni", "ae/aiy", "wich", "mola", "ishq/ishqa", "maawan", "tayari", "wazifa", "wird"; Pakistani naat/manqabat titles with Lahore/Pakistan/Shahmukhi/Western Punjabi context are usually pnb_Latn, not Urdu or English. Pashto cues include repeated grammar/phrases such as "da ... jwand", "sta", "zama", "sara", "kho", "peghor", or explicit Pashto/Pakhto; do not relabel Pashto-like Pakistani vines as English just because the script is Latin. Use pan_Guru/pan_Latn for Indian/Eastern Punjabi or explicit Gurmukhi/India context. Chhattisgarhi/CG music cues include "Cg Song", "Chhattisgarhi/Chhattisarhi Gana", "Mor", "Mola", "Tor", "Nai", "Ka Hoge"; use hne_Latn or hne_Deva, not hif or generic Hindi unless the text is actually standard Hindi. Bundeli/Bundelkhand cues include explicit "Bundeli", "Bundeli Gaane", or "Bundelkhand"; use bns_Latn/bns_Deva rather than hne/bho/hin. Bhojpuri cues include repeated Bhojpuri grammar such as "ba", "bani", "badu", "tohar", "hamar", "rauwa", "saiyan", "ka ho", or explicit Bhojpuri/Bhojpuriya; if only a #bhojpuri tag or artist/genre cue is present while the phrase text is generic Hindi/English, keep the phrase language primary and record Bhojpuri as secondary/low confidence.
+- SPARSE CUES: hashtag-only, mostly-hashtag, emoji-heavy, title-template-only, or proper-noun-only channels do not contain enough written-language evidence for a confident classification. Do not let a single channel name, one short non-English item, hashtags, locations, artist names, or topic labels override repeated natural-language titles/descriptions. If only weak cues remain after cleanup, use status="insufficient_text" or low confidence rather than guessing; preserve recurring secondary evidence with secondary_language_label/is_mixed_language instead.
+- PROPER-NOUN/LITURGY TRAP: religious titles, temple/person/place names, transliterated chants, or topic labels such as "Gita", "Darbar", "Puje", "Bhagavatha", "Matha", "Teertaru", "Pravachana", "Allah", "Quran/Qur'an", "Surah", "Yasin", "Rahman", "Tilawat", "Naat", "Azan", or "Masha Allah" are weak evidence by themselves. Arabic religious words in Latin script do not imply Arabic metadata unless there is Arabic-script text or grammatical Arabic phrasing. For Islamic metadata with Urdu/Hindi connective text such as "ki", "main", "duniya", "sabse/subse", "pyari", "awaz", or "translation", classify the connective language (often urd_Latn/hin_Latn) rather than Arabic. If only names/topics are present, use insufficient_text or low/medium confidence and preserve secondary cues.
+- LANGUAGE-NAME / AD-VARIANT TRAP: product/ad titles can list variants such as "Hindi 20 Sec", "Bengali 6 Sec", or "Punjabi 6 Sec" while the natural text is mostly English. Treat language names in title suffixes, hashtags, and query lists as weak routing tags unless actual phrase text in that language is present. Hashtag-only language names can support a secondary cue but should not be the primary label without phrase evidence.
+- SEO-TEMPLATE TRAP: English category words like "lyrics", "recipe", "mukbang", "ASMR", "official video", "full video", "new song", "listen/stream", and "subscribe" are often boilerplate around non-English phrase text. Do not let these terms automatically dominate repeated Hindi/Korean/Telugu/etc. phrase text; if the only non-English signal is a language name or proper noun, keep English primary and record the other cue as secondary or low confidence.
+- MIXED-SCRIPT TITLE TRAP: many titles combine English media scaffolding with the real title phrase, e.g. "ASMR ... 먹방 MUKBANG, EATING", "Raghu Tarang II Quotes for Healthy Living: వండని వంటలు", or "OFFICIAL 4K VIDEO". Downweight the generic English scaffolding and classify from the recurring natural-language phrase/script across titles. Repeated English description templates should not override repeated non-English title phrases.
+- TRANSLATED-TITLE TRAP: titles often pair a source-language title with an English translation after a colon/pipe, e.g. Korean/Russian/Chinese text followed by an English gloss. If the same non-English script or romanized source-language phrases recur across titles, do not count the English gloss or credit shell as equal primary-language evidence.
+- MEDIA-SHELL TRAP: words such as "fancam", "behind", "performance ver.", "full episode", "promo", "preview", "review", "reaction", "cartoon", "gameplay", "nursery rhymes", "kids", and "toy" describe the video format or audience. Treat them as weak category labels unless there is enough surrounding natural-language text in English.
+- TEMPLATE-DESCRIPTION TRAP: duplicated descriptions, query lists, "related tags", "your query solved", "listen here", shopping/booking blocks, and social-link blocks in any language often repeat across every video. They should not multiply the weight of English or SEO terms. Use the varied title text and the first natural-language description as stronger evidence than repeated templates.
+- REGIONAL ISO TRAP: use the most specific current ISO 639-3 code only with direct metadata evidence. Common cues: Haryanvi=bgc; Bundeli/Bundelkhandi=bns; Braj/Brij/Braj Bhasha=bra; Rajasthani=raj and explicit Marwari=mwr; Bhojpuri=bho; Kumaoni=kfy (not kum, which is Kumyk); Garhwali=gbm; Nagpuri/Sadri/Sadani=sck when those names are explicit (not nag, which is Naga Pidgin); Kashmiri=kas (not ksh, which is Kolsch); Tulu=tcy; Hindko=hnd; Kutchi/Kachchi/Kutch=kfr; Gujarati=guj; Chhattisgarhi=hne only for Chhattisgarhi/CG cues; Pashto=pus (not pas); Western/Shahmukhi Punjabi=pnb and Eastern/Gurmukhi Punjabi=pan. If the cue is only a broad genre/location/artist name and the phrase evidence is generic Hindi/Urdu/English, choose the phrase evidence and mention the regional cue as dialect_or_variant or secondary evidence.
+- BOSNIAN/CROATIAN/SERBIAN AMBIGUITY: if Latin-script Bosnian/Croatian/Serbian/Serbo-Croatian text is mutually intelligible and the supplied metadata has no decisive country, orthography, or explicit-language cue, use hbs_Latn. Use bos_Latn, hrv_Latn, or srp_Latn only when direct metadata evidence supports that specific variety, such as explicit "bosanski", "hrvatski", "srpski", "Srbija", "Hrvatska", "BiH", or clear Cyrillic Serbian. Sports/news metadata from regional outlets without direct country/language cues should normally be hbs_Latn.
 - ENGLISH vs CREOLE: standard English is eng_Latn; only use jam_Latn/pcm_Latn with genuine creole grammar/lexis.
+- FRENCH vs CREOLE: standard French is fra_Latn; only use gcf_Latn for Guadeloupean/Caribbean French Creole with genuine creole grammar/lexis, not merely Caribbean artists, Zouk/Kassav references, or French proper nouns.
 - MINORITY OVER-PREDICTION: be conservative with rare Romance/minority tail labels (srd, ast, vec, gug, lim, scn, glg, eus); a few ambiguous Latin words are usually Spanish/Italian/Portuguese/English. Set is_high_risk_tail=true if you do assign one.
 
-NORMALIZE TAXONOMY: report Arabic as the macrolanguage ara_Arab (put a known dialect in dialect_or_variant); use cmn for Chinese/Mandarin rather than zho; use fil_Latn for broad Filipino/Tagalog unless there is a specific reason to report tgl; use ory rather than ori for Odia; use uzb rather than uzn for broad Uzbek; use zsm rather than msa for Standard Malay/Malay; use npi rather than nep for Nepali; distinguish ind vs zsm only with clear evidence.
+NORMALIZE TAXONOMY: report Arabic as the macrolanguage ara_Arab (put a known dialect in dialect_or_variant); use kmr_Latn for broad Kurmanji/Northern Kurdish rather than ku/kur; use cmn for Chinese/Mandarin rather than zho; use hbs_Latn for unresolved Bosnian/Croatian/Serbian text; use fil_Latn for broad Filipino/Tagalog unless there is a specific reason to report tgl; use ory rather than ori for Odia; use uzb rather than uzn for broad Uzbek; use zsm rather than msa for Standard Malay/Malay; use npi rather than nep for Nepali; use pnb for Western/Pakistani Punjabi, pan for Eastern/Standard Punjabi, bns for Bundeli, bra for Braj, raj for Rajasthani, mwr for explicit Marwari, sck for Nagpuri/Sadri/Sadani, kas for Kashmiri, tcy for Tulu, hnd for Hindko, kfr for Kutchi/Kachchi, guj for Gujarati, hne for Chhattisgarhi, bho for Bhojpuri, mag for Magahi, and hif only for Fiji Hindi; distinguish ind vs zsm only with clear evidence.
 
 MIXED LANGUAGE: if a second language recurs across multiple fields, set secondary_language_label, is_mixed_language=true, and list mixed_languages. Do not force a single-language call when the supplied metadata is genuinely bilingual; choose the dominant written metadata language and preserve the recurring secondary language.
 
 ABSTAIN rather than guess: if the supplied metadata has no usable text, status="insufficient_text" and leave labels null. Otherwise status="classified".
+Do not return und, zxx, mul, inc, or other family/collective codes as classified language labels; use status="insufficient_text" with null labels instead when the text is not classifiable or only a broad family is known.
 
 Base the judgment ONLY on the supplied text. NEVER invent content. Return ONE compact, minified JSON object
 on one line, nothing else. Keep evidence <=160 characters and quote only the shortest decisive text:
@@ -578,14 +770,34 @@ AGREEMENT_STATUSES = [
 route_frames = []
 
 if ROUTING_MODE == "random_validation":
-    # Seeded, reproducible sample from the full notebook-01 comparison table. This is intended for
-    # API/secrets smoke validation, not adjudication of only the residual-review queue.
+    # Seeded, reproducible sample from notebook-01 comparison output. Scope defaults to the full comparison
+    # table for API smoke validation; the LID-disagreement scope targets hard cases where the two fastText
+    # detectors disagree after project-level ISO normalization.
+    random_sample_base = cmp_df
+    route_reason = "random_validation"
+    if RANDOM_VALIDATION_SCOPE == "lid_iso_disagreement":
+        random_sample_base = random_sample_base.where(
+            canonical_base_iso_expr(F.col("openlid_primary_language_iso639_3")).isNotNull()
+            & canonical_base_iso_expr(F.col("glotlid_primary_language_iso639_3")).isNotNull()
+            & (
+                canonical_base_iso_expr(F.col("openlid_primary_language_iso639_3"))
+                != canonical_base_iso_expr(F.col("glotlid_primary_language_iso639_3"))
+            )
+        )
+        route_reason = "random_validation_lid_iso_disagreement"
+    n_random_sample_base = random_sample_base.count()
+    print(f"Random validation eligible channels ({RANDOM_VALIDATION_SCOPE}): {n_random_sample_base:,}")
+    if n_random_sample_base < RANDOM_VALIDATION_SAMPLE_SIZE:
+        raise ValueError(
+            f"random_validation_scope={RANDOM_VALIDATION_SCOPE} has only {n_random_sample_base:,} eligible "
+            f"channels, fewer than requested sample size {RANDOM_VALIDATION_SAMPLE_SIZE:,}."
+        )
     sample_order = F.xxhash64(F.concat_ws("|", F.col("channel_id"), F.lit(RANDOM_VALIDATION_SEED)))
     route_frames.append(
-        cmp_df
+        random_sample_base
         .orderBy(sample_order, F.col("channel_id"))
         .limit(RANDOM_VALIDATION_SAMPLE_SIZE)
-        .withColumn("route_reason", F.lit("random_validation"))
+        .withColumn("route_reason", F.lit(route_reason))
     )
 else:
     if ROUTE_DISAGREEMENT:
@@ -669,7 +881,8 @@ if not route_frames:
 
 # Union; if a channel matches multiple routes, keep the highest-priority reason.
 _priority = F.create_map(*sum([[F.lit(k), F.lit(v)] for k, v in {
-    "random_validation": 0, "disagreement": 1, "unresolved_tail": 2, "shared_bias_english_indic": 3, "agreement_audit": 4,
+    "random_validation": 0, "random_validation_lid_iso_disagreement": 0,
+    "disagreement": 1, "unresolved_tail": 2, "shared_bias_english_indic": 3, "agreement_audit": 4,
 }.items()], []))
 routed = route_frames[0]
 for rf in route_frames[1:]:
@@ -739,10 +952,27 @@ _PROMPT_BOILERPLATE_LINE_PATTERNS = [
     r"^\W*auto-generated by youtube\b",
     r"^released on\s*:",
     r"^(song credits?|music credits?|audio production)\b",
-    r"^(main artist|producer|composer|lyricist|arranger|associated performer|music publisher|cast)\s*:",
+    r"^\W*(album|song|spng|singer|lyrics?|chorus|music composition)\s*[:：;-]",
+    r"^\W*(main artist|artist|producer|executive producer|composer|lyricist|arranger|associated performer|performed by|music publisher|cast|genre)\s*[:：;-]",
+    r"^\W*(script|dialogue|direction|directed by|writer|written by|written and produced by|story|screenplay|starring|staring|guest appearance|edit|editor|video edited|color|colorist|dop|director of photography|cinematography|camera(?:\s+man)?|shot by|bgm|poster design|pr|label|banner|production|mix(?:ed)?(?:\s+and)?\s+master(?:ed)?|mastered by|beat prod(?:uced)?|set design|choreography|makeup)\s*[:：;-]",
+    r"^\W*(digital media(?: creator| planner)?|presents?|presented by|publisher|trade enqu?ir(?:y|ies)|trade enqu?ary|copyright|related artists?|other re?lated tags?|other re?lated hashtags?)\s*[:：;-]",
+    r"^\W*(eid ul fitr\s*\d+\s*[—-]\s*)?presenting\b.*\b(drama|natok|film|movie)\b",
+    r"^\W*(presenting|watch)\s+the\s+(new|latest|valentine special|eid special)?\s*(drama|natok|film|movie)\b",
+    r"^\W*watch\s+.*\b(?:movie|episode|part|clip|show)\b",
+    r"^\W*(welcome to|you are watching|movie synopsis|synopsis|storyline)\b",
+    r"^\W*(enjoy\s*&\s*stay connected|watch more videos?|for partnership|partnership/collaboration)\b",
     r"^\W*(official site|facebook|twitter|instagram|tiktok|website|discord)\b",
-    r"^(click here to subscribe|make sure to subscribe|subscribe\b|for more such videos|get ready to witness)\b",
-    r"^(download link|download mp3|download song|follow (us|me)|join (my|our)|support (the stream|a creator|us|me)|superchat)\b",
+    r"^\W*(related tags?|related tag|your quer(?:y|ies) solved|query solved|search terms?|keywords?|tags?)\s*(?:[:：-]+\s*)?$",
+    r"^\W*(for booking|booking|bookings|business enquiries?|business inquiries?|business promotion|sponsorship|collaboration)\s*[:：-]?\b",
+    r"^\W*(listen|stream)(?:/download)?\s+(here|now|on|via|\S+\s+via)\b",
+    r"^\W*discover similar songs\b",
+    r"^\W*be sure to\s+(subscribe|like|follow)\b",
+    r"^\W*(we are on|pre-?save link|shop)\b",
+    r"^\W*follow\s+[@A-Za-z0-9_.-]+\s*:?\b",
+    r"^\W*(click here to subscribe|make sure to subscribe|subscribe\b|like us on|for more such videos|get ready to witness)\b",
+    r"^\W*(download link|download mp3|download song|follow (us|me)|join (my|our)|support\b|sponsor\b|superchat)\b",
+    r"^\W*(upi id|e-?mail id|email id|e-?mail|email|whats?app|phone|contact)\b",
+    r"^\W*(if you like|follow us on|free home delivery|publisher|copyright)\b",
     r"^(copyright disclaimer|under section 107|allowance is made for fair use|fair use is a use permitted|non-profit, educational or personal use)\b",
     r"^music video by\b.*\bofficial video\b",
     r"^[\u2117\u00a9]\s*\d{4}\b",
@@ -751,35 +981,89 @@ _PROMPT_BOILERPLATE_PHRASE_PATTERNS = [
     r"\bcopyright disclaimer under section 107\b.*$",
     r"\bprovided to youtube by\b.*$",
     r"\bauto-generated by youtube\b.*$",
+    r"\b(?:related tags?|your quer(?:y|ies) solved|query solved|search terms?|keywords?)\s*[:：-].*$",
+    r"\b(?:stream|listen)(?:/download)?\s+\S+\s+via\b.*$",
+    r"\bmake reels on instagram\b.*$",
+    r"\b(?:album|song|singer|lyrics?)\s*[:：-].*$",
     r"\bdownload link\s*[-:]\s*\S+",
+    r"\b(?:performed by|written and produced by|produced\s*&\s*written by|directed by|mastered by|mixed and mastered|mix and mastered|video edited|camera(?:\s+man)?|shot by|beat prod(?:uced)?|executive producer|starring|staring|set design|choreography|makeup|digital media(?: creator| planner)?|presented by|presents?|publisher|trade enqu?ir(?:y|ies)|trade enqu?ary)\b.*$",
+    r"\bproduced by\b.*$",
+    r"\bunder the banner of\b.*$",
+]
+_PROMPT_DESCRIPTION_BOILERPLATE_PHRASE_PATTERNS = [
+    r"\b(?:facebook|instagram|tiktok|twitter|telegram|snapchat|youtube)\s*[:：/@].*$",
+    r"\b(?:more socials|redes sociales|social medias?|suis[- ]?moi|abonne[- ]toi|"
+    r"folgt? (?:uns|mir)|folge (?:uns|mir)|segui(?:ci)?|pratite me|"
+    r"kanal jetzt abonnieren|channel abonnieren|channel abonnieren|subscribe(?: to)?|"
+    r"follow (?:me|us|[A-Z][A-Za-z0-9_.-]+))\b.*$",
+    r"\b(?:download/stream|stream/download|download mp3|download now|download here|"
+    r"ascolta|escucha|écoute|ecoute)\b.*$",
+    r"\b(?:bookings? via|label, management|management, booking|booking & interviewanfragen|"
+    r"business inquiries?|business enquiries?|contact|mail\s*:|e-?mail\s*:)\b.*$",
+    r"\b(?:join the trend|use my code)\b.*$",
+]
+_PROMPT_BOILERPLATE_SECTION_PATTERNS = [
+    r"^\W*(related tags?|related tag|your quer(?:y|ies) solved|query solved|search terms?|keywords?)\s*(?:[:：-]+\s*)?$",
 ]
 _PROMPT_GENERIC_HASHTAGS = {
-    "shorts", "ytshorts", "shortvideo", "viral", "trending", "fyp", "explore", "motivation",
-    "officialvideo", "musicvideo", "video", "song", "subscribe", "youtube", "youtubeshorts",
-    "feedshorts", "shortsfeed", "reels", "foryou", "duet", "status", "newrelease", "latest",
+    "shorts", "ytshorts", "shortvideo", "viral", "viralshorts", "trending", "trend", "fyp",
+    "explore", "motivation", "officialvideo", "musicvideo", "video", "song", "subscribe",
+    "youtube", "youtubeshorts", "feedshorts", "shortsfeed", "reels", "foryou", "foryoupage",
+    "duet", "status", "newrelease", "latest", "funny", "comedy", "dance", "dancesong",
+    "partymusic", "love", "emotional", "islamic", "islamicprayer", "islamicritual",
+    "quran", "surah", "yasin", "rahman", "naat", "tilawat", "juma", "allah", "azan",
 }
 _URL_RE = re.compile(r"(https?://\S+|www\.\S+)", flags=re.IGNORECASE)
 _OFFICIAL_VIDEO_RE = re.compile(r"\(?\bofficial(?:\s+music)?\s+video\b\)?", flags=re.IGNORECASE)
+_GENERIC_TITLE_SCAFFOLD_RE = re.compile(
+    r"\b(?:official(?:\s+\w+){0,2}\s+video|remastered|lyrics?|lyric\s+video|jukebox|"
+    r"mukbang|eating|asmr|shorts?|reels?|vlogs?|mini\s*vlog|daily\s*vlog|"
+    r"music\s+video|full\s+video|full\s+movie|new\s+song|old\s+songs?|songs?|"
+    r"official\s+trailer|trailer|teaser|web\s+series|audio\s+jukebox|audio|"
+    r"visuali[sz]er|clip\s+officiel|cover|remix|recipe|whatsapp\s+status|status|"
+    r"comedy\s+scene|dance\s+choreo|choreo|dance|movie|fancam|behind|"
+    r"performance\s+ver(?:sion)?|full\s+episode|episodes?|promo|preview|review|reaction|"
+    r"gameplay|minecraft|roblox|lego|cartoons?|nursery\s+rhymes?|rhymes?|toys?|"
+    r"compilations?|subscribe|hd|4k)\b",
+    flags=re.IGNORECASE,
+)
 _HASHTAG_RE = re.compile(r"#([A-Za-z0-9_]+)")
 _PROMPT_LANGUAGE_HINT_PATTERNS = {
-    "ara": [r"\barabic\b", r"\bquran\b", r"\ballah\b", r"\bazan\b"],
-    "ben": [r"\bbangla\b", r"\bbengali\b", r"\bnatok\b"],
+    "ara": [r"\barabic\b"],
+    "ben": [r"\bbangla\b", r"\bbengali\b"],
+    "bgc": [r"\bharyanvi\b"],
     "bho": [r"\bbhojpuri\b"],
+    "bns": [r"\bbundeli\b", r"\bbundelkhand(?:i)?\b"],
+    "bra": [r"\bbraj\b", r"\bbrij\b"],
     "ell": [r"\bgreek\b"],
-    "hin": [r"\bhindi\b", r"\bbollywood\b", r"\bdesi\b", r"\bharyanvi\b"],
+    "hbs": [r"\bserbo[- ]?croatian\b", r"\bbcs\b"],
+    "hin": [r"\bhindi\b", r"\bhinglish\b"],
+    "hnd": [r"\bhindko\b"],
+    "hne": [r"\bchh?attisgarh(?:i)?\b", r"\bchh?attisarhi\b", r"\bcg\s+(song|gana)\b"],
+    "guj": [r"\bgujarati\b"],
     "ind": [r"\bindonesian\b", r"\bindonesia\b"],
     "jav": [r"\bjavanese\b"],
+    "kas": [r"\bkashmiri\b"],
+    "kfr": [r"\bkutchi\b", r"\bkachchi\b", r"\bkutch\b"],
+    "kha": [r"\bkhasi\b"],
     "kor": [r"\bkorean\b", r"\bk[- ]?pop\b"],
     "lao": [r"\blao\b"],
     "mal": [r"\bmalayalam\b"],
+    "mag": [r"\bmagahi\b", r"\bmaghi\b", r"\bmaghisong\b"],
+    "mwr": [r"\bmarwari\b"],
     "pan": [r"\bpunjabi\b", r"\bgurmukhi\b"],
+    "pnb": [r"\bwestern punjabi\b", r"\bpakistani punjabi\b", r"\bshahmukhi\b"],
     "por": [r"\bportuguese\b", r"\bportugu[e\u00ea]s\b"],
+    "pus": [r"\bpashto\b", r"\bpakhto\b"],
+    "raj": [r"\brajasthani\b"],
     "rus": [r"\brussian\b"],
+    "sck": [r"\bnagpuri\b", r"\bsadri\b", r"\bsadani\b"],
     "spa": [r"\bspanish\b", r"\bespa[n\u00f1]ol\b"],
     "tam": [r"\btamil\b"],
+    "tcy": [r"\btulu\b"],
     "tel": [r"\btelugu\b"],
     "tha": [r"\bthai\b"],
-    "urd": [r"\burdu\b", r"\bshayari\b", r"\bghazal\b"],
+    "urd": [r"\burdu\b"],
     "wol": [r"\bwolof\b"],
     "zsm": [r"\bmalay\b", r"\bbahasa malaysia\b"],
 }
@@ -827,6 +1111,10 @@ def _text_script_counts(text: str) -> Dict[str, int]:
     return counts
 
 
+def _letter_count(text: str) -> int:
+    return sum(1 for ch in str(text or "") if ch.isalpha())
+
+
 def _language_hint_counts(text: str) -> Dict[str, int]:
     lowered = str(text or "").lower()
     counts: Dict[str, int] = {}
@@ -837,6 +1125,27 @@ def _language_hint_counts(text: str) -> Dict[str, int]:
     return counts
 
 
+def _extract_non_generic_hashtags(text: str):
+    tags = []
+    for raw_tag in _HASHTAG_RE.findall(str(text or "")):
+        tag = raw_tag.strip("_").lower()
+        if tag and tag not in _PROMPT_GENERIC_HASHTAGS:
+            tags.append(tag)
+    return tags
+
+
+def _is_hashtag_dominated_line(text: str) -> bool:
+    raw = _URL_RE.sub("", str(text or ""))
+    tags = _HASHTAG_RE.findall(raw)
+    if len(tags) < 2:
+        return False
+    total_letters = _letter_count(raw)
+    non_hashtag_letters = _letter_count(_HASHTAG_RE.sub("", raw))
+    if total_letters == 0:
+        return True
+    return non_hashtag_letters < 12 or (non_hashtag_letters / total_letters) < 0.35
+
+
 def _remove_generic_hashtags(text: str) -> str:
     def _sub(match):
         tag = match.group(1).lower()
@@ -845,32 +1154,50 @@ def _remove_generic_hashtags(text: str) -> str:
     return _HASHTAG_RE.sub(_sub, text)
 
 
+def _remove_hashtag_tokens(text: str) -> str:
+    return _HASHTAG_RE.sub("", text)
+
+
 def _clean_prompt_text(text: str, segment_type: str) -> str:
     lines = []
     for raw_line in str(text or "").splitlines():
         line = raw_line.strip()
         if not line:
             continue
+        hashtag_dominated = _is_hashtag_dominated_line(line)
         line = _URL_RE.sub("", line).strip()
         if not line:
             continue
         if _strip_prompt_boilerplate:
             line_l = line.lower()
+            if any(re.search(pattern, line_l, flags=re.IGNORECASE) for pattern in _PROMPT_BOILERPLATE_SECTION_PATTERNS):
+                break
             if any(re.search(pattern, line_l, flags=re.IGNORECASE) for pattern in _PROMPT_BOILERPLATE_LINE_PATTERNS):
                 continue
             for pattern in _PROMPT_BOILERPLATE_PHRASE_PATTERNS:
                 line = re.sub(pattern, "", line, flags=re.IGNORECASE)
+            if (segment_type or "").lower() in {"video_description", "channel_description"}:
+                for pattern in _PROMPT_DESCRIPTION_BOILERPLATE_PHRASE_PATTERNS:
+                    line = re.sub(pattern, "", line, flags=re.IGNORECASE)
             line = _OFFICIAL_VIDEO_RE.sub("", line)
+            if (segment_type or "").lower() == "video_title":
+                line = _GENERIC_TITLE_SCAFFOLD_RE.sub("", line)
             line = re.sub(r"\bauto-generated by youtube\b", "", line, flags=re.IGNORECASE)
             line = _remove_generic_hashtags(line)
-        line = re.sub(r"\s+", " ", line).strip(" -|\u00b7:;")
-        if line:
+            line = _remove_hashtag_tokens(line)
+        line = re.sub(r"\s+", " ", line).strip(" -|\u00b7:;►•*")
+        if hashtag_dominated and _letter_count(line) < 20:
+            continue
+        if line and any(ch.isalpha() for ch in line):
             lines.append(line)
     return "\n".join(lines).strip()
 
 
 def _prompt_dedupe_key(text: str) -> str:
     key = _URL_RE.sub("", str(text or "").lower())
+    key = re.sub(r"\b(?:episode|ep|part|pt|day|vol|volume|quote|quotes)\s*[-:#]?\s*\d+\b", "", key)
+    key = re.sub(r"\d+", "#", key)
+    key = _HASHTAG_RE.sub("", key)
     key = re.sub(r"[\W_]+", "", key, flags=re.UNICODE)
     return key[:500]
 
@@ -898,6 +1225,7 @@ def build_user_prompt(segments) -> str:
     text_script_stats = {}
     field_stats = {}
     language_hint_stats = {}
+    weak_hashtag_hint_stats = {}
 
     def _invalid_tag(s) -> str:
         if s["is_valid"]:
@@ -938,6 +1266,15 @@ def build_user_prompt(segments) -> str:
         for iso, n_hits in _language_hint_counts(txt).items():
             language_hint_stats[iso] = language_hint_stats.get(iso, 0) + n_hits
 
+    def _record_weak_hashtag_hints(bucket: str, raw_text: str) -> None:
+        tags = _extract_non_generic_hashtags(raw_text)
+        if not tags:
+            return
+        tag_text = " ".join(tags)
+        for iso, n_hits in _language_hint_counts(tag_text).items():
+            bucket_stats = weak_hashtag_hint_stats.setdefault(bucket, {})
+            bucket_stats[iso] = bucket_stats.get(iso, 0) + n_hits
+
     def _bucket_for_segment_type(st: str) -> str:
         if st == "channel_name":
             return "channel_name"
@@ -949,6 +1286,8 @@ def build_user_prompt(segments) -> str:
 
     for s in segments:
         st = (s["segment_type"] or "").lower()
+        bucket = _bucket_for_segment_type(st)
+        _record_weak_hashtag_hints(bucket, s["text"])
         txt = _clean_prompt_text(s["text"], st)
         if not txt:
             continue
@@ -959,7 +1298,6 @@ def build_user_prompt(segments) -> str:
             if len(key) > len(st) + 8:
                 seen.add(key)
         entry = f"{txt}{_invalid_tag(s)}"
-        bucket = _bucket_for_segment_type(st)
         _record_text_stats(bucket, txt)
         if st == "channel_name":
             name.append(entry)
@@ -1010,6 +1348,8 @@ def build_user_prompt(segments) -> str:
     descs = _select_diverse(descs, _max_descs)
     other = _select_diverse(other, _max_titles)
     lines = []
+    if not field_stats:
+        lines.append("NO USABLE NATURAL-LANGUAGE TITLE/DESCRIPTION TEXT REMAINED AFTER CLEANUP.")
     if field_stats:
         field_parts = []
         for bucket in ["video_title", "description", "channel_name", "other"]:
@@ -1043,6 +1383,15 @@ def build_user_prompt(segments) -> str:
         hints = sorted(language_hint_stats.items(), key=lambda kv: (-kv[1], kv[0]))
         hint_part = ", ".join(f"{iso}={n_hits}" for iso, n_hits in hints[:8])
         lines.append("LANGUAGE HINTS (non-decisive cue counts): " + hint_part)
+    if weak_hashtag_hint_stats:
+        weak_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket not in weak_hashtag_hint_stats:
+                continue
+            hints = sorted(weak_hashtag_hint_stats[bucket].items(), key=lambda kv: (-kv[1], kv[0]))
+            weak_parts.append(f"{bucket}: " + ", ".join(f"{iso}={n_hits}" for iso, n_hits in hints[:5]))
+        if weak_parts:
+            lines.append("WEAK HASHTAG LANGUAGE CUES (not decisive; require phrase evidence): " + " | ".join(weak_parts))
     if name:
         lines.append(f"CHANNEL NAME: {name[0]}")
     if titles:
@@ -1053,7 +1402,7 @@ def build_user_prompt(segments) -> str:
         lines += [f"- {d}" for d in descs]
     if other and not (titles or descs):
         lines += [f"- {o}" for o in other]
-    lines.append("(Provider metadata, generic URLs, duplicate segments, and generic hashtags may have been removed before this prompt. Items tagged [lid-invalid: ...] failed the fastText eligibility rule; repeated short items can still be meaningful evidence.)")
+    lines.append("(Provider metadata, generic URLs, duplicate segments, and hashtag tokens may have been removed before this prompt. Direct language-name hashtags are summarized only as weak cues. Items tagged [lid-invalid: ...] failed the fastText eligibility rule; repeated short items can still be meaningful evidence.)")
     prompt = "Channel metadata to classify:\n" + "\n".join(lines)
     return prompt[:_prompt_max]
 
@@ -1103,6 +1452,11 @@ def _openai_batch_endpoint_for_model(model: Optional[str]) -> str:
     return "/v1/responses" if _openai_uses_responses_api(model) else "/v1/chat/completions"
 
 
+def _openai_reasoning_effort_for_model(model: Optional[str]) -> str:
+    effort = OPENAI_REASONING_EFFORT_BY_MODEL.get(str(model or ""), OPENAI_REASONING_EFFORT)
+    return "" if str(effort or "").strip().lower() == "none" else effort
+
+
 @F.udf(StringType())
 def make_batch_line(provider: str, model: str, request_id: str, system_prompt: str, user_prompt: str,
                     temperature: Optional[float], max_output_tokens: int) -> str:
@@ -1120,8 +1474,9 @@ def make_batch_line(provider: str, model: str, request_id: str, system_prompt: s
                 "text": {"format": {"type": "json_schema", "name": "lid_panel_prediction",
                                     "schema": LANG_RESPONSE_JSON_SCHEMA, "strict": False}, "verbosity": "low"},
             }
-            if OPENAI_REASONING_EFFORT:
-                body["reasoning"] = {"effort": OPENAI_REASONING_EFFORT}
+            reasoning_effort = _openai_reasoning_effort_for_model(model)
+            if reasoning_effort:
+                body["reasoning"] = {"effort": reasoning_effort}
             if temp is not None:
                 body["temperature"] = temp
             obj = {"custom_id": request_id, "method": "POST", "url": "/v1/responses", "body": body}
@@ -1181,46 +1536,90 @@ rw = Window.partitionBy("provider", "model").orderBy("request_id")
 requests = requests.withColumn("_n", F.row_number().over(rw)) \
     .withColumn("chunk_id", F.floor((F.col("_n") - F.lit(1)) / F.lit(MAX_REQUESTS_PER_FILE)).cast("int")).drop("_n")
 
-write_run_scoped(requests, panel_requests_full)
-print("Wrote request table to", panel_requests_full)
+_using_existing_requests = False
+_reuse_existing_requests_reason = None
+if IMPORT_RESULTS and REUSE_EXISTING_REQUESTS_ON_IMPORT:
+    _reuse_existing_requests_reason = "import_results=true"
+elif SUBMIT_BATCHES and REUSE_EXISTING_REQUESTS_ON_SUBMIT:
+    _reuse_existing_requests_reason = "submit_batches=true"
+
+if _reuse_existing_requests_reason and _table_exists_full(panel_requests_full):
+    existing_run_requests = spark.table(panel_requests_full).where(F.col("run_id") == F.lit(RUN_ID))
+    if existing_run_requests.limit(1).count() > 0:
+        if REFRESH_REQUEST_PROVIDER_FILTER:
+            refresh_filter = F.col("provider").isin(*sorted(REFRESH_REQUEST_PROVIDER_FILTER))
+            if REFRESH_REQUEST_MODEL_FILTER:
+                refresh_filter = refresh_filter & F.col("model").isin(*sorted(REFRESH_REQUEST_MODEL_FILTER))
+            refreshed_requests = existing_run_requests.where(refresh_filter).withColumn(
+                "batch_line",
+                make_batch_line(
+                    F.col("provider"),
+                    F.col("model"),
+                    F.col("request_id"),
+                    F.col("system_prompt"),
+                    F.col("prompt_user"),
+                    F.col("temperature"),
+                    F.col("max_output_tokens"),
+                ),
+            )
+            kept_requests = existing_run_requests.where(~refresh_filter)
+            requests = kept_requests.unionByName(refreshed_requests, allowMissingColumns=True)
+            print(
+                "Refreshing stored request batch lines for providers",
+                sorted(REFRESH_REQUEST_PROVIDER_FILTER),
+                "models",
+                sorted(REFRESH_REQUEST_MODEL_FILTER) if REFRESH_REQUEST_MODEL_FILTER else "ALL",
+                "while preserving stored prompts.",
+            )
+        else:
+            requests = existing_run_requests
+            _using_existing_requests = True
+            print(f"Reusing existing request table for {_reuse_existing_requests_reason}:", panel_requests_full)
+
+if not _using_existing_requests:
+    write_run_scoped(requests, panel_requests_full)
+    print("Wrote request table to", panel_requests_full)
 display(spark.table(panel_requests_full).where(F.col("run_id") == F.lit(RUN_ID)).groupBy("provider", "model").count())
 
 # COMMAND ----------
-# Write JSONL batch files to DBFS (one per provider/model/chunk).
-os.makedirs(BATCH_OUTPUT_DIR, exist_ok=True)
-run_dir = os.path.join(BATCH_OUTPUT_DIR, RUN_ID)
-os.makedirs(run_dir, exist_ok=True)
-_run_requests = spark.table(panel_requests_full).where(F.col("run_id") == F.lit(RUN_ID))
-groups = _run_requests.select("provider", "model", "chunk_id").distinct().orderBy("provider", "model", "chunk_id").collect()
 batch_file_records = []
-for g in groups:
-    provider, model, chunk_id = g["provider"], g["model"], int(g["chunk_id"])
-    provider_dir = os.path.join(run_dir, provider, safe_model_dir(model))
-    os.makedirs(provider_dir, exist_ok=True)
-    local_path = os.path.join(provider_dir, f"chunk_{chunk_id:05d}.jsonl")
-    subset = _run_requests.where(
-        (F.col("provider") == provider) & (F.col("model") == model) & (F.col("chunk_id") == chunk_id)
-    ).select("batch_line")
-    n = 0
-    n_bytes = 0
-    with open(local_path, "w", encoding="utf-8") as f:
-        for row in subset.toLocalIterator():
-            line = row["batch_line"]
-            f.write(line + "\n")
-            n += 1
-            n_bytes += len(line.encode("utf-8")) + 1
-    batch_file_records.append((RUN_ID, provider, model, chunk_id, local_path, n, n_bytes, datetime.utcnow().isoformat()))
-    print(f"Wrote {n:,} requests: {local_path} ({n_bytes:,} bytes)")
+run_dir = os.path.join(BATCH_OUTPUT_DIR, RUN_ID)
+if _using_existing_requests and not SUBMIT_BATCHES:
+    print("Skipping batch JSONL rewrite while reusing existing requests for import_results=true.")
+else:
+    # Write JSONL batch files to DBFS (one per provider/model/chunk).
+    os.makedirs(BATCH_OUTPUT_DIR, exist_ok=True)
+    os.makedirs(run_dir, exist_ok=True)
+    _run_requests = spark.table(panel_requests_full).where(F.col("run_id") == F.lit(RUN_ID))
+    groups = _run_requests.select("provider", "model", "chunk_id").distinct().orderBy("provider", "model", "chunk_id").collect()
+    for g in groups:
+        provider, model, chunk_id = g["provider"], g["model"], int(g["chunk_id"])
+        provider_dir = os.path.join(run_dir, provider, safe_model_dir(model))
+        os.makedirs(provider_dir, exist_ok=True)
+        local_path = os.path.join(provider_dir, f"chunk_{chunk_id:05d}.jsonl")
+        subset = _run_requests.where(
+            (F.col("provider") == provider) & (F.col("model") == model) & (F.col("chunk_id") == chunk_id)
+        ).select("batch_line")
+        n = 0
+        n_bytes = 0
+        with open(local_path, "w", encoding="utf-8") as f:
+            for row in subset.toLocalIterator():
+                line = row["batch_line"]
+                f.write(line + "\n")
+                n += 1
+                n_bytes += len(line.encode("utf-8")) + 1
+        batch_file_records.append((RUN_ID, provider, model, chunk_id, local_path, n, n_bytes, datetime.utcnow().isoformat()))
+        print(f"Wrote {n:,} requests: {local_path} ({n_bytes:,} bytes)")
 
-# D4: persist a batch-file registry (run-scoped, idempotent) so submission/import are auditable.
-if batch_file_records:
-    batch_files_df = spark.createDataFrame(
-        batch_file_records,
-        ["run_id", "provider", "model", "chunk_id", "local_jsonl_path", "n_requests", "n_bytes", "created_at_utc"],
-    )
-    write_run_scoped(batch_files_df, panel_batch_files_full)
-    print("Wrote batch-file registry to", panel_batch_files_full)
-print("Batch files written under", run_dir)
+    # D4: persist a batch-file registry (run-scoped, idempotent) so submission/import are auditable.
+    if batch_file_records:
+        batch_files_df = spark.createDataFrame(
+            batch_file_records,
+            ["run_id", "provider", "model", "chunk_id", "local_jsonl_path", "n_requests", "n_bytes", "created_at_utc"],
+        )
+        write_run_scoped(batch_files_df, panel_batch_files_full)
+        print("Wrote batch-file registry to", panel_batch_files_full)
+    print("Batch files written under", run_dir)
 
 # COMMAND ----------
 # MAGIC %md
@@ -1333,6 +1732,7 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
                             "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
                             "attempts_detail": attempt_records,
                             "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+                            "reasoning_effort": DEEPSEEK_REASONING_EFFORT or None,
                             "max_tokens": body.get("max_tokens"),
                         },
                     }
@@ -1359,6 +1759,7 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
                                 "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
                                 "attempts_detail": attempt_records,
                                 "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+                                "reasoning_effort": DEEPSEEK_REASONING_EFFORT or None,
                                 "max_tokens": body.get("max_tokens"),
                             },
                             "error": last_error,
@@ -1373,6 +1774,7 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
                     "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
                     "attempts_detail": attempt_records,
                     "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+                    "reasoning_effort": DEEPSEEK_REASONING_EFFORT or None,
                     "max_tokens": body.get("max_tokens"),
                 },
                 "error": last_error,
@@ -1392,6 +1794,7 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
                     "duration_ms": round((time.perf_counter() - request_started_perf) * 1000, 1),
                     "attempts_detail": attempt_records,
                     "thinking_type": DEEPSEEK_THINKING_TYPE or None,
+                    "reasoning_effort": DEEPSEEK_REASONING_EFFORT or None,
                 },
                 "error": repr(e)[:2000],
             }
@@ -1503,7 +1906,7 @@ def persist_batch_job_records(records):
 
 
 def existing_batch_job_records():
-    if not (SKIP_EXISTING_SUBMITTED_BATCHES and _table_exists_full(panel_batch_jobs_full)):
+    if not _table_exists_full(panel_batch_jobs_full):
         return []
     existing = (
         spark.table(panel_batch_jobs_full)
@@ -1529,19 +1932,22 @@ def provider_status_is_successful(provider_status: str) -> bool:
 if SUBMIT_BATCHES:
     batch_job_records = existing_batch_job_records()
     already_submitted = set()
-    for r in batch_job_records:
-        provider = str(r[1])
-        provider_status = str(r[9] or "")
-        submission_status = str(r[10] or "")
-        if (
-            provider in {"anthropic", "gemini", "openai", "deepseek"}
-            and submission_status == "submitted"
-            and r[8] is not None
-            and provider_status_is_successful(provider_status)
-        ):
-            already_submitted.add((provider, str(r[2]), int(r[3])))
-    if already_submitted:
-        print(f"Skipping {len(already_submitted):,} already submitted provider-batch chunks.")
+    if SKIP_EXISTING_SUBMITTED_BATCHES:
+        for r in batch_job_records:
+            provider = str(r[1])
+            provider_status = str(r[9] or "")
+            submission_status = str(r[10] or "")
+            if (
+                provider in {"anthropic", "gemini", "openai", "deepseek"}
+                and submission_status == "submitted"
+                and r[8] is not None
+                and provider_status_is_successful(provider_status)
+            ):
+                already_submitted.add((provider, str(r[2]), int(r[3])))
+        if already_submitted:
+            print(f"Skipping {len(already_submitted):,} already submitted provider-batch chunks.")
+    else:
+        print("skip_existing_submitted_batches=false — existing batch-job records will be preserved but not skipped.")
 
     def replace_batch_job_record(record):
         nonlocal_records = []
@@ -1568,6 +1974,9 @@ if SUBMIT_BATCHES:
         _, provider, model, chunk_id, path, n, n_bytes, _ = rec
         if SUBMIT_PROVIDER_FILTER and str(provider) not in SUBMIT_PROVIDER_FILTER:
             print(provider, model, chunk_id, "not in submit_provider_filter; skipping")
+            continue
+        if SUBMIT_MODEL_FILTER and str(model) not in SUBMIT_MODEL_FILTER:
+            print(provider, model, chunk_id, "not in submit_model_filter; skipping")
             continue
         if (str(provider), str(model), int(chunk_id)) in already_submitted:
             print(provider, model, chunk_id, "already submitted; skipping")
@@ -1773,6 +2182,51 @@ def _base_iso(label, iso):
     return None
 
 
+def _split_language_label(label) -> Tuple[Optional[str], Optional[str]]:
+    if not label:
+        return None, None
+    parts = str(label).strip().replace("-", "_").split("_")
+    base = parts[0].strip().lower() if parts and parts[0].strip() else None
+    script = parts[1].strip() if len(parts) > 1 and parts[1].strip() else None
+    return base, script
+
+
+def _clean_base_iso_value(value) -> Optional[str]:
+    if not value:
+        return None
+    raw = str(value).strip().lower()
+    if raw in {"", "null", "none"}:
+        return None
+    if raw in ARABIC_FAMILY_ISO:
+        raw = "ara"
+    raw = CANONICAL_BASE_ISO.get(raw, raw)
+    if raw in NON_LANGUAGE_BASE_ISO:
+        return None
+    return raw if re.fullmatch(r"[a-z]{3}", raw) else None
+
+
+def _clean_script_value(value) -> Optional[str]:
+    if not value:
+        return None
+    raw = str(value).strip()
+    raw_l = raw.lower()
+    if raw_l in {"", "null", "none"}:
+        return None
+    mapped = SCRIPT_FAMILY_CANONICAL.get(raw_l)
+    if mapped:
+        return mapped
+    return raw if re.fullmatch(r"[A-Z][a-z]{3}", raw) else None
+
+
+def _clean_language_label_value(value) -> Optional[str]:
+    base_raw, script_raw = _split_language_label(value)
+    base = _clean_base_iso_value(base_raw)
+    if not base:
+        return None
+    script = _clean_script_value(script_raw)
+    return f"{base}_{script}" if script else base
+
+
 def _to_nullable_bool(value):
     if value is None:
         return None
@@ -1799,6 +2253,15 @@ def _string_list(value):
     return []
 
 
+def _language_label_list(value):
+    labels = []
+    for item in _string_list(value):
+        cleaned = _clean_language_label_value(item)
+        if cleaned:
+            labels.append(cleaned)
+    return labels
+
+
 @F.udf(pred_schema)
 def normalize_prediction_udf(raw_text: str):
     o = extract_first_json_object(raw_text)
@@ -1806,20 +2269,29 @@ def normalize_prediction_udf(raw_text: str):
         o = extract_partial_prediction_object(raw_text)
     if not o:
         return (None, None, None, None, None, None, None, None, None, [], None, None, "no_json_object")
-    label = o.get("primary_language_label")
-    iso = o.get("primary_language_iso639_3") or _base_iso(label, None)
-    script = o.get("primary_language_script") or (str(label).split("_")[1] if label and "_" in str(label) else None)
+    raw_label = o.get("primary_language_label")
+    label_iso, label_script = _split_language_label(raw_label)
+    # Prefer the constrained iso_Script label over separately emitted component fields when they conflict.
+    # Some small models return internally inconsistent JSON such as primary_language_label=tel_Latn with
+    # primary_language_iso639_3=hin; using the label keeps panel votes aligned with the requested output.
+    iso = _clean_base_iso_value(label_iso) or _clean_base_iso_value(o.get("primary_language_iso639_3"))
+    script = _clean_script_value(label_script) or _clean_script_value(o.get("primary_language_script"))
+    label = f"{iso}_{script}" if iso and script else iso
+    status = o.get("status")
+    prediction_parse_error = None
+    if str(status or "").strip().lower() == "classified" and not iso:
+        prediction_parse_error = "invalid_language_label"
     return (
-        label, iso, script, o.get("status"),
+        label, iso, script, status,
         _to_nullable_bool(o.get("is_romanized")),
         _to_nullable_bool(o.get("is_high_risk_tail")),
         _to_nullable_bool(o.get("is_mixed_language")),
-        o.get("secondary_language_label"),
+        _clean_language_label_value(o.get("secondary_language_label")),
         o.get("dialect_or_variant"),
-        _string_list(o.get("mixed_languages")),
+        _language_label_list(o.get("mixed_languages")),
         o.get("confidence"),
         (o.get("evidence") or "")[:500],
-        None,
+        prediction_parse_error,
     )
 
 
@@ -2035,7 +2507,7 @@ if IMPORT_RESULTS:
         .withColumn("_panel_label_iso", F.when(F.col("_panel_label_iso").isin("", "null", "none"), F.lit(None)).otherwise(F.col("_panel_label_iso")))
         .withColumn("panel_language_iso", F.coalesce(F.col("_panel_label_iso"), F.col("panel_majority_vote_iso")))
         .withColumn("panel_language_iso639_3", F.col("panel_language_iso"))
-        .withColumn("panel_language_script", F.coalesce(F.col("panel_language_script_from_model"), F.element_at(F.split("panel_language_label", "_"), 2)))
+        .withColumn("panel_language_script", F.coalesce(F.col("panel_language_script_from_model"), safe_split_get_expr(F.col("panel_language_label"), "_", 1)))
         .withColumn("panel_language_script_family", script_family_expr(F.col("panel_language_script")))
         .withColumn("panel_normalized_language_iso639_3", canonical_base_iso_expr(F.col("panel_language_iso639_3")))
         .withColumn(

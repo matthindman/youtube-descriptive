@@ -1,0 +1,12 @@
+{
+  "run_name": "codex_category_frequency_histogram_20260612",
+  "tasks": [
+    {
+      "task_key": "category_frequency_histogram",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/category_frequency_histogram_20260612"
+      }
+    }
+  ]
+}

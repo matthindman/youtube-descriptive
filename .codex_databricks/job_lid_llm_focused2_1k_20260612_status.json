@@ -1,0 +1,24 @@
+{
+  "run_name": "lid_llm_focused2_1k_batch_status_20260612",
+  "tasks": [
+    {
+      "task_key": "check_lid_llm_focused2_1k_batch_status",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/check_lid_llm_batch_status_20260610",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "too_full_20260609_lid_iso_disagree_1k_focused2_20260612",
+          "batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "status_snapshot_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_status_check",
+          "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
+          "anthropic_secret_key": "anthropic-api-key",
+          "gemini_secret_key": "gemini-api-key"
+        }
+      }
+    }
+  ]
+}

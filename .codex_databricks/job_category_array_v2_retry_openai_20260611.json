@@ -1,0 +1,22 @@
+{
+  "run_name": "category_array_v2_retry_openai_20260611",
+  "tasks": [
+    {
+      "task_key": "retry_category_array_v2_openai",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/submit_existing_category_array_v2_batch_files_20260611",
+        "base_parameters": {
+          "run_id": "category_topic_random_1000_array_v2_20260611",
+          "output_catalog": "dev_sean",
+          "output_schema": "matt",
+          "output_prefix": "yt_category_topic_random_1000",
+          "submit_provider_filter": "openai",
+          "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
+          "openai_reasoning_effort": "minimal"
+        }
+      }
+    }
+  ]
+}

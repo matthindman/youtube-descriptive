@@ -1,0 +1,58 @@
+{
+  "run_name": "lid_llm_focused3_1k_import_results_20260612",
+  "tasks": [
+    {
+      "task_key": "import_lid_llm_focused3_1k_results",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/03_language_llm_panel_databricks",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "comparison_table": "yt_lid_v3_too_full_20260609_channel_model_comparison",
+          "segments_input_table": "yt_lid_v3_too_full_20260609_segments_input",
+          "channel_text_features_table": "yt_lid_v3_too_full_20260609_channel_text_features",
+          "hindi_indic_audit_table": "yt_lid_v3_too_full_20260609_hindi_indic_audit_candidates",
+          "run_id": "too_full_20260609_lid_iso_disagree_1k_focused3_20260612",
+          "source_run_id": "too_full_20260609",
+          "inference_hash_buckets": "4096",
+          "routing_mode": "random_validation",
+          "random_validation_scope": "lid_iso_disagreement",
+          "random_validation_sample_size": "1000",
+          "random_validation_seed": "2026061203",
+          "max_routed_channels": "0",
+          "panel_requests_table": "yt_lid_v3_too_full_20260609_llm_validation_requests",
+          "panel_batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "panel_raw_results_table": "yt_lid_v3_too_full_20260609_llm_validation_raw_results",
+          "panel_verdicts_table": "yt_lid_v3_too_full_20260609_llm_validation_verdicts",
+          "panel_model_agreement_table": "yt_lid_v3_too_full_20260609_llm_validation_model_agreement",
+          "models_json": "[{\"provider\":\"openai\",\"model\":\"gpt-5.5\",\"tier\":\"frontier\"},{\"provider\":\"openai\",\"model\":\"gpt-5.4-mini\",\"tier\":\"small\"},{\"provider\":\"openai\",\"model\":\"gpt-5.4-nano\",\"tier\":\"nano\"},{\"provider\":\"anthropic\",\"model\":\"claude-haiku-4-5\",\"tier\":\"small\"},{\"provider\":\"deepseek\",\"model\":\"deepseek-v4-flash\",\"tier\":\"small\"}]",
+          "batch_output_dir": "/dbfs/FileStore/youtube_lid_panel_batches",
+          "results_input_dir": "/dbfs/FileStore/youtube_lid_panel_batches/results",
+          "max_requests_per_file": "10000",
+          "max_output_tokens": "2000",
+          "openai_reasoning_effort": "none",
+          "openai_reasoning_effort_by_model_json": "{}",
+          "gemini_thinking_level": "",
+          "deepseek_thinking_type": "disabled",
+          "deepseek_reasoning_effort": "",
+          "deepseek_max_output_tokens": "600",
+          "deepseek_max_workers": "16",
+          "deepseek_request_timeout_seconds": "60",
+          "deepseek_max_retries": "1",
+          "panel_majority_mode": "reached_models",
+          "min_panel_votes_for_majority": "2",
+          "panel_majority_vote_basis": "normalized_base_iso",
+          "submit_batches": "false",
+          "import_results": "true",
+          "reuse_existing_requests_on_import": "true",
+          "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
+          "anthropic_secret_key": "anthropic-api-key",
+          "deepseek_secret_key": "deepseek-api-key"
+        }
+      }
+    }
+  ]
+}

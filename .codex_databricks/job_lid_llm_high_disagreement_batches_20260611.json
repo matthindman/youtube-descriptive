@@ -1,0 +1,22 @@
+{
+  "run_name": "lid_llm_high_disagreement_batches_20260611",
+  "tasks": [
+    {
+      "task_key": "export_lid_llm_high_disagreement_batches",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 900,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/export_lid_llm_high_disagreement_batches_20260611",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "too_full_20260609_lid_iso_disagree_1k_20260611",
+          "audit_table": "yt_lid_v3_too_full_20260609_llm_hardcase_disagreement_audit",
+          "batch_size": "30",
+          "num_batches": "4",
+          "output_path": "/dbfs/FileStore/youtube_lid_panel_batches/analysis/high_disagreement_batches_20260611.json"
+        }
+      }
+    }
+  ]
+}

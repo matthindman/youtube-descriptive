@@ -1,0 +1,23 @@
+{
+  "run_name": "lid_llm_hardcase_repair_batch_jobs_20260611",
+  "tasks": [
+    {
+      "task_key": "repair_lid_llm_batch_jobs",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1200,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/repair_lid_llm_hardcase_batch_jobs_20260611",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "too_full_20260609_lid_iso_disagree_1k_20260611",
+          "batch_files_table": "yt_lid_v3_too_full_20260609_llm_validation_requests_batch_files",
+          "batch_jobs_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_jobs",
+          "status_snapshot_table": "yt_lid_v3_too_full_20260609_llm_validation_batch_status_check",
+          "results_input_dir": "/dbfs/FileStore/youtube_lid_panel_batches/results",
+          "openai_records_json": "[{\"model\":\"gpt-5-nano\",\"chunk_id\":0,\"local_jsonl_path\":\"/dbfs/FileStore/youtube_lid_panel_batches/too_full_20260609_lid_iso_disagree_1k_20260611/openai/gpt-5-nano/chunk_00000.jsonl\",\"n_requests\":1000,\"n_bytes\":8249710,\"provider_file_id\":\"file-HuV2hgHrD4oUcDpe6FNpVh\",\"provider_batch_id\":\"batch_6a2b1afc8e68819098fa99ed321195d9\",\"provider_status\":\"validating\",\"submission_status\":\"submitted\"},{\"model\":\"gpt-5.4-mini\",\"chunk_id\":0,\"local_jsonl_path\":\"/dbfs/FileStore/youtube_lid_panel_batches/too_full_20260609_lid_iso_disagree_1k_20260611/openai/gpt-5.4-mini/chunk_00000.jsonl\",\"n_requests\":1000,\"n_bytes\":8251710,\"provider_file_id\":\"file-CpYwoQsqM2Q4bUtLr3tjaD\",\"provider_batch_id\":\"batch_6a2b1b00f9048190a23fde05b6142876\",\"provider_status\":\"validating\",\"submission_status\":\"submitted\"},{\"model\":\"gpt-5.4-nano\",\"chunk_id\":0,\"local_jsonl_path\":\"/dbfs/FileStore/youtube_lid_panel_batches/too_full_20260609_lid_iso_disagree_1k_20260611/openai/gpt-5.4-nano/chunk_00000.jsonl\",\"n_requests\":1000,\"n_bytes\":8251710,\"provider_file_id\":\"file-21wGteWWaxHK1BScessDF1\",\"provider_batch_id\":\"batch_6a2b1b063f0c8190843ef479f3c9156e\",\"provider_status\":\"validating\",\"submission_status\":\"submitted\"},{\"model\":\"gpt-5.5\",\"chunk_id\":0,\"local_jsonl_path\":\"/dbfs/FileStore/youtube_lid_panel_batches/too_full_20260609_lid_iso_disagree_1k_20260611/openai/gpt-5.5/chunk_00000.jsonl\",\"n_requests\":1000,\"n_bytes\":8246710,\"provider_file_id\":\"file-JtQnTiK774WLzdagtuGLcp\",\"provider_batch_id\":\"batch_6a2b1b0a5b3881909ec7f87f78af0c47\",\"provider_status\":\"validating\",\"submission_status\":\"submitted\"}]"
+        }
+      }
+    }
+  ]
+}

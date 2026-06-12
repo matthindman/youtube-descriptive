@@ -1,0 +1,20 @@
+{
+  "run_name": "category_topic_multilabel_random_1000_openai_retry_fixed_schema_20260612",
+  "tasks": [
+    {
+      "task_key": "retry_category_topic_multilabel_openai_fixed_schema",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/retry_category_topic_multilabel_openai_fixed_schema_20260612",
+        "base_parameters": {
+          "run_id": "category_topic_multilabel_random_1000_20260612",
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "requests_table": "yt_category_topic_multilabel_1000_requests",
+          "batch_jobs_table": "yt_category_topic_multilabel_1000_batch_jobs",
+          "batch_output_dir": "/dbfs/FileStore/youtube_category_topic_multilabel_batches"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "run_name": "category_topic_multilabel_random_1000_confusion_plot_20260612",
+  "tasks": [
+    {
+      "task_key": "plot_category_topic_multilabel_confusion",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/plot_category_topic_multilabel_confusion_20260612",
+        "base_parameters": {
+          "run_id": "category_topic_multilabel_random_1000_20260612",
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "output_prefix": "yt_category_topic_multilabel_1000",
+          "provider": "gemini",
+          "model": "gemini-3.5-flash",
+          "prediction_variant": "prob_label_threshold_closure_postprocessed",
+          "top_n_labels": "18",
+          "analysis_output_dir": "/dbfs/FileStore/youtube_category_topic_multilabel_batches/analysis"
+        }
+      }
+    }
+  ]
+}

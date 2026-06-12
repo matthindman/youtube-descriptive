@@ -1,0 +1,32 @@
+{
+  "run_name": "category_topic_multilabel_random_1000_submit_20260612",
+  "tasks": [
+    {
+      "task_key": "submit_category_topic_multilabel_random_1000",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/run_category_topic_multilabel_1000_20260612",
+        "base_parameters": {
+          "run_id": "category_topic_multilabel_random_1000_20260612",
+          "channels_table": "prod_tads.youtube_too.yt_sl_channels",
+          "videos_table": "prod_tads.youtube_too.yt_sl_videos",
+          "category_table": "dev_sean.default.channel_category",
+          "language_table": "dev_sean.matt.yt_lid_v3_channels",
+          "output_catalog": "dev_sean",
+          "output_schema": "matt",
+          "output_prefix": "yt_category_topic_multilabel_1000",
+          "sample_size": "1000",
+          "random_seed": "20260612",
+          "calibration_pct": "40",
+          "videos_per_channel": "10",
+          "batch_output_dir": "/dbfs/FileStore/youtube_category_topic_multilabel_batches",
+          "results_input_dir": "/dbfs/FileStore/youtube_category_topic_multilabel_batches/results",
+          "max_output_tokens": "4500",
+          "submit_batches": "true",
+          "submit_provider_filter": "anthropic,gemini,deepseek",
+          "skip_existing_submitted_batches": "true"
+        }
+      }
+    }
+  ]
+}

@@ -157,14 +157,14 @@ backfill_categories = (
     .where(F.lower(F.trim(F.col("status"))) == F.lit("done"))
     .select(
         F.col("canonical_id").cast("string").alias("channel_id"),
-        F.element_at(F.col("topic_categories"), 1).cast("string").alias("heldout_topic_category"),
+        F.explode_outer(F.col("topic_categories")).cast("string").alias("heldout_topic_category"),
     )
     .where(
         F.col("channel_id").isNotNull()
         & F.col("heldout_topic_category").isNotNull()
         & (F.length(F.trim(F.col("heldout_topic_category"))) > 0)
     )
-    .dropDuplicates(["channel_id"])
+    .dropDuplicates(["channel_id", "heldout_topic_category"])
 )
 
 backfill_categories_any_status = (
@@ -172,14 +172,14 @@ backfill_categories_any_status = (
     .select(
         F.col("canonical_id").cast("string").alias("channel_id"),
         F.lower(F.trim(F.col("status"))).alias("status"),
-        F.element_at(F.col("topic_categories"), 1).cast("string").alias("heldout_topic_category"),
+        F.explode_outer(F.col("topic_categories")).cast("string").alias("heldout_topic_category"),
     )
     .where(
         F.col("channel_id").isNotNull()
         & F.col("heldout_topic_category").isNotNull()
         & (F.length(F.trim(F.col("heldout_topic_category"))) > 0)
     )
-    .dropDuplicates(["channel_id"])
+    .dropDuplicates(["channel_id", "heldout_topic_category"])
 )
 
 backfill_status_counts = (
@@ -204,8 +204,8 @@ summary = (
     .join(bronze_counts, on="channel_id", how="left")
     .join(reference_channel_labels.select("channel_id").withColumn("has_reference_label", F.lit(True)), on="channel_id", how="left")
     .join(bronze_reference_channel_labels.select("channel_id").withColumn("has_bronze_reference_label", F.lit(True)), on="channel_id", how="left")
-    .join(backfill_categories.select("channel_id").withColumn("has_backfill_topic_category", F.lit(True)), on="channel_id", how="left")
-    .join(backfill_categories_any_status.select("channel_id").withColumn("has_backfill_topic_category_any_status", F.lit(True)), on="channel_id", how="left")
+    .join(backfill_categories.select("channel_id").dropDuplicates(["channel_id"]).withColumn("has_backfill_topic_category", F.lit(True)), on="channel_id", how="left")
+    .join(backfill_categories_any_status.select("channel_id").dropDuplicates(["channel_id"]).withColumn("has_backfill_topic_category_any_status", F.lit(True)), on="channel_id", how="left")
     .agg(
         F.count("*").alias("n_channels"),
         F.sum(F.when(F.col("n_videos") > 0, 1).otherwise(0)).alias("n_channels_with_videos"),
@@ -225,8 +225,8 @@ sample_summary = (
     .join(bronze_counts, on="channel_id", how="left")
     .join(reference_channel_labels.select("channel_id").withColumn("has_reference_label", F.lit(True)), on="channel_id", how="left")
     .join(bronze_reference_channel_labels.select("channel_id").withColumn("has_bronze_reference_label", F.lit(True)), on="channel_id", how="left")
-    .join(backfill_categories.select("channel_id").withColumn("has_backfill_topic_category", F.lit(True)), on="channel_id", how="left")
-    .join(backfill_categories_any_status.select("channel_id").withColumn("has_backfill_topic_category_any_status", F.lit(True)), on="channel_id", how="left")
+    .join(backfill_categories.select("channel_id").dropDuplicates(["channel_id"]).withColumn("has_backfill_topic_category", F.lit(True)), on="channel_id", how="left")
+    .join(backfill_categories_any_status.select("channel_id").dropDuplicates(["channel_id"]).withColumn("has_backfill_topic_category_any_status", F.lit(True)), on="channel_id", how="left")
     .agg(
         F.count("*").alias("sample_n_channels"),
         F.sum(F.when(F.col("n_ai_label_videos") > 0, 1).otherwise(0)).alias("sample_n_channels_with_any_ai_label"),
@@ -280,8 +280,9 @@ result = {
         "min_reference_agreement_fraction": 0.50,
     },
     "heldout_topic_rule": {
-        "label_source": "dev_sean.default.backfill_channels.topic_categories[0]",
+        "label_source": "dev_sean.default.backfill_channels.topic_categories exploded array",
         "status_filter": "status = 'done'",
+        "array_rule": "topic_categories is multi-label; coverage is channel-level nonempty array, top labels are exploded elements",
     },
     "full_universe": summary_row,
     "deterministic_random_1000_preview": sample_row,

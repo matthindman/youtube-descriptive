@@ -1,0 +1,7 @@
+{
+  "warehouse_id": "86100da4e1fe8713",
+  "wait_timeout": "50s",
+  "disposition": "INLINE",
+  "format": "JSON_ARRAY",
+  "statement": "SELECT child_label, parent_label, edge_strength, train_n_child, train_n_parent, ROUND(train_confidence_child_to_parent, 4) AS train_confidence, ROUND(heldout_confidence_child_to_parent, 4) AS heldout_confidence, ROUND(train_lift, 3) AS train_lift, ROUND(train_confidence_wilson_lower_95, 4) AS train_wilson_lower, ROUND(train_pct_parent_before_child, 4) AS train_parent_before_child, ROUND(heldout_pct_parent_before_child, 4) AS heldout_parent_before_child FROM dev_sean.matt.yt_channel_topic_taxonomy_inferred_edges_20260612 WHERE edge_strength IN ('strong_empirical_parent', 'moderate_empirical_parent') ORDER BY edge_strength, parent_label, train_n_child DESC, child_label"
+}

@@ -1,0 +1,22 @@
+{
+  "run_name": "lid_llm_focused3_1k_request_counts_20260612",
+  "tasks": [
+    {
+      "task_key": "inspect_lid_llm_focused3_1k_request_counts",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1200,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/inspect_lid_llm_hardcase_request_counts_20260611",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "too_full_20260609_lid_iso_disagree_1k_focused3_20260612",
+          "source_run_id": "too_full_20260609",
+          "inference_hash_buckets": "4096",
+          "requests_table": "yt_lid_v3_too_full_20260609_llm_validation_requests",
+          "comparison_table": "yt_lid_v3_too_full_20260609_channel_model_comparison"
+        }
+      }
+    }
+  ]
+}

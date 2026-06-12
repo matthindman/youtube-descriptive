@@ -1,0 +1,7 @@
+{
+  "warehouse_id": "86100da4e1fe8713",
+  "wait_timeout": "50s",
+  "disposition": "INLINE",
+  "format": "JSON_ARRAY",
+  "statement": "SELECT topic_category, empirical_role, train_n_label_channels, ROUND(train_pct_nonempty_channels, 3) AS train_pct_nonempty_channels, ROUND(train_pct_label_instances_first, 3) AS train_pct_label_instances_first, n_learned_children, n_strong_children, n_moderate_children, n_learned_parents, n_strong_parents, n_moderate_parents FROM dev_sean.matt.yt_channel_topic_taxonomy_label_roles_20260612 ORDER BY CASE empirical_role WHEN 'empirical_parent' THEN 1 WHEN 'intermediate_or_crosscutting_parent' THEN 2 WHEN 'empirical_child' THEN 3 ELSE 4 END, n_learned_children DESC, train_n_label_channels DESC, topic_category"
+}

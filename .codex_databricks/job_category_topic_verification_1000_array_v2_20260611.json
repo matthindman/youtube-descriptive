@@ -1,0 +1,42 @@
+{
+  "run_name": "category_topic_random_1000_array_v2_submit_20260611",
+  "tasks": [
+    {
+      "task_key": "submit_category_topic_random_1000_array_v2",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/run_category_topic_verification_1000_20260611",
+        "base_parameters": {
+          "run_id": "category_topic_random_1000_array_v2_20260611",
+          "channels_table": "prod_tads.youtube_too.yt_sl_channels",
+          "videos_table": "prod_tads.youtube_too.yt_sl_videos",
+          "category_table": "dev_sean.default.channel_category",
+          "language_table": "dev_sean.matt.yt_lid_v3_channels",
+          "output_catalog": "dev_sean",
+          "output_schema": "matt",
+          "output_prefix": "yt_category_topic_random_1000",
+          "sample_size": "1000",
+          "random_seed": "20260611",
+          "videos_per_channel": "10",
+          "max_output_tokens": "700",
+          "models_json": "[{\"provider\":\"openai\",\"model\":\"gpt-5.5\",\"tier\":\"frontier\"},{\"provider\":\"openai\",\"model\":\"gpt-5.4-mini\",\"tier\":\"small\"},{\"provider\":\"openai\",\"model\":\"gpt-5.4-nano\",\"tier\":\"nano\"},{\"provider\":\"openai\",\"model\":\"gpt-5-nano\",\"tier\":\"nano_low_cost\"},{\"provider\":\"anthropic\",\"model\":\"claude-opus-4-8\",\"tier\":\"frontier\"},{\"provider\":\"anthropic\",\"model\":\"claude-sonnet-4-6\",\"tier\":\"mid\"},{\"provider\":\"anthropic\",\"model\":\"claude-haiku-4-5\",\"tier\":\"small\"},{\"provider\":\"gemini\",\"model\":\"gemini-3.1-pro-preview\",\"tier\":\"frontier\"},{\"provider\":\"gemini\",\"model\":\"gemini-3.5-flash\",\"tier\":\"mid\"},{\"provider\":\"gemini\",\"model\":\"gemini-3.1-flash-lite\",\"tier\":\"small\"},{\"provider\":\"deepseek\",\"model\":\"deepseek-v4-pro\",\"tier\":\"frontier\"},{\"provider\":\"deepseek\",\"model\":\"deepseek-v4-flash\",\"tier\":\"small\"}]",
+          "submit_batches": "true",
+          "submit_provider_filter": "anthropic,gemini,openai,deepseek",
+          "skip_existing_submitted_batches": "true",
+          "secret_scope": "youtube-llm-keys",
+          "openai_secret_key": "openai-api-key",
+          "anthropic_secret_key": "anthropic-api-key",
+          "gemini_secret_key": "gemini-api-key",
+          "deepseek_secret_key": "deepseek-api-key",
+          "openai_reasoning_effort": "minimal",
+          "gemini_thinking_level": "low",
+          "deepseek_thinking_type": "disabled",
+          "deepseek_max_output_tokens": "700",
+          "deepseek_max_workers": "16",
+          "deepseek_request_timeout_seconds": "60",
+          "deepseek_max_retries": "1"
+        }
+      }
+    }
+  ]
+}

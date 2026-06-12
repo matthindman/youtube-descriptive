@@ -1,0 +1,7 @@
+{
+  "warehouse_id": "86100da4e1fe8713",
+  "wait_timeout": "50s",
+  "disposition": "INLINE",
+  "format": "JSON_ARRAY",
+  "statement": "CREATE OR REPLACE TABLE dev_sean.matt.yt_channel_topic_taxonomy_heldout_edge_predictions_20260612 AS WITH heldout_channels AS (SELECT * FROM dev_sean.matt.yt_channel_topic_taxonomy_channel_labels_20260612 WHERE split = 'heldout' AND topic_category_count > 0), heldout_exploded AS (SELECT channel_id, topic_categories, child_label FROM heldout_channels LATERAL VIEW explode(topic_categories) e AS child_label), learned_edges AS (SELECT * FROM dev_sean.matt.yt_channel_topic_taxonomy_inferred_edges_20260612 WHERE edge_strength IN ('strong_empirical_parent', 'moderate_empirical_parent')) SELECT h.channel_id, h.child_label, e.parent_label, e.edge_strength, e.train_confidence_child_to_parent, e.train_confidence_wilson_lower_95, e.train_lift, array_contains(h.topic_categories, e.parent_label) AS heldout_parent_present FROM heldout_exploded h INNER JOIN learned_edges e ON h.child_label = e.child_label"
+}

@@ -203,7 +203,7 @@ deepseek_secret_key = deepseek-api-key
 Default model coverage by family and size/cost bracket:
 
 ```text
-OpenAI:    gpt-5.5, gpt-5.4, gpt-5.4-mini, gpt-5.4-nano, gpt-5-nano
+OpenAI:    gpt-5.5, gpt-5.4-mini, gpt-5.4-nano, gpt-5-nano
 Anthropic: claude-opus-4-8, claude-sonnet-4-6, claude-haiku-4-5
 Gemini:    gemini-3.1-pro-preview, gemini-3.5-flash, gemini-3.1-flash-lite
 DeepSeek:  deepseek-v4-pro, deepseek-v4-flash
@@ -236,10 +236,12 @@ Then set the validation controls:
 
 ```text
 routing_mode = random_validation
+random_validation_scope = all
 random_validation_sample_size = 1000
 random_validation_seed = 20260610
 max_output_tokens = 2000
-openai_reasoning_effort = minimal
+openai_reasoning_effort = none
+openai_reasoning_effort_by_model_json = {"gpt-5-nano":"minimal"}
 gemini_thinking_level = low
 submit_batches = false
 import_results = false
@@ -258,6 +260,9 @@ Recommended sequence:
    has exactly 1,000 request rows.
 2. Set `submit_batches=true` for the provider/API smoke. OpenAI, Anthropic, and Gemini will create provider
    batch jobs; DeepSeek will run direct requests and write result JSONL immediately under `results_input_dir`.
+   Submit retries default to `reuse_existing_requests_on_submit=true`: if request rows already exist for
+   the `run_id`, the notebook resubmits from those exact stored prompt rows instead of rebuilding prompts.
+   This keeps all provider responses comparable within a run. Use a new `run_id` for prompt/cleaning changes.
 3. Check provider batch status before import. The helper notebook
    `.codex_databricks/check_lid_llm_batch_status_20260610.py` writes the latest OpenAI/Anthropic/Gemini status
    snapshot to `yt_lid_v3_too_full_20260609_llm_validation_batch_status_check`.
@@ -268,29 +273,82 @@ Recommended sequence:
 5. Rerun `03_language_llm_panel_databricks.py` with `submit_batches=false` and `import_results=true`.
    Import reads `results_input_dir/<run_id>` when present, then writes raw parsed predictions, verdicts,
    and the all-model pairwise agreement matrix.
+   The import path defaults to `reuse_existing_requests_on_import=true`; when request rows already exist
+   for the `run_id`, the notebook reuses those rows instead of rewriting prompts or batch JSONL. This avoids
+   mixing provider responses from an already-submitted prompt with a later local prompt edit. Set the reuse
+   switches to `false` only when intentionally rebuilding a run before any provider submission has happened.
 6. Review `yt_lid_v3_too_full_20260609_llm_validation_model_agreement` for all model-pair agreement and
    `yt_lid_v3_too_full_20260609_llm_validation_verdicts` for majority coverage and panel-vs-fastText
    top-line agreement.
+7. For a visual agreement readout that includes OpenLID and GlotLID alongside the imported LLM models, run
+   `.codex_databricks/inspect_lid_llm_hardcase_agreement_visual_20260611.py` and render the exported JSON
+   with `.codex_databricks/render_lid_llm_agreement_heatmap_20260611.py`. The helper reports normalized
+   base-ISO agreement and leaves missing provider results out of the matrix rather than imputing them.
+
+For a harder validation pass focused on likely adjudication value rather than smoke testing, keep
+`routing_mode=random_validation` and set `random_validation_scope=lid_iso_disagreement`. That scope samples
+only channels where OpenLID and GlotLID have non-null, different primary ISO labels after the same
+project-level normalization used by panel agreement (`zho`→`cmn`, `ku`/`kur`→`kmr`, Arabic dialects→`ara`,
+etc.). The notebook
+fails early if the requested sample is larger than the eligible hard-case universe for the selected source
+run.
 
 The language panel asks models for compact one-line JSON and defaults to `max_output_tokens=2000`,
-`openai_reasoning_effort=minimal`, `gemini_thinking_level=low`, `deepseek_thinking_type=disabled`,
-and `deepseek_max_output_tokens=600`. The larger global cap is intentional: reasoning/thinking tokens
+`openai_reasoning_effort=none`, `gemini_thinking_level=low`, `deepseek_thinking_type=disabled`,
+and `deepseek_max_output_tokens=600`. To test DeepSeek thinking mode, set
+`deepseek_thinking_type=enabled` and `deepseek_reasoning_effort` to one of
+`low`, `medium`, `high`, `max`, or `xhigh`; DeepSeek currently accepts `low`/`medium` only as
+compatibility aliases that map to `high`, and `xhigh` maps to `max`. Thinking-enabled DeepSeek runs must
+set `deepseek_max_output_tokens>=2000` for Flash-only tests and `>=4000` whenever Pro is selected;
+reasoning tokens share the cap, and lower caps truncated final JSON on the June 11 low-thinking tests
+(600 tokens failed badly; 2,000 still truncated many Pro rows). The larger global cap is intentional:
+reasoning/thinking tokens
 share the output budget on some providers, and the June 10 validation showed that Gemini frequently
 truncated JSON at lower caps, reducing valid parsed votes even though the batch jobs themselves
 succeeded. DeepSeek is handled separately because it runs through direct synchronous calls rather than a
 provider batch API; keeping thinking disabled and capping its classification response avoids hidden
 reasoning output dominating latency/cost while preserving enough budget for the required JSON.
+OpenAI batch models currently use `none` rather than `minimal` for thinking off; some newer batch aliases
+reject `minimal` with `unsupported_value`. The older `gpt-5-nano` batch alias is the exception observed in
+the June 11 hard-case run: it rejects `none` and requires the lowest supported effort, `minimal`, so keep
+the `openai_reasoning_effort_by_model_json` override unless that alias is retired.
 
 DeepSeek direct result JSONL now includes `_deepseek_direct_metadata` with per-request duration,
-attempt count, status codes, transport, thinking setting, and max-token setting. Use this metadata for
+attempt count, status codes, transport, thinking setting, reasoning-effort setting, and max-token setting. Use this metadata for
 runtime diagnosis before inferring provider slowness from total job wall time. The focused DeepSeek
 retry notebook also normalizes stale request JSONL at call time, so older request files with omitted
 thinking controls or the global 2,000-token cap will still submit with the current DeepSeek defaults.
 
+The June 11 hard-case disagreement audit showed that the highest model splits were driven mainly by
+romanized South Asian close varieties, repeated English description templates, and mixed-script titles
+where generic English media scaffolding competed with the actual title phrase. The prompt now explicitly
+downweights mixed-script title scaffolding such as `ASMR`, `MUKBANG`, `Official Video`, `Lyrics`, and
+series labels, and the prompt cleaner strips those generic title terms before request materialization.
+The four-round audit over the top 120 hard-case splits added broader media-shell stripping for terms such
+as `trailer`, `teaser`, `full movie`, `audio jukebox`, `visualizer`, `cover`, `remix`, `recipe`, `status`,
+and `dance/choreo`, and added a translated-title guard for cases where a recurring non-English source title
+is followed by an English gloss after a colon or pipe.
+The next four 30-channel passes over ranks 121-240 found additional leakage from music-credit descriptions
+(`Stream ... via`, `Performed by`, `Produced & Written by`, `Mixed and Mastered`, `Video Edited`, etc.) and
+format/audience title shells (`fancam`, `behind`, `performance ver.`, `full episode`, `promo`, `review`,
+`reaction`, `gameplay`, `cartoon`, `nursery rhymes`, `toy`). Those are now stripped or explicitly
+downweighted before classification.
+The ranks 361-480 pass mostly contained single-model outliers, but it surfaced repeated multilingual
+social/download/booking boilerplate in descriptions (`More socials`, `Redes Sociales`, `Folgt uns`,
+`Segui`, `Suis-moi`, `Channel abonnieren`, `Bookings via`, etc.). These patterns are now stripped only from
+description fields so title text is not over-cleaned.
+The cleaner also treats section headers such as `Related Tag :-` as the start of a query/tag block, so
+the following SEO list does not enter the prompt. Parser normalization now prefers a complete
+`primary_language_label` (`iso_Script`) over conflicting component fields when a model emits inconsistent
+JSON, because the full label is the constrained field requested by the prompt. Malformed classified labels
+such as `hmo?`, label-like ISO components such as `hye_latn`, or invalid script strings no longer count as
+valid panel votes after alias normalization. Non-language outputs such as `und`, `zxx`, and `mul` are treated
+as abstentions/null labels rather than classified panel votes.
+
 Panel reconciliation now keeps both raw and normalized language judgments. Raw model labels are preserved,
 but majority status defaults to `panel_majority_vote_basis=normalized_base_iso`, which collapses known
 project-level taxonomy aliases (`zho`→`cmn`, `tgl`→`fil`, `ori`→`ory`, `uzn`→`uzb`, `msa`→`zsm`,
-`nep`→`npi`, Arabic dialects→`ara`)
+`nep`→`npi`, `ku`/`kur`→`kmr`, Arabic dialects→`ara`)
 and treats Chinese `Hans`/`Hant`/`Hani` as the same script family for agreement diagnostics. The raw
 agreement matrix still reports exact base-ISO and full-label agreement, and additionally reports normalized
 base-ISO and normalized-label agreement. Use normalized base-language disagreement for human-review routing;
@@ -299,8 +357,24 @@ question.
 
 Prompt construction defaults to `strip_prompt_boilerplate=true` and `dedupe_prompt_segments=true`. The
 panel prompt lists video titles before descriptions, removes common provider/release/link boilerplate such
-as auto-generated music metadata, copyright/fair-use boilerplate, support/download/social boilerplate, and
-generic URLs, collapses duplicate segment text, and includes compact field, segment-script, text-script, and
+as auto-generated music metadata, copyright/fair-use boilerplate, production-credit boilerplate
+(`Presenting the new drama`, cast/script/producer/DOP/BGM lines), support/download/social boilerplate, and
+generic URLs. It also strips common contact/donation boilerplate (`UPI ID`, email, WhatsApp/contact/support
+lines) and warns models not to treat liturgical/proper-name-only strings (`Gita`, `Darbar`, `Puje`,
+`Bhagavatha`, `Matha`, `Pravachana`, etc.) as decisive language evidence without grammatical connective text.
+The prompt and parser also normalize common provider mistakes surfaced in hardcase validation: language-name
+outputs such as `hindi_Deva` are mapped back to ISO (`hin_Deva`), script aliases such as `Hangul` are mapped
+to ISO 15924 (`Hang`), and South Asian close-variety traps are called out explicitly (`pnb` vs `pan`,
+`hne` Chhattisgarhi vs `hif` Fiji Hindi, and Bhojpuri/Magahi hashtag conflicts).
+Music/link boilerplate such as `listen here`, `stream on`, `discover similar songs`, `pre-save link`,
+`we are on`, `shop`, booking blocks, and artist follow lines is stripped before prompt assembly. Query/tag
+sections such as `Related Tags`, `Your query solved`, `search terms`, and `keywords` stop the description
+cleaner because later lines are usually SEO lists rather than channel-language evidence. The prompt warns
+against letting English SEO-template words (`lyrics`, `recipe`, `mukbang`, `ASMR`, `official video`, etc.)
+dominate repeated non-English phrase text.
+The prompt collapses exact and near-duplicate segment text, normalizing volatile episode/part/day/quote
+numbers in the dedupe key so repeated template descriptions count once instead of multiplying English
+boilerplate weight. It includes compact field, segment-script, text-script, and
 non-decisive language-hint summaries for candidate segments after cleanup. Prompt caps preserve representative
 non-Latin-script examples before filling with the highest-priority remaining text. Short fields that failed
 the fastText validity threshold are still shown with diagnostics because repeated short titles can be decisive

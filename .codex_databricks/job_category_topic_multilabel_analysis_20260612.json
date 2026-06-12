@@ -1,0 +1,20 @@
+{
+  "run_name": "category_topic_multilabel_random_1000_analysis_20260612",
+  "tasks": [
+    {
+      "task_key": "analyze_category_topic_multilabel_results",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/analyze_category_topic_multilabel_20260612",
+        "base_parameters": {
+          "run_id": "category_topic_multilabel_random_1000_20260612",
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "output_prefix": "yt_category_topic_multilabel_1000",
+          "analysis_output_dir": "/dbfs/FileStore/youtube_category_topic_multilabel_batches/analysis",
+          "preferred_prediction_variant": "prob_label_threshold"
+        }
+      }
+    }
+  ]
+}

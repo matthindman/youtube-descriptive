@@ -1,0 +1,292 @@
+# Databricks notebook source
+# MAGIC %md
+# MAGIC # Topic/Genre 1k Batch Result Download
+
+# COMMAND ----------
+# MAGIC %pip install "openai>=2.0.0" anthropic "google-genai>=1.51.0" pandas pyarrow
+
+# COMMAND ----------
+dbutils.library.restartPython()
+
+# COMMAND ----------
+import json
+import os
+import re
+from datetime import datetime, timezone
+from typing import Any
+
+from pyspark.sql import functions as F
+from pyspark.sql.types import IntegerType, StringType, StructField, StructType
+
+
+def _create_text_widget(name: str, default: str) -> None:
+    try:
+        dbutils.widgets.text(name, default, name)
+    except Exception:
+        pass
+
+
+def _get_widget(name: str, default: str) -> str:
+    try:
+        value = dbutils.widgets.get(name)
+        return value if value else default
+    except Exception:
+        return default
+
+
+_create_text_widget("catalog", "dev_sean")
+_create_text_widget("schema", "matt")
+_create_text_widget("run_id", "category_topic_random_1000_20260611")
+_create_text_widget("batch_jobs_table", "yt_category_topic_random_1000_batch_jobs")
+_create_text_widget("batch_files_table", "yt_category_topic_random_1000_batch_files")
+_create_text_widget("status_snapshot_table", "yt_category_topic_random_1000_batch_status_check")
+_create_text_widget("result_files_table", "yt_category_topic_random_1000_result_files")
+_create_text_widget("results_input_dir", "/dbfs/FileStore/youtube_category_topic_batches/results")
+_create_text_widget("secret_scope", "youtube-llm-keys")
+_create_text_widget("openai_secret_key", "openai-api-key")
+_create_text_widget("anthropic_secret_key", "anthropic-api-key")
+_create_text_widget("gemini_secret_key", "gemini-api-key")
+_create_text_widget("provider_filter", "anthropic,gemini,openai")
+_create_text_widget("fail_on_download_errors", "false")
+
+CATALOG = _get_widget("catalog", "dev_sean")
+SCHEMA = _get_widget("schema", "matt")
+RUN_ID = _get_widget("run_id", "category_topic_random_1000_20260611")
+BATCH_JOBS_TABLE = _get_widget("batch_jobs_table", "yt_category_topic_random_1000_batch_jobs")
+BATCH_FILES_TABLE = _get_widget("batch_files_table", "yt_category_topic_random_1000_batch_files")
+STATUS_SNAPSHOT_TABLE = _get_widget("status_snapshot_table", "yt_category_topic_random_1000_batch_status_check")
+RESULT_FILES_TABLE = _get_widget("result_files_table", "yt_category_topic_random_1000_result_files")
+RESULTS_INPUT_DIR = _get_widget("results_input_dir", "/dbfs/FileStore/youtube_category_topic_batches/results").rstrip("/")
+SECRET_SCOPE = _get_widget("secret_scope", "youtube-llm-keys")
+OPENAI_SECRET_KEY = _get_widget("openai_secret_key", "openai-api-key")
+ANTHROPIC_SECRET_KEY = _get_widget("anthropic_secret_key", "anthropic-api-key")
+GEMINI_SECRET_KEY = _get_widget("gemini_secret_key", "gemini-api-key")
+PROVIDER_FILTER = {
+    p.strip().lower()
+    for p in _get_widget("provider_filter", "anthropic,gemini,openai").split(",")
+    if p.strip()
+}
+FAIL_ON_DOWNLOAD_ERRORS = _get_widget("fail_on_download_errors", "false").strip().lower() in {"1", "true", "t", "yes", "y"}
+
+
+def fqtn(table: str) -> str:
+    return f"`{CATALOG}`.`{SCHEMA}`.`{table}`"
+
+
+def safe_model_dir(model: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]", "_", model or "model")
+
+
+def as_jsonable(value: Any):
+    if value is None:
+        return None
+    if hasattr(value, "model_dump"):
+        return value.model_dump()
+    if hasattr(value, "to_json_dict"):
+        return value.to_json_dict()
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, dict):
+        return {str(k): as_jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [as_jsonable(v) for v in value]
+    return str(value)
+
+
+def enum_name(value: Any):
+    if value is None:
+        return None
+    return getattr(value, "name", None) or getattr(value, "value", None) or str(value)
+
+
+def get_secret(key: str) -> str:
+    return dbutils.secrets.get(scope=SECRET_SCOPE, key=key)
+
+
+def openai_file_content_text(file_content: Any) -> str:
+    text = getattr(file_content, "text", None)
+    if isinstance(text, str):
+        return text
+    if isinstance(file_content, str):
+        return file_content
+    if isinstance(file_content, bytes):
+        return file_content.decode("utf-8")
+    if hasattr(file_content, "read"):
+        data = file_content.read()
+        return data.decode("utf-8") if isinstance(data, bytes) else str(data)
+    try:
+        return bytes(file_content).decode("utf-8")
+    except Exception:
+        return str(file_content)
+
+
+def _table_exists_full(table_full: str) -> bool:
+    try:
+        spark.table(table_full).limit(0)
+        return True
+    except Exception:
+        return False
+
+
+def _sql_string(value: str) -> str:
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def write_run_scoped(df, table_full: str):
+    if not _table_exists_full(table_full):
+        df.write.format("delta").mode("overwrite").partitionBy("run_id").saveAsTable(table_full)
+        return
+    existing = spark.table(table_full)
+    for field in existing.schema.fields:
+        if field.name not in df.columns:
+            df = df.withColumn(field.name, F.lit(None).cast(field.dataType))
+    df = df.select(*existing.columns)
+    spark.sql(f"DELETE FROM {table_full} WHERE run_id = {_sql_string(RUN_ID)}")
+    df.write.format("delta").mode("append").option("mergeSchema", "true").saveAsTable(table_full)
+
+
+status = (
+    spark.table(fqtn(STATUS_SNAPSHOT_TABLE))
+    .where(F.col("run_id") == F.lit(RUN_ID))
+    .where(F.col("status_error").isNull())
+    .select("provider", "model", "chunk_id", "provider_batch_id", "provider_status", "output_ref_json")
+)
+jobs = (
+    spark.table(fqtn(BATCH_JOBS_TABLE)).alias("j")
+    .where(F.col("j.run_id") == F.lit(RUN_ID))
+    .join(
+        spark.table(fqtn(BATCH_FILES_TABLE)).alias("f").where(F.col("f.run_id") == F.lit(RUN_ID)),
+        on=["run_id", "provider", "model", "chunk_id", "local_jsonl_path"],
+        how="left",
+    )
+    .select("provider", "model", "chunk_id", "provider_file_id", "provider_batch_id", "n_requests")
+)
+
+completed = (
+    status.alias("s")
+    .join(jobs.alias("j"), on=["provider", "model", "chunk_id", "provider_batch_id"], how="inner")
+    .where(F.col("provider").isin(*sorted(PROVIDER_FILTER)))
+    .where(
+        ((F.col("provider") == F.lit("openai")) & (F.col("provider_status") == F.lit("completed")))
+        | ((F.col("provider") == F.lit("anthropic")) & (F.col("provider_status") == F.lit("ended")))
+        | ((F.col("provider") == F.lit("gemini")) & (F.col("provider_status") == F.lit("JOB_STATE_SUCCEEDED")))
+    )
+    .select("provider", "model", "chunk_id", "provider_batch_id", "provider_file_id", "n_requests", "provider_status", "output_ref_json")
+    .dropDuplicates(["provider", "model", "chunk_id", "provider_batch_id"])
+    .orderBy("provider", "model", "chunk_id")
+    .collect()
+)
+
+print(f"Completed downloadable batches for run_id={RUN_ID}: {len(completed)}")
+
+openai_client = None
+anthropic_client = None
+gemini_client = None
+downloaded_at = datetime.now(timezone.utc).isoformat()
+records = []
+
+for row in completed:
+    provider = row["provider"]
+    model = row["model"]
+    chunk_id = int(row["chunk_id"])
+    provider_batch_id = row["provider_batch_id"]
+    out_dir = os.path.join(RESULTS_INPUT_DIR, RUN_ID, provider, safe_model_dir(model))
+    os.makedirs(out_dir, exist_ok=True)
+    out_path = os.path.join(out_dir, f"chunk_{chunk_id:05d}_results.jsonl")
+    n_lines = 0
+    status_label = "downloaded"
+    error = None
+
+    try:
+        if provider == "openai":
+            from openai import OpenAI
+
+            if openai_client is None:
+                openai_client = OpenAI(api_key=get_secret(OPENAI_SECRET_KEY))
+            output_ref = {}
+            try:
+                output_ref = json.loads(row["output_ref_json"] or "{}")
+            except Exception:
+                output_ref = {}
+            output_file_id = output_ref.get("output_file_id")
+            if not output_file_id:
+                batch = openai_client.batches.retrieve(provider_batch_id)
+                output_file_id = getattr(batch, "output_file_id", None)
+            if not output_file_id:
+                raise RuntimeError("OpenAI batch has no output_file_id")
+            text = openai_file_content_text(openai_client.files.content(output_file_id))
+            with open(out_path, "w", encoding="utf-8") as dst:
+                dst.write(text)
+                if text and not text.endswith("\n"):
+                    dst.write("\n")
+            n_lines = len([line for line in text.splitlines() if line.strip()])
+        elif provider == "anthropic":
+            import anthropic
+
+            if anthropic_client is None:
+                anthropic_client = anthropic.Anthropic(api_key=get_secret(ANTHROPIC_SECRET_KEY))
+            with open(out_path, "w", encoding="utf-8") as dst:
+                for item in anthropic_client.messages.batches.results(provider_batch_id):
+                    dst.write(json.dumps(as_jsonable(item), ensure_ascii=False) + "\n")
+                    n_lines += 1
+        elif provider == "gemini":
+            from google import genai
+
+            if gemini_client is None:
+                gemini_client = genai.Client(api_key=get_secret(GEMINI_SECRET_KEY))
+            try:
+                batch = gemini_client.batches.get(name=provider_batch_id)
+            except TypeError:
+                batch = gemini_client.batches.get(provider_batch_id)
+            state = enum_name(getattr(batch, "state", None))
+            if state != "JOB_STATE_SUCCEEDED":
+                raise RuntimeError(f"Gemini batch is not succeeded: {state}")
+            dest = getattr(batch, "dest", None)
+            result_file_name = getattr(dest, "file_name", None)
+            if not result_file_name:
+                raise RuntimeError("Gemini batch has no dest.file_name")
+            file_content = gemini_client.files.download(file=result_file_name)
+            text = file_content if isinstance(file_content, str) else bytes(file_content).decode("utf-8")
+            with open(out_path, "w", encoding="utf-8") as dst:
+                dst.write(text)
+                if text and not text.endswith("\n"):
+                    dst.write("\n")
+            n_lines = len([line for line in text.splitlines() if line.strip()])
+        else:
+            status_label = "skipped"
+            error = f"Unsupported provider for download: {provider}"
+    except Exception as exc:
+        status_label = "error"
+        error = repr(exc)[:2000]
+
+    records.append((RUN_ID, downloaded_at, provider, model, chunk_id, provider_batch_id, out_path, int(row["n_requests"] or 0), n_lines, status_label, error))
+    print(provider, model, provider_batch_id, status_label, f"lines={n_lines}", error or "")
+
+schema = StructType([
+    StructField("run_id", StringType(), True),
+    StructField("downloaded_at_utc", StringType(), True),
+    StructField("provider", StringType(), True),
+    StructField("model", StringType(), True),
+    StructField("chunk_id", IntegerType(), True),
+    StructField("provider_batch_id", StringType(), True),
+    StructField("result_jsonl_path", StringType(), True),
+    StructField("n_expected_requests", IntegerType(), True),
+    StructField("n_result_lines", IntegerType(), True),
+    StructField("download_status", StringType(), True),
+    StructField("download_error", StringType(), True),
+])
+
+result_files = spark.createDataFrame(records, schema)
+write_run_scoped(result_files, fqtn(RESULT_FILES_TABLE))
+display(result_files.orderBy("provider", "model", "chunk_id"))
+
+errors = result_files.where(F.col("download_status") == F.lit("error")).count()
+summary = {
+    "run_id": RUN_ID,
+    "result_files_table": fqtn(RESULT_FILES_TABLE),
+    "n_completed_downloadable": len(records),
+    "n_download_errors": int(errors),
+}
+if errors and FAIL_ON_DOWNLOAD_ERRORS:
+    raise RuntimeError(f"{errors} result downloads failed; see {fqtn(RESULT_FILES_TABLE)}")
+dbutils.notebook.exit(json.dumps(summary, sort_keys=True))
