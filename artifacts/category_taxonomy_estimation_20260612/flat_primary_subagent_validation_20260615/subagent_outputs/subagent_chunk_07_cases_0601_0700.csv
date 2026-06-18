@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+601,Film/TV/Humor,high,Repeated #mizah humor shorts and everyday joke premises.,Humor is explicit in hashtags.
+602,Film/TV/Humor,high,Telugu creepy pasta and two sentence horror story episodes.,Fiction horror story channel.
+603,Hobby/General interests,high,"Survival skills, bushcraft, camping and outdoor ideas.",Outdoor survival hobby rather than organized sport.
+604,Food,high,"Foodvlog episodes with recipes, cooking and kitchenware.","Some lifestyle/home content, but food is central."
+605,Entertainment/General,medium,"Viral shorts about challenges, magic, toys and odd situations.","Evidence is broad viral entertainment, not one clear topic."
+606,Politics/News,high,"Commentary on politicians, immigration, local council conflict and public issues.","Opinion format, but political/news topic dominates."
+607,Society/General,medium,School reunion and Guruvandana teacher-honoring program videos.,"Education setting, but content is community event coverage."
+608,Film/TV/Humor,medium,"Spider-Man, Hulk, Captain America and TikTok dance/fight scene shorts.",Mixed superhero/viral entertainment; not vehicle-centered despite Bugatti title.
+609,Religion,high,Buddhist dhamma talks and temple support descriptions.,Religious teaching is explicit.
+610,Fashion/Beauty,medium,"Costume, carnival and Halloween wearable product videos.","Retail/product angle, but main objects are costumes."
+611,Lifestyle/General,high,"Daily routine, home tour, twins, pajamas and family vlog topics.",Food and home decor appear inside lifestyle vlogs.
+612,Music,high,"Setia Band, Charly songs and acoustic music clips.",Music content is explicit.
+613,Film/TV/Humor,high,Comedy shorts about family relationships and pranks.,Hashtags and premises are comedy-centered.
+614,Music,high,Official music video and song credits for Mitar Miric.,Music release evidence is direct.
+615,Politics/News,high,"Harian Kompas news selections, Trump assassination attempt and Hajj logistics.",News publisher evidence is direct.
+616,Education/Knowledge,high,"Facts about Iraq, geography, animals and world topics.","Adventure clips appear, but facts/knowledge dominates."
+617,Hobby/General interests,high,"DIY mini stoves, oil burner, metal/wood bed and making projects.",Hands-on fabrication hobby content.
+618,Sports,high,"Goalkeeper blocks, reactions and goalkeeper mentality challenges.",Soccer goalkeeping is explicit.
+619,Video games,high,"Quarantine Zone gameplay, full game and livestream titles.",Game title and gaming descriptions are direct.
+620,Hobby/General interests,high,"Paper craft templates, DIY gifts and Moducknet schemes.",Crafting is the central activity.
+621,Hobby/General interests,medium,"Life tricks, recipes, toy wrapping, bracelets and household hacks.","Viral reaction format is possible, but evidence is tips/hacks."
+622,Video games,high,"Tomodachi Life, Pokemon Champions and Windrose gameplay videos.",Game names dominate recent evidence.
+623,Hobby/General interests,high,"Fishing for catfish, wader and river fish.","Fishing hobby, not organized sport."
+624,Food,high,"Telugu cooking videos with manchurian, biryani, omelet and pakoda.",Food topic is explicit.
+625,Video games,high,BeamNG Drive Monster Jam gameplay and crashes.,Vehicle theme is within video game gameplay.
+626,Video games,high,"Destiny 2 news, weapons, armor, Xur and Trials of Osiris.",Game-specific channel.
+627,Entertainment/General,low,"Mixed sholawat, cake decoration and traditional game videos.","Evidence spans religion, food and games without a stable main topic."
+628,Pets/Animals,high,"Cat meowing sounds, dog dances, puppy and chick sound videos.",Animal content dominates.
+629,Music,high,"ANTH songs, new music, love songs and rap shorts.",Music releases are central.
+630,Film/TV/Humor,medium,"Reaction videos to unusual memes, food creators and viral content.","Some gaming appears, but reaction/humor entertainment is broader."
+631,Film/TV/Humor,medium,"Funny shorts using chocolates, biscuits and candy.",Food items appear as comedy props.
+632,Video games,high,"Best Android games, game links and gameplay descriptions.",Game recommendations are explicit.
+633,Film/TV/Humor,medium,ARB TV variety/talk show clips and television programming.,General TV channel with entertainment talk shows.
+634,Vehicles,high,Driving school lessons on traffic signs and driver rules.,Vehicle/driving instruction is central.
+635,Film/TV/Humor,high,Funny Bengali shorts centered on Mistu and family jokes.,Comedy hashtags and titles dominate.
+636,Film/TV/Humor,high,Family Guy clip titles and episode references.,TV cartoon clips are direct evidence.
+637,Film/TV/Humor,high,"Funny rankings, pranks, road rage and street interview shorts.",Humor/prank format is explicit.
+638,Film/TV/Humor,high,Try Not to Laugh challenge shorts.,Comedy reaction challenge evidence is direct.
+639,Travel,high,"Expeditions through Dagestan, Donbas and Arctic routes.",Vehicle use supports travel expedition content.
+640,Pets/Animals,low,"Recent titles are mostly cat clips, with some dance battle footage.",Mixed channel evidence; dance descriptions conflict with cat-heavy recent titles.
+641,Lifestyle/General,high,"Pregnancy announcement, family vlogs, father-son days and travel food vlog.",Family/daily life dominates.
+642,Pets/Animals,high,"Cat moments, cat food, dog clothes and pet gift shorts.",Pet content is explicit.
+643,Health/Fitness,high,"Exercises, massage and health advice for gallbladder, kidneys and intestines.",Health and body practice dominate.
+644,Health/Fitness,high,"Yoga, pregnancy yoga, postures and online yoga classes.",Yoga/fitness topic is direct.
+645,Video games,high,GTA 5 Franklin mod gameplay with superheroes and bikes.,GTA 5 content is explicit.
+646,Film/TV/Humor,high,Analysis of Super Mario Bros movie details and errors.,"Movie analysis, not gameplay."
+647,Music,high,Kumar Sanu and Bollywood song uploads with singer credits.,Song compilation channel.
+648,Sports,medium,Marathon and Spartan race videos dominate recent evidence.,Some travel/tech vlog titles also appear.
+649,Sports,high,Maradona and Ronaldinho football skills clips.,Football is explicit.
+650,Vehicles,high,"Trucks, dumpers, Lamborghini, cranes and police chase vehicle shorts.",Vehicle-centered evidence is consistent.
+651,Music,high,"Remixes, tracks, stream/download links and music submissions.",Music channel evidence is direct.
+652,Lifestyle/General,medium,"Family memories, village/festival videos and family event vlogs.","One gaming challenge appears, but family/life content dominates."
+653,Lifestyle/General,medium,"Personal podcast essays on creativity, anxiety, dating and relationships.","Includes a short film, but personal/lifestyle podcast is broader."
+654,Film/TV/Humor,high,KBS Gagconcert and comedy show clips.,Comedy TV content is explicit.
+655,Food,high,"Cooking challenges, pesto, fast food testing and recipes.",Food topic dominates.
+656,Music,high,"New Assamese songs with singers, lyrics and audio credits.",Music release evidence is direct.
+657,Politics/News,high,"Nagpur police, local news and public affairs interviews.",News/current affairs channel.
+658,Video games,high,Minecraft and Sprunki animations with game-centered titles.,Game culture animation is explicitly gaming-centered.
+659,Entertainment/General,low,Short casual Indonesian prompts and viral-style clips.,Evidence is too generic for a more specific topic.
+660,Film/TV/Humor,high,"Chintu comedy, funny memes and scripted skit descriptions.",Comedy is explicit.
+661,Food,medium,"Wild duck, pheasant, pork belly and recipe videos.","Hunting is present, but recipes/cooking are prominent."
+662,Music,high,Marathi devotional Khandoba/Yedamay song compilations.,"Religious subject, but the content is songs."
+663,Hobby/General interests,high,"DIY home repair, nail design, earrings and smart life hacks.",Craft/hack topic dominates.
+664,Film/TV/Humor,high,Bhojpuri comedy shorts and family joke skits.,Comedy hashtags and premises dominate.
+665,Film/TV/Humor,high,Animated Chaves and Adventure Time humor shorts.,Animation/humor evidence is explicit.
+666,Music,high,"Crystal Waters house music, remixes, radio show and DJ mixes.",Music topic is direct.
+667,Film/TV/Humor,medium,Official TV Aichi channel with local TV programs and show segments.,Broad broadcaster content includes tech and local features.
+668,Film/TV/Humor,medium,Short humorous Portuguese clips with joke-style titles.,Evidence is brief but consistently comedic.
+669,Technology,high,"Water pump, jet engine, Tesla turbine and generator experiments.",Engineering technology is central.
+670,Music,high,Karaoke videos with scrolling lyrics for songs.,Music/karaoke evidence is direct.
+671,Music,high,TrapSoul and R&B playlist mixes with tracklists.,Music playlist channel.
+672,Technology,high,"Earbuds, smart glasses and e-ink tech product reviews.",Gadget review evidence is direct.
+673,Food,high,"Recipes for suero, tuna patties, picadillo and red rice.",Cooking instruction dominates.
+674,Travel,high,Laos market visits and on-tour videos across towns.,Food appears as part of travel market coverage.
+675,Entertainment/General,medium,"Celebrity paparazzi, ramp walk and actor/personality shorts.","Entertainment celebrity coverage, not a single film/TV work."
+676,Film/TV/Humor,high,Chinese drama episodes from The Legend of HaoLan.,TV drama episodes are direct evidence.
+677,Video games,high,"PUBG Mobile episodes, shorts and ranking gameplay.",Game title dominates.
+678,Film/TV/Humor,high,Children’s cartoon/animation episodes and shorts.,Animated kids entertainment is central.
+679,Film/TV/Humor,high,Movie upload and telenovela episode parts.,Film/TV clips are direct evidence.
+680,Fashion/Beauty,high,Meesho/Flipkart dress and ethnic set fashion unboxing shorts.,Fashion shopping/unboxing dominates.
+681,Politics/News,high,"El Salvador news on Bukele, police operations and crime cases.",News/current events evidence is direct.
+682,Video games,high,"PUBG Mobile event, skins, characters and gameplay topics.",Game title and gaming context dominate.
+683,Music,high,"BLV official audio, visualizers, remixes and track links.",Music release evidence is direct.
+684,Fashion/Beauty,high,Nail art tutorials and nail design shorts.,Beauty/nails topic is explicit.
+685,Film/TV/Humor,high,Bollywood movie illogical scene/fact videos.,Movie-centered facts dominate despite one life-hack video.
+686,Education/Knowledge,high,Geography/history facts and what-if country scenarios.,Educational fact content is explicit.
+687,Music,high,Lucky Dube song uploads and live music titles.,Music content is direct.
+688,Lifestyle/General,low,"Resort, outfit choices, blogger song promo and casual personal clips.",Mixed lifestyle/music/fashion evidence.
+689,Entertainment/General,high,Satisfying ASMR kinetic sand and slime videos.,"Sensory entertainment, not a narrower topic."
+690,Music,high,"Concert, song, singer and lyrics-related titles.",Music performance evidence is direct.
+691,Film/TV/Humor,medium,"Bubble, balloon, magic mess and sibling-style short entertainment titles.","Sparse evidence, but scripted kid/family entertainment is likely."
+692,Music,high,"Cicero song titles, tour dates and music release clues.",Artist/music evidence is direct.
+693,Food,high,Waffle-maker food experiments and recipe/food hack titles.,Food/cooking experiments dominate.
+694,Video games,high,"GTA5 shorts with Sonic, Goku and game tags.",Game-centered animation/content is explicit.
+695,Music,high,WILLOW official visualizers and album track links.,Music release evidence is direct.
+696,Technology,high,"CES robot vacuum, smart appliance and gadget reviews.",Tech product review channel.
+697,Hobby/General interests,high,"Stained glass project, fantasy crafts, pilgrimage book and RPG review.",Creative hobby/fantasy projects dominate.
+698,Politics/News,high,"Breaking news on Strait of Hormuz, White House and Hezbollah.",News channel evidence is direct.
+699,Entertainment/General,medium,"Choice prompts about wizard, potions, challenges and jobs with background music.","Not clearly gameplay, music, or humor-specific."
+700,Health/Fitness,high,"Muscle analysis, supplements, performance optimization and energy drinks.",Fitness/health performance content dominates.

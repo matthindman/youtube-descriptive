@@ -1,0 +1,10 @@
+rule_variant,n_model_variants,mean_flat_accuracy,median_flat_accuracy,max_flat_accuracy
+v8_food_before_film_tv,32,0.576637813,0.59933,0.64441
+v1_music_vehicle_priority,32,0.576220625,0.59766,0.64441
+v4_wrestling_to_film_tv,32,0.576220625,0.59766,0.64441
+v6_military_to_politics_news,32,0.576220625,0.59766,0.64441
+v3_motorsport_to_vehicles,32,0.57616875,0.59766,0.64441
+v5_performing_arts_to_film_tv,32,0.575125313,0.59933,0.64274
+v7_business_to_politics_news,32,0.574916875,0.59933,0.64274
+v2_film_over_video_game,32,0.570064375,0.59599,0.64107
+v0_prior_draft,32,0.567716563,0.59933,0.64608

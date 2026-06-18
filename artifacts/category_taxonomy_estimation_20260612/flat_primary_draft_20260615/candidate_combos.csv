@@ -1,0 +1,705 @@
+specific_candidate_combo,n_channels,pct_nonempty_channels
+Music,24640,0.1246559818682208
+Entertainment/General + Film/TV/Humor,21776,0.1101667476121094
+Video games,18514,0.0936639954670552
+Lifestyle/General,12432,0.0628946090335114
+Hobby/General interests + Lifestyle/General,8716,0.0440950299498138
+Entertainment/General + Film/TV/Humor + Lifestyle/General,8508,0.0430427391937833
+Entertainment/General + Lifestyle/General,7985,0.0403968350331876
+Food + Lifestyle/General,7271,0.0367846446495062
+News/Society/Politics,6023,0.0304709001133236
+Entertainment/General + Film/TV/Humor + Music,4302,0.0217642059252064
+Entertainment/General,3682,0.0186275700178079
+Lifestyle/General + Vehicles/Motorsport,3590,0.0181621337218714
+Lifestyle/General + Music,3526,0.0178383519507851
+News/Society/Politics + Religion,3352,0.0169580702606443
+Health/Fitness + Lifestyle/General,3235,0.0163661567103772
+Lifestyle/General + Technology,2801,0.0141705115751983
+Sports,2754,0.0139327343370568
+Entertainment/General + Music,2322,0.0117472073822243
+Education/Explainers,1815,0.0091822486644001
+Lifestyle/General + Sports,1764,0.0089242350655658
+Entertainment/General + Hobby/General interests + Lifestyle/General,1687,0.0085346851222276
+Education/Explainers + Lifestyle/General,1680,0.008499271491015
+Entertainment/General + Film/TV/Humor + Video games,1669,0.0084436214991096
+Education/Explainers + News/Society/Politics,1595,0.008069248826291
+Fashion/Beauty + Hobby/General interests + Lifestyle/General,1557,0.0078770033997085
+Entertainment/General + Lifestyle/General + Music,1526,0.0077201716043386
+Fashion/Beauty + Lifestyle/General,1417,0.0071687307754573
+Lifestyle/General + Pets/Animals,1396,0.0070624898818196
+Entertainment/General + Film/TV/Humor + News/Society/Politics,1367,0.0069157762667961
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music,1347,0.0068145944633317
+Music + News/Society/Politics + Religion,1270,0.0064250445199935
+Lifestyle/General + Travel,1109,0.0056105310021045
+Education/Explainers + Health/Fitness + Lifestyle/General,1073,0.0054284037558685
+Entertainment/General + Lifestyle/General + Pets/Animals,1059,0.0053575764934434
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General,987,0.0049933220009713
+Music + Religion,897,0.0045380038853812
+Education/Explainers + Lifestyle/General + Technology,829,0.004193985753602
+Entertainment/General + News/Society/Politics,813,0.0041130403108305
+Lifestyle/General + News/Society/Politics + Religion,766,0.003875263072689
+Entertainment/General + Food + Lifestyle/General,738,0.0037336085478387
+Food + Hobby/General interests + Lifestyle/General,725,0.0036678403755868
+Entertainment/General + Video games,714,0.0036121903836813
+Hobby/General interests + Lifestyle/General + Technology,689,0.0034857131293508
+Lifestyle/General + News/Society/Politics,688,0.0034806540391775
+Hobby/General interests + Lifestyle/General + Pets/Animals,685,0.0034654767686579
+Lifestyle/General + Video games,673,0.0034047676865792
+Film/TV/Humor + Music,493,0.002494131455399
+Lifestyle/General + Sports + Vehicles/Motorsport,487,0.0024637769143597
+Lifestyle/General + Technology + Video games,479,0.0024233041929739
+Hobby/General interests + Lifestyle/General + Music,465,0.0023524769305488
+Hobby/General interests + Lifestyle/General + Video games,427,0.0021602315039663
+Food + Health/Fitness + Lifestyle/General,424,0.0021450542334466
+Entertainment/General + Film/TV/Humor + Food + Lifestyle/General,399,0.002018576979116
+Hobby/General interests + Lifestyle/General + Vehicles/Motorsport,392,0.0019831633479035
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Pets/Animals,380,0.0019224542658248
+Hobby/General interests + Lifestyle/General + Travel,351,0.0017757406508013
+Music + Video games,350,0.0017706815606281
+Entertainment/General + Lifestyle/General + Sports,306,0.0015480815930063
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music,303,0.0015329043224866
+Education/Explainers + Lifestyle/General + News/Society/Politics,302,0.0015278452323134
+Entertainment/General + News/Society/Politics + Religion,280,0.0014165452485025
+Entertainment/General + Health/Fitness + Lifestyle/General,277,0.0014013679779828
+Food + Lifestyle/General + Travel,256,0.0012951270843451
+Health/Fitness + Lifestyle/General + Sports,253,0.0012799498138254
+Entertainment/General + Lifestyle/General + Vehicles/Motorsport,251,0.001269831633479
+Entertainment/General + Film/TV/Humor + Sports,235,0.0011888861907074
+Entertainment/General + Sports,231,0.0011686498300145
+Lifestyle/General + Music + News/Society/Politics + Religion,231,0.0011686498300145
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Sports,228,0.0011534725594949
+Film/TV/Humor + Lifestyle/General + Music,225,0.0011382952889752
+Entertainment/General + Lifestyle/General + News/Society/Politics,220,0.0011129998381091
+Education/Explainers + News/Society/Politics + Religion,218,0.0011028816577626
+Lifestyle/General + Music + Technology,208,0.0010522907560304
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Video games,204,0.0010320543953375
+Film/TV/Humor + News/Society/Politics,199,0.0010067589444714
+Education/Explainers + Entertainment/General,193,0.0009764044034320868
+Entertainment/General + Lifestyle/General + Technology,190,0.000961227132912417
+Entertainment/General + Lifestyle/General + Video games,189,0.0009561680427391938
+Health/Fitness + Lifestyle/General + News/Society/Politics,185,0.0009359316820463008
+Sports + Video games,178,0.000900518050833738
+Education/Explainers + Entertainment/General + Film/TV/Humor,177,0.0008954589606605148
+Hobby/General interests + Lifestyle/General + Sports,176,0.0008903998704872916
+Education/Explainers + Hobby/General interests + Lifestyle/General,170,0.000860045329447952
+Lifestyle/General + Technology + Vehicles/Motorsport,164,0.0008296907884086126
+Lifestyle/General + News/Society/Politics + Vehicles/Motorsport,161,0.0008145135178889429
+Education/Explainers + Health/Fitness + Lifestyle/General + News/Society/Politics,157,0.0007942771571960498
+Entertainment/General + Film/TV/Humor + News/Society/Politics + Religion,155,0.0007841589768496033
+Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics,153,0.0007740407965031569
+Education/Explainers + Lifestyle/General + Vehicles/Motorsport,151,0.0007639226161567104
+News/Society/Politics + Sports,151,0.0007639226161567104
+Entertainment/General + Fashion/Beauty + Lifestyle/General,149,0.0007538044358102639
+Music + News/Society/Politics,149,0.0007538044358102639
+Education/Explainers + Entertainment/General + Lifestyle/General,148,0.0007487453456370407
+Education/Explainers + Entertainment/General + News/Society/Politics,132,0.0006677999028654686
+Education/Explainers + Entertainment/General + Film/TV/Humor + News/Society/Politics,131,0.0006627408126922454
+Food + Lifestyle/General + Pets/Animals,131,0.0006627408126922454
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Technology,124,0.0006273271814796827
+Lifestyle/General + Music + Religion,124,0.0006273271814796827
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music,114,0.0005767362797474503
+Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General,113,0.000571677189574227
+Education/Explainers + Lifestyle/General + News/Society/Politics + Technology,110,0.0005564999190545572
+Entertainment/General + Hobby/General interests + Lifestyle/General + Video games,109,0.000551440828881334
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General,103,0.0005210862878419945
+Entertainment/General + Lifestyle/General + News/Society/Politics + Religion,99,0.0005008499271491015
+Hobby/General interests + Lifestyle/General + Sports + Vehicles/Motorsport,98,0.0004957908369758782
+Entertainment/General + Hobby/General interests + Lifestyle/General + Music,96,0.00048567265662943174
+Health/Fitness + Hobby/General interests + Lifestyle/General,96,0.00048567265662943174
+Entertainment/General + Film/TV/Humor + Music + Video games,91,0.0004603772057633155
+Entertainment/General + Lifestyle/General + Travel,91,0.0004603772057633155
+Lifestyle/General + Vehicles/Motorsport + Video games,90,0.00045531811559009226
+Health/Fitness + Lifestyle/General + Music,89,0.000450259025416869
+Health/Fitness + Lifestyle/General + News/Society/Politics + Religion,88,0.0004451999352436458
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Vehicles/Motorsport,87,0.00044014084507042255
+News/Society/Politics + Video games,86,0.0004350817548971993
+Lifestyle/General + Travel + Vehicles/Motorsport,84,0.0004249635745507528
+Education/Explainers + Food + Lifestyle/General,79,0.0003996681236846366
+Music + Sports,79,0.0003996681236846366
+Education/Explainers + Music,77,0.00038954994333819005
+Food + Lifestyle/General + Video games,77,0.00038954994333819005
+Entertainment/General + Music + News/Society/Politics + Religion,76,0.0003844908531649668
+Food + Hobby/General interests + Lifestyle/General + Pets/Animals,68,0.00034401813177918085
+Lifestyle/General + Music + Travel,67,0.00033895904160595756
+Vehicles/Motorsport + Video games,67,0.00033895904160595756
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Travel,66,0.0003338999514327343
+Entertainment/General + Music + News/Society/Politics,64,0.00032378177108628785
+Film/TV/Humor + Hobby/General interests + Lifestyle/General,62,0.00031366359073984137
+Food + Lifestyle/General + Music,60,0.00030354541039339484
+Hobby/General interests + Lifestyle/General + News/Society/Politics,59,0.0002984863202201716
+Lifestyle/General + Music + Vehicles/Motorsport,57,0.0002883681398737251
+Education/Explainers + Hobby/General interests + Lifestyle/General + Technology,56,0.0002833090497005019
+Entertainment/General + Film/TV/Humor + Religion,56,0.0002833090497005019
+Entertainment/General + Music + Video games,55,0.0002782499595272786
+Film/TV/Humor + Lifestyle/General,53,0.0002681317791808321
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Video games,52,0.0002630726890076089
+Lifestyle/General + News/Society/Politics + Travel,50,0.0002529545086611624
+Lifestyle/General + Music + News/Society/Politics,49,0.0002478954184879391
+Education/Explainers + Entertainment/General + Film/TV/Humor + Music,48,0.00024283632831471587
+Lifestyle/General + News/Society/Politics + Technology,48,0.00024283632831471587
+Fashion/Beauty + Food + Lifestyle/General,46,0.0002327181479682694
+Film/TV/Humor + Sports,46,0.0002327181479682694
+Fashion/Beauty + Health/Fitness + Lifestyle/General,44,0.0002225999676218229
+Food + Lifestyle/General + Technology,44,0.0002225999676218229
+Education/Explainers + Lifestyle/General + News/Society/Politics + Religion,43,0.00021754087744859965
+Fashion/Beauty + Lifestyle/General + Music,43,0.00021754087744859965
+Education/Explainers + Lifestyle/General + Music,42,0.0002124817872753764
+Education/Explainers + Health/Fitness,41,0.00020742269710215315
+Entertainment/General + Music + Religion,40,0.0002023636069289299
+Lifestyle/General + Music + Pets/Animals,40,0.0002023636069289299
+Entertainment/General + Food + Hobby/General interests + Lifestyle/General,39,0.00019730451675570665
+Health/Fitness + Hobby/General interests + Lifestyle/General + Music,39,0.00019730451675570665
+Technology + Video games,38,0.0001922454265824834
+Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Religion,37,0.00018718633640926017
+Lifestyle/General + Pets/Animals + Sports,37,0.00018718633640926017
+Entertainment/General + Film/TV/Humor + Music + News/Society/Politics,36,0.0001821272462360369
+Entertainment/General + Film/TV/Humor + Music + Religion,35,0.0001770681560628137
+Entertainment/General + Lifestyle/General + Music + News/Society/Politics + Religion,35,0.0001770681560628137
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + Music,35,0.0001770681560628137
+Education/Explainers + Video games,34,0.00017200906588959043
+Education/Explainers + Entertainment/General + News/Society/Politics + Religion,33,0.00016694997571636716
+Entertainment/General + Film/TV/Humor + Food,33,0.00016694997571636716
+Health/Fitness + Music,33,0.00016694997571636716
+Education/Explainers + Entertainment/General + Health/Fitness + Lifestyle/General,32,0.00016189088554314392
+Fashion/Beauty + Lifestyle/General + Travel,32,0.00016189088554314392
+Film/TV/Humor + Lifestyle/General + Pets/Animals,32,0.00016189088554314392
+Hobby/General interests + Lifestyle/General + Technology + Vehicles/Motorsport,32,0.00016189088554314392
+Education/Explainers + Religion,30,0.00015177270519669742
+Entertainment/General + Film/TV/Humor + Music + News/Society/Politics + Religion,30,0.00015177270519669742
+Entertainment/General + Health/Fitness + Lifestyle/General + Sports,30,0.00015177270519669742
+Health/Fitness + Hobby/General interests + Lifestyle/General + Sports,30,0.00015177270519669742
+Food + Lifestyle/General + News/Society/Politics,29,0.00014671361502347418
+Entertainment/General + Fashion/Beauty + Film/TV/Humor + Lifestyle/General,28,0.00014165452485025094
+Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General + News/Society/Politics,28,0.00014165452485025094
+Entertainment/General + Hobby/General interests + Lifestyle/General + Pets/Animals,28,0.00014165452485025094
+Film/TV/Humor + Food + Lifestyle/General,28,0.00014165452485025094
+Lifestyle/General + News/Society/Politics + Sports,28,0.00014165452485025094
+Lifestyle/General + Music + Sports,26,0.00013153634450380444
+Education/Explainers + Health/Fitness + News/Society/Politics,25,0.0001264772543305812
+Entertainment/General + Film/TV/Humor + News/Society/Politics + Sports,25,0.0001264772543305812
+Film/TV/Humor + News/Society/Politics + Religion,25,0.0001264772543305812
+Hobby/General interests + Lifestyle/General + Pets/Animals + Travel,25,0.0001264772543305812
+Health/Fitness + Lifestyle/General + Pets/Animals,24,0.00012141816415735794
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + Music,23,0.0001163590739841347
+Lifestyle/General + Sports + Video games,23,0.0001163590739841347
+Entertainment/General + Fashion/Beauty + Hobby/General interests + Lifestyle/General,22,0.00011129998381091145
+Entertainment/General + Film/TV/Humor + Health/Fitness,22,0.00011129998381091145
+Film/TV/Humor + Lifestyle/General + Vehicles/Motorsport,22,0.00011129998381091145
+Hobby/General interests + Lifestyle/General + Pets/Animals + Sports,22,0.00011129998381091145
+Education/Explainers + Entertainment/General + Lifestyle/General + Technology,21,0.0001062408936376882
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Religion,21,0.0001062408936376882
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Religion,21,0.0001062408936376882
+Hobby/General interests + Lifestyle/General + Sports + Travel,21,0.0001062408936376882
+Education/Explainers + Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General,20,0.00010118180346446496
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + Technology,20,0.00010118180346446496
+Entertainment/General + Health/Fitness + Lifestyle/General + Music,20,0.00010118180346446496
+Lifestyle/General + News/Society/Politics + Religion + Travel,20,0.00010118180346446496
+Lifestyle/General + News/Society/Politics + Video games,20,0.00010118180346446496
+Education/Explainers + Entertainment/General + Lifestyle/General + News/Society/Politics,19,9.61227132912417e-05
+Education/Explainers + Film/TV/Humor + News/Society/Politics,19,9.61227132912417e-05
+Education/Explainers + Lifestyle/General + News/Society/Politics + Vehicles/Motorsport,19,9.61227132912417e-05
+Education/Explainers + Lifestyle/General + Pets/Animals,19,9.61227132912417e-05
+Education/Explainers + Lifestyle/General + Travel,19,9.61227132912417e-05
+Film/TV/Humor + Health/Fitness + Lifestyle/General,19,9.61227132912417e-05
+Film/TV/Humor + Lifestyle/General + Sports,19,9.61227132912417e-05
+Food + Hobby/General interests + Lifestyle/General + Travel,19,9.61227132912417e-05
+Entertainment/General + Film/TV/Humor + Health/Fitness + News/Society/Politics,18,9.106362311801844e-05
+Entertainment/General + Fashion/Beauty + Lifestyle/General + Music,17,8.600453294479521e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Pets/Animals,17,8.600453294479521e-05
+Entertainment/General + Film/TV/Humor + News/Society/Politics + Video games,17,8.600453294479521e-05
+Film/TV/Humor + News/Society/Politics + Sports,17,8.600453294479521e-05
+Lifestyle/General + Music + Video games,17,8.600453294479521e-05
+Lifestyle/General + Sports + Travel,17,8.600453294479521e-05
+Education/Explainers + Lifestyle/General + Technology + Video games,16,8.094544277157196e-05
+Entertainment/General + Food + Lifestyle/General + Music,16,8.094544277157196e-05
+Entertainment/General + Health/Fitness + Lifestyle/General + News/Society/Politics,16,8.094544277157196e-05
+Health/Fitness + Lifestyle/General + Video games,16,8.094544277157196e-05
+Hobby/General interests + Lifestyle/General + Travel + Vehicles/Motorsport,16,8.094544277157196e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + News/Society/Politics + Religion,15,7.588635259834871e-05
+Education/Explainers + Food + Health/Fitness + Lifestyle/General,15,7.588635259834871e-05
+Education/Explainers + Health/Fitness + Lifestyle/General + News/Society/Politics + Religion,15,7.588635259834871e-05
+Entertainment/General + Film/TV/Humor + Music + Sports,15,7.588635259834871e-05
+Entertainment/General + Food + Lifestyle/General + Pets/Animals,15,7.588635259834871e-05
+Entertainment/General + Music + Sports,15,7.588635259834871e-05
+Fashion/Beauty + Food + Hobby/General interests + Lifestyle/General,15,7.588635259834871e-05
+Entertainment/General + Film/TV/Humor + Food + Hobby/General interests + Lifestyle/General,14,7.082726242512547e-05
+Entertainment/General + Lifestyle/General + Sports + Vehicles/Motorsport,14,7.082726242512547e-05
+Food + Lifestyle/General + News/Society/Politics + Religion,14,7.082726242512547e-05
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Sports + Vehicles/Motorsport,14,7.082726242512547e-05
+Lifestyle/General + Pets/Animals + Travel,14,7.082726242512547e-05
+Lifestyle/General + Religion,14,7.082726242512547e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Sports,13,6.576817225190222e-05
+Entertainment/General + Hobby/General interests + Lifestyle/General + Technology,13,6.576817225190222e-05
+Entertainment/General + Hobby/General interests + Lifestyle/General + Vehicles/Motorsport,13,6.576817225190222e-05
+Entertainment/General + Lifestyle/General + Music + Pets/Animals,13,6.576817225190222e-05
+Entertainment/General + News/Society/Politics + Video games,13,6.576817225190222e-05
+Health/Fitness + Lifestyle/General + Vehicles/Motorsport,13,6.576817225190222e-05
+Health/Fitness + News/Society/Politics,13,6.576817225190222e-05
+Hobby/General interests + Lifestyle/General + Technology + Video games,13,6.576817225190222e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Technology,12,6.070908207867897e-05
+Film/TV/Humor + Health/Fitness + Hobby/General interests + Lifestyle/General + Music,12,6.070908207867897e-05
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Technology,12,6.070908207867897e-05
+Lifestyle/General + Pets/Animals + Video games,12,6.070908207867897e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics,11,5.564999190545572e-05
+Education/Explainers + Hobby/General interests + Lifestyle/General + News/Society/Politics,11,5.564999190545572e-05
+Entertainment/General + Film/TV/Humor + Food + Health/Fitness + Lifestyle/General,11,5.564999190545572e-05
+Entertainment/General + Film/TV/Humor + Pets/Animals,11,5.564999190545572e-05
+Entertainment/General + Film/TV/Humor + Sports + Video games,11,5.564999190545572e-05
+Entertainment/General + Lifestyle/General + Music + Religion,11,5.564999190545572e-05
+Hobby/General interests + Lifestyle/General + Music + Travel,11,5.564999190545572e-05
+Lifestyle/General + News/Society/Politics + Technology + Vehicles/Motorsport,11,5.564999190545572e-05
+News/Society/Politics + Religion + Video games,11,5.564999190545572e-05
+Education/Explainers + Food + Lifestyle/General + News/Society/Politics,10,5.059090173223248e-05
+Education/Explainers + Lifestyle/General + Religion,10,5.059090173223248e-05
+Entertainment/General + Hobby/General interests + Lifestyle/General + Sports,10,5.059090173223248e-05
+Film/TV/Humor + Music + Religion,10,5.059090173223248e-05
+Food + Lifestyle/General + Vehicles/Motorsport,10,5.059090173223248e-05
+Health/Fitness + Lifestyle/General + Religion,10,5.059090173223248e-05
+Hobby/General interests + Lifestyle/General + Music + Religion,10,5.059090173223248e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General,9,4.5531811559009226e-05
+Entertainment/General + Film/TV/Humor + Health/Fitness + Hobby/General interests + Lifestyle/General,9,4.5531811559009226e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + Religion,9,4.5531811559009226e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Technology + Video games,9,4.5531811559009226e-05
+Entertainment/General + Lifestyle/General + Music + News/Society/Politics,9,4.5531811559009226e-05
+Entertainment/General + Lifestyle/General + Music + Vehicles/Motorsport,9,4.5531811559009226e-05
+Entertainment/General + Lifestyle/General + News/Society/Politics + Vehicles/Motorsport,9,4.5531811559009226e-05
+Entertainment/General + Lifestyle/General + Pets/Animals + Video games,9,4.5531811559009226e-05
+Entertainment/General + Sports + Video games,9,4.5531811559009226e-05
+Fashion/Beauty + Lifestyle/General + Technology,9,4.5531811559009226e-05
+Fashion/Beauty + Lifestyle/General + Video games,9,4.5531811559009226e-05
+Film/TV/Humor + Lifestyle/General + Travel,9,4.5531811559009226e-05
+Health/Fitness + Lifestyle/General + Sports + Vehicles/Motorsport,9,4.5531811559009226e-05
+Education/Explainers + Entertainment/General + Lifestyle/General + Vehicles/Motorsport,8,4.047272138578598e-05
+Education/Explainers + Fashion/Beauty + Lifestyle/General,8,4.047272138578598e-05
+Education/Explainers + Film/TV/Humor + Lifestyle/General,8,4.047272138578598e-05
+Education/Explainers + News/Society/Politics + Video games,8,4.047272138578598e-05
+Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General + Music,8,4.047272138578598e-05
+Entertainment/General + Food + Lifestyle/General + Video games,8,4.047272138578598e-05
+Food + Lifestyle/General + News/Society/Politics + Video games,8,4.047272138578598e-05
+Food + Lifestyle/General + Sports,8,4.047272138578598e-05
+Health/Fitness + Lifestyle/General + Technology,8,4.047272138578598e-05
+Health/Fitness + Lifestyle/General + Travel,8,4.047272138578598e-05
+Hobby/General interests + Lifestyle/General + Music + News/Society/Politics + Religion,8,4.047272138578598e-05
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Vehicles/Motorsport,8,4.047272138578598e-05
+Hobby/General interests + Lifestyle/General + Religion,8,4.047272138578598e-05
+Lifestyle/General + News/Society/Politics + Religion + Technology,8,4.047272138578598e-05
+Lifestyle/General + News/Society/Politics + Vehicles/Motorsport + Video games,8,4.047272138578598e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + Travel,7,3.5413631212562736e-05
+Education/Explainers + Entertainment/General + Hobby/General interests + Lifestyle/General,7,3.5413631212562736e-05
+Education/Explainers + Health/Fitness + Lifestyle/General + Technology,7,3.5413631212562736e-05
+Education/Explainers + Music + News/Society/Politics + Religion,7,3.5413631212562736e-05
+Entertainment/General + Fashion/Beauty + Film/TV/Humor + Lifestyle/General + Music,7,3.5413631212562736e-05
+Entertainment/General + Film/TV/Humor + Food + Lifestyle/General + Music,7,3.5413631212562736e-05
+Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General + Sports,7,3.5413631212562736e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + News/Society/Politics,7,3.5413631212562736e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + Sports,7,3.5413631212562736e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Vehicles/Motorsport,7,3.5413631212562736e-05
+Entertainment/General + Food + Health/Fitness + Lifestyle/General,7,3.5413631212562736e-05
+Entertainment/General + News/Society/Politics + Sports,7,3.5413631212562736e-05
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + Sports,7,3.5413631212562736e-05
+Fashion/Beauty + Lifestyle/General + Sports,7,3.5413631212562736e-05
+Film/TV/Humor + Health/Fitness + Hobby/General interests + Lifestyle/General,7,3.5413631212562736e-05
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Pets/Animals,7,3.5413631212562736e-05
+Film/TV/Humor + Lifestyle/General + News/Society/Politics,7,3.5413631212562736e-05
+Film/TV/Humor + Music + News/Society/Politics + Religion,7,3.5413631212562736e-05
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Video games,7,3.5413631212562736e-05
+Hobby/General interests + Lifestyle/General + Technology + Travel,7,3.5413631212562736e-05
+Lifestyle/General + News/Society/Politics + Pets/Animals,7,3.5413631212562736e-05
+Lifestyle/General + News/Society/Politics + Technology + Video games,7,3.5413631212562736e-05
+Lifestyle/General + Sports + Technology,7,3.5413631212562736e-05
+Lifestyle/General + Travel + Video games,7,3.5413631212562736e-05
+Music + Vehicles/Motorsport,7,3.5413631212562736e-05
+Education/Explainers + Entertainment/General + Health/Fitness + Lifestyle/General + News/Society/Politics,6,3.0354541039339484e-05
+Education/Explainers + Film/TV/Humor + Health/Fitness + Lifestyle/General,6,3.0354541039339484e-05
+Education/Explainers + Lifestyle/General + Video games,6,3.0354541039339484e-05
+Education/Explainers + Music + News/Society/Politics,6,3.0354541039339484e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + Travel,6,3.0354541039339484e-05
+Entertainment/General + Hobby/General interests + Lifestyle/General + Travel,6,3.0354541039339484e-05
+Entertainment/General + Lifestyle/General + Music + Sports,6,3.0354541039339484e-05
+Entertainment/General + Lifestyle/General + Music + Travel,6,3.0354541039339484e-05
+Film/TV/Humor + Health/Fitness + Lifestyle/General + News/Society/Politics,6,3.0354541039339484e-05
+Film/TV/Humor + Lifestyle/General + Video games,6,3.0354541039339484e-05
+Health/Fitness + News/Society/Politics + Religion,6,3.0354541039339484e-05
+Lifestyle/General + Sports + Vehicles/Motorsport + Video games,6,3.0354541039339484e-05
+Education/Explainers + Entertainment/General + Lifestyle/General + Music,5,2.529545086611624e-05
+Education/Explainers + Entertainment/General + Lifestyle/General + News/Society/Politics + Religion,5,2.529545086611624e-05
+Education/Explainers + Entertainment/General + Music,5,2.529545086611624e-05
+Education/Explainers + Fashion/Beauty + Hobby/General interests + Lifestyle/General,5,2.529545086611624e-05
+Education/Explainers + Food + Hobby/General interests + Lifestyle/General,5,2.529545086611624e-05
+Education/Explainers + Health/Fitness + Lifestyle/General + Religion,5,2.529545086611624e-05
+Education/Explainers + Lifestyle/General + Music + Technology,5,2.529545086611624e-05
+Education/Explainers + Lifestyle/General + News/Society/Politics + Technology + Vehicles/Motorsport,5,2.529545086611624e-05
+Education/Explainers + Lifestyle/General + News/Society/Politics + Travel,5,2.529545086611624e-05
+Education/Explainers + Lifestyle/General + Technology + Vehicles/Motorsport,5,2.529545086611624e-05
+Education/Explainers + Sports,5,2.529545086611624e-05
+Entertainment/General + Fashion/Beauty + Film/TV/Humor + Hobby/General interests + Lifestyle/General,5,2.529545086611624e-05
+Entertainment/General + Film/TV/Humor + Health/Fitness + Hobby/General interests + Lifestyle/General + Music,5,2.529545086611624e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Sports + Video games,5,2.529545086611624e-05
+Entertainment/General + Film/TV/Humor + Vehicles/Motorsport,5,2.529545086611624e-05
+Entertainment/General + Food + Lifestyle/General + Travel,5,2.529545086611624e-05
+Entertainment/General + Lifestyle/General + Music + Video games,5,2.529545086611624e-05
+Entertainment/General + Lifestyle/General + Pets/Animals + Religion,5,2.529545086611624e-05
+Entertainment/General + Lifestyle/General + Religion,5,2.529545086611624e-05
+Entertainment/General + Lifestyle/General + Technology + Vehicles/Motorsport,5,2.529545086611624e-05
+Entertainment/General + Lifestyle/General + Technology + Video games,5,2.529545086611624e-05
+Entertainment/General + Lifestyle/General + Vehicles/Motorsport + Video games,5,2.529545086611624e-05
+Fashion/Beauty + Film/TV/Humor + Hobby/General interests + Lifestyle/General,5,2.529545086611624e-05
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + Technology,5,2.529545086611624e-05
+Fashion/Beauty + Lifestyle/General + News/Society/Politics + Religion,5,2.529545086611624e-05
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Travel,5,2.529545086611624e-05
+Film/TV/Humor + Lifestyle/General + News/Society/Politics + Religion,5,2.529545086611624e-05
+Film/TV/Humor + Video games,5,2.529545086611624e-05
+Food + Hobby/General interests + Lifestyle/General + Pets/Animals + Travel,5,2.529545086611624e-05
+Food + Lifestyle/General + Religion,5,2.529545086611624e-05
+Hobby/General interests + Lifestyle/General + Pets/Animals + Vehicles/Motorsport,5,2.529545086611624e-05
+Lifestyle/General + Music + News/Society/Politics + Religion + Travel,5,2.529545086611624e-05
+Lifestyle/General + Music + Technology + Video games,5,2.529545086611624e-05
+Lifestyle/General + Sports + Travel + Vehicles/Motorsport,5,2.529545086611624e-05
+Lifestyle/General + Technology + Travel,5,2.529545086611624e-05
+Education/Explainers + Entertainment/General + Health/Fitness,4,2.023636069289299e-05
+Education/Explainers + Health/Fitness + Lifestyle/General + Pets/Animals,4,2.023636069289299e-05
+Education/Explainers + Hobby/General interests + Lifestyle/General + Music,4,2.023636069289299e-05
+Education/Explainers + Hobby/General interests + Lifestyle/General + Travel,4,2.023636069289299e-05
+Education/Explainers + Lifestyle/General + Music + News/Society/Politics,4,2.023636069289299e-05
+Education/Explainers + Lifestyle/General + Music + Religion,4,2.023636069289299e-05
+Education/Explainers + Music + Religion,4,2.023636069289299e-05
+Education/Explainers + News/Society/Politics + Sports,4,2.023636069289299e-05
+Entertainment/General + Fashion/Beauty + Film/TV/Humor,4,2.023636069289299e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Travel,4,2.023636069289299e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + News/Society/Politics,4,2.023636069289299e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + Pets/Animals,4,2.023636069289299e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + Video games,4,2.023636069289299e-05
+Entertainment/General + Health/Fitness + Hobby/General interests + Lifestyle/General,4,2.023636069289299e-05
+Entertainment/General + Health/Fitness + Lifestyle/General + News/Society/Politics + Religion,4,2.023636069289299e-05
+Entertainment/General + Health/Fitness + Lifestyle/General + Pets/Animals,4,2.023636069289299e-05
+Entertainment/General + Lifestyle/General + Music + Technology,4,2.023636069289299e-05
+Entertainment/General + Lifestyle/General + Pets/Animals + Sports,4,2.023636069289299e-05
+Fashion/Beauty + Food + Lifestyle/General + Travel,4,2.023636069289299e-05
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + Video games,4,2.023636069289299e-05
+Film/TV/Humor + Health/Fitness + Lifestyle/General + Music,4,2.023636069289299e-05
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music + Religion,4,2.023636069289299e-05
+Film/TV/Humor + Lifestyle/General + Music + Religion,4,2.023636069289299e-05
+Film/TV/Humor + Lifestyle/General + Technology,4,2.023636069289299e-05
+Food + Hobby/General interests + Lifestyle/General + Technology,4,2.023636069289299e-05
+Health/Fitness + Lifestyle/General + News/Society/Politics + Video games,4,2.023636069289299e-05
+Hobby/General interests + Lifestyle/General + Sports + Video games,4,2.023636069289299e-05
+Lifestyle/General + News/Society/Politics + Pets/Animals + Religion,4,2.023636069289299e-05
+Lifestyle/General + News/Society/Politics + Religion + Vehicles/Motorsport,4,2.023636069289299e-05
+Lifestyle/General + Pets/Animals + Religion,4,2.023636069289299e-05
+Lifestyle/General + Pets/Animals + Vehicles/Motorsport,4,2.023636069289299e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Health/Fitness,3,1.5177270519669742e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Video games,3,1.5177270519669742e-05
+Education/Explainers + Film/TV/Humor + Lifestyle/General + News/Society/Politics,3,1.5177270519669742e-05
+Education/Explainers + Film/TV/Humor + News/Society/Politics + Religion,3,1.5177270519669742e-05
+Education/Explainers + Lifestyle/General + Sports,3,1.5177270519669742e-05
+Entertainment/General + Fashion/Beauty + Lifestyle/General + News/Society/Politics,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + Food + Lifestyle/General + Pets/Animals,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + Food + Lifestyle/General + Travel,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + Health/Fitness + Music,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + News/Society/Politics + Religion,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + Vehicles/Motorsport,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Travel,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Video games,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Pets/Animals + Video games,3,1.5177270519669742e-05
+Entertainment/General + Film/TV/Humor + News/Society/Politics + Religion + Video games,3,1.5177270519669742e-05
+Entertainment/General + Food,3,1.5177270519669742e-05
+Entertainment/General + Food + Lifestyle/General + Technology,3,1.5177270519669742e-05
+Entertainment/General + Hobby/General interests + Lifestyle/General + Religion,3,1.5177270519669742e-05
+Entertainment/General + Lifestyle/General + News/Society/Politics + Religion + Technology,3,1.5177270519669742e-05
+Entertainment/General + Lifestyle/General + News/Society/Politics + Video games,3,1.5177270519669742e-05
+Entertainment/General + Religion,3,1.5177270519669742e-05
+Fashion/Beauty + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music,3,1.5177270519669742e-05
+Fashion/Beauty + Health/Fitness + Hobby/General interests + Lifestyle/General,3,1.5177270519669742e-05
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + News/Society/Politics,3,1.5177270519669742e-05
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + Pets/Animals,3,1.5177270519669742e-05
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + Travel,3,1.5177270519669742e-05
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + Vehicles/Motorsport,3,1.5177270519669742e-05
+Fashion/Beauty + Lifestyle/General + Vehicles/Motorsport,3,1.5177270519669742e-05
+Film/TV/Humor + Food + Hobby/General interests + Lifestyle/General,3,1.5177270519669742e-05
+Film/TV/Humor + Health/Fitness + Hobby/General interests + Lifestyle/General + Sports,3,1.5177270519669742e-05
+Film/TV/Humor + Lifestyle/General + Music + News/Society/Politics,3,1.5177270519669742e-05
+Film/TV/Humor + Lifestyle/General + News/Society/Politics + Travel,3,1.5177270519669742e-05
+Film/TV/Humor + Lifestyle/General + News/Society/Politics + Vehicles/Motorsport,3,1.5177270519669742e-05
+Food + Hobby/General interests + Lifestyle/General + Music,3,1.5177270519669742e-05
+Food + Hobby/General interests + Lifestyle/General + News/Society/Politics,3,1.5177270519669742e-05
+Food + Hobby/General interests + Lifestyle/General + Video games,3,1.5177270519669742e-05
+Food + Lifestyle/General + Music + Travel,3,1.5177270519669742e-05
+Health/Fitness + Hobby/General interests + Lifestyle/General + Travel,3,1.5177270519669742e-05
+Hobby/General interests + Lifestyle/General + Music + Pets/Animals,3,1.5177270519669742e-05
+Hobby/General interests + Lifestyle/General + Music + Video games,3,1.5177270519669742e-05
+Hobby/General interests + Lifestyle/General + Sports + Travel + Vehicles/Motorsport,3,1.5177270519669742e-05
+Hobby/General interests + Lifestyle/General + Vehicles/Motorsport + Video games,3,1.5177270519669742e-05
+Lifestyle/General + Music + News/Society/Politics + Pets/Animals + Religion,3,1.5177270519669742e-05
+Lifestyle/General + Music + News/Society/Politics + Travel,3,1.5177270519669742e-05
+Lifestyle/General + Music + Travel + Vehicles/Motorsport,3,1.5177270519669742e-05
+Lifestyle/General + Religion + Travel,3,1.5177270519669742e-05
+Music + News/Society/Politics + Video games,3,1.5177270519669742e-05
+News/Society/Politics + Religion + Sports,3,1.5177270519669742e-05
+Sports + Vehicles/Motorsport,3,1.5177270519669742e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General + Vehicles/Motorsport,2,1.0118180346446495e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Religion + Travel,2,1.0118180346446495e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Music + News/Society/Politics,2,1.0118180346446495e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Religion,2,1.0118180346446495e-05
+Education/Explainers + Entertainment/General + Lifestyle/General + Religion,2,1.0118180346446495e-05
+Education/Explainers + Entertainment/General + Religion,2,1.0118180346446495e-05
+Education/Explainers + Entertainment/General + Video games,2,1.0118180346446495e-05
+Education/Explainers + Fashion/Beauty + Lifestyle/General + News/Society/Politics,2,1.0118180346446495e-05
+Education/Explainers + Film/TV/Humor,2,1.0118180346446495e-05
+Education/Explainers + Film/TV/Humor + Health/Fitness + Lifestyle/General + News/Society/Politics,2,1.0118180346446495e-05
+Education/Explainers + Film/TV/Humor + Hobby/General interests + Lifestyle/General,2,1.0118180346446495e-05
+Education/Explainers + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Travel,2,1.0118180346446495e-05
+Education/Explainers + Food + Lifestyle/General + Technology,2,1.0118180346446495e-05
+Education/Explainers + Health/Fitness + Lifestyle/General + Music,2,1.0118180346446495e-05
+Education/Explainers + Hobby/General interests + Lifestyle/General + Vehicles/Motorsport,2,1.0118180346446495e-05
+Education/Explainers + Lifestyle/General + Music + News/Society/Politics + Religion,2,1.0118180346446495e-05
+Education/Explainers + Lifestyle/General + News/Society/Politics + Religion + Travel,2,1.0118180346446495e-05
+Education/Explainers + Lifestyle/General + Religion + Travel,2,1.0118180346446495e-05
+Entertainment/General + Fashion/Beauty + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music,2,1.0118180346446495e-05
+Entertainment/General + Fashion/Beauty + Film/TV/Humor + Music,2,1.0118180346446495e-05
+Entertainment/General + Fashion/Beauty + Hobby/General interests + Lifestyle/General + Music,2,1.0118180346446495e-05
+Entertainment/General + Fashion/Beauty + Lifestyle/General + Pets/Animals,2,1.0118180346446495e-05
+Entertainment/General + Fashion/Beauty + Music,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General + News/Society/Politics + Religion,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music + Pets/Animals,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music + Video games,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Religion,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + Technology,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Sports,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Technology + Vehicles/Motorsport,2,1.0118180346446495e-05
+Entertainment/General + Film/TV/Humor + Religion + Video games,2,1.0118180346446495e-05
+Entertainment/General + Food + Hobby/General interests + Lifestyle/General + Pets/Animals,2,1.0118180346446495e-05
+Entertainment/General + Food + Lifestyle/General + News/Society/Politics + Religion,2,1.0118180346446495e-05
+Entertainment/General + Food + Lifestyle/General + Sports,2,1.0118180346446495e-05
+Entertainment/General + Hobby/General interests + Lifestyle/General + News/Society/Politics,2,1.0118180346446495e-05
+Entertainment/General + Lifestyle/General + News/Society/Politics + Pets/Animals,2,1.0118180346446495e-05
+Entertainment/General + Lifestyle/General + News/Society/Politics + Religion + Vehicles/Motorsport,2,1.0118180346446495e-05
+Entertainment/General + Lifestyle/General + News/Society/Politics + Sports,2,1.0118180346446495e-05
+Entertainment/General + Lifestyle/General + Pets/Animals + Technology,2,1.0118180346446495e-05
+Entertainment/General + Lifestyle/General + Religion + Vehicles/Motorsport,2,1.0118180346446495e-05
+Entertainment/General + Lifestyle/General + Sports + Video games,2,1.0118180346446495e-05
+Entertainment/General + News/Society/Politics + Religion + Sports,2,1.0118180346446495e-05
+Fashion/Beauty + Food + Health/Fitness + Lifestyle/General,2,1.0118180346446495e-05
+Fashion/Beauty + Lifestyle/General + Pets/Animals,2,1.0118180346446495e-05
+Film/TV/Humor + Food + Lifestyle/General + Travel,2,1.0118180346446495e-05
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music + Travel,2,1.0118180346446495e-05
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Sports,2,1.0118180346446495e-05
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Vehicles/Motorsport,2,1.0118180346446495e-05
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Video games,2,1.0118180346446495e-05
+Film/TV/Humor + Lifestyle/General + Music + News/Society/Politics + Religion,2,1.0118180346446495e-05
+Film/TV/Humor + Lifestyle/General + Music + Pets/Animals,2,1.0118180346446495e-05
+Film/TV/Humor + Lifestyle/General + Music + Travel,2,1.0118180346446495e-05
+Film/TV/Humor + Music + News/Society/Politics,2,1.0118180346446495e-05
+Food + Health/Fitness + Hobby/General interests + Lifestyle/General,2,1.0118180346446495e-05
+Food + Lifestyle/General + Music + News/Society/Politics + Religion,2,1.0118180346446495e-05
+Food + Lifestyle/General + Music + Religion,2,1.0118180346446495e-05
+Food + Lifestyle/General + Technology + Video games,2,1.0118180346446495e-05
+Food + Music,2,1.0118180346446495e-05
+Health/Fitness + Hobby/General interests + Lifestyle/General + Vehicles/Motorsport,2,1.0118180346446495e-05
+Health/Fitness + Lifestyle/General + Music + News/Society/Politics + Religion,2,1.0118180346446495e-05
+Health/Fitness + Lifestyle/General + Music + Religion,2,1.0118180346446495e-05
+Health/Fitness + Lifestyle/General + Music + Sports,2,1.0118180346446495e-05
+Health/Fitness + Music + Religion,2,1.0118180346446495e-05
+Hobby/General interests + Lifestyle/General + Music + Sports,2,1.0118180346446495e-05
+Hobby/General interests + Lifestyle/General + Music + Technology,2,1.0118180346446495e-05
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Religion + Travel,2,1.0118180346446495e-05
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Sports + Technology + Vehicles/Motorsport,2,1.0118180346446495e-05
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Technology,2,1.0118180346446495e-05
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Travel,2,1.0118180346446495e-05
+Hobby/General interests + Lifestyle/General + Religion + Travel,2,1.0118180346446495e-05
+Hobby/General interests + Music,2,1.0118180346446495e-05
+Lifestyle/General + Music + News/Society/Politics + Vehicles/Motorsport,2,1.0118180346446495e-05
+Lifestyle/General + Music + Pets/Animals + Religion,2,1.0118180346446495e-05
+Lifestyle/General + Music + Religion + Travel,2,1.0118180346446495e-05
+Lifestyle/General + News/Society/Politics + Sports + Vehicles/Motorsport,2,1.0118180346446495e-05
+Lifestyle/General + Pets/Animals + Technology,2,1.0118180346446495e-05
+Lifestyle/General + Technology + Vehicles/Motorsport + Video games,2,1.0118180346446495e-05
+Music + News/Society/Politics + Religion + Sports,2,1.0118180346446495e-05
+Music + Religion + Video games,2,1.0118180346446495e-05
+Music + Technology,2,1.0118180346446495e-05
+Music + Travel,2,1.0118180346446495e-05
+Education/Explainers + Entertainment/General + Film/TV/Humor + Food + Lifestyle/General,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Film/TV/Humor + Food + Lifestyle/General + Religion,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General + News/Society/Politics,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Film/TV/Humor + Health/Fitness + News/Society/Politics,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + Music + Religion,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Travel,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + Religion,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Film/TV/Humor + Lifestyle/General + Religion + Travel,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Film/TV/Humor + Music + Sports,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Health/Fitness + Lifestyle/General + Music,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Lifestyle/General + Music + News/Society/Politics + Religion,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Lifestyle/General + Music + Religion,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Lifestyle/General + Pets/Animals,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Lifestyle/General + Sports,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Lifestyle/General + Travel,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Lifestyle/General + Video games,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Music + News/Society/Politics,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Music + News/Society/Politics + Religion,1,5.059090173223248e-06
+Education/Explainers + Entertainment/General + Sports,1,5.059090173223248e-06
+Education/Explainers + Fashion/Beauty,1,5.059090173223248e-06
+Education/Explainers + Fashion/Beauty + Health/Fitness + Lifestyle/General,1,5.059090173223248e-06
+Education/Explainers + Film/TV/Humor + Health/Fitness + Lifestyle/General + Music,1,5.059090173223248e-06
+Education/Explainers + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Technology,1,5.059090173223248e-06
+Education/Explainers + Film/TV/Humor + Lifestyle/General + Technology,1,5.059090173223248e-06
+Education/Explainers + Food + Hobby/General interests + Lifestyle/General + Travel,1,5.059090173223248e-06
+Education/Explainers + Health/Fitness + Lifestyle/General + News/Society/Politics + Technology,1,5.059090173223248e-06
+Education/Explainers + Health/Fitness + Lifestyle/General + News/Society/Politics + Video games,1,5.059090173223248e-06
+Education/Explainers + Health/Fitness + Music,1,5.059090173223248e-06
+Education/Explainers + Health/Fitness + Religion,1,5.059090173223248e-06
+Education/Explainers + Hobby/General interests + Lifestyle/General + News/Society/Politics + Religion,1,5.059090173223248e-06
+Education/Explainers + Hobby/General interests + Lifestyle/General + Pets/Animals,1,5.059090173223248e-06
+Education/Explainers + Hobby/General interests + Lifestyle/General + Technology + Vehicles/Motorsport,1,5.059090173223248e-06
+Education/Explainers + Hobby/General interests + Lifestyle/General + Video games,1,5.059090173223248e-06
+Education/Explainers + Lifestyle/General + Music + Vehicles/Motorsport,1,5.059090173223248e-06
+Education/Explainers + Lifestyle/General + News/Society/Politics + Pets/Animals,1,5.059090173223248e-06
+Education/Explainers + Lifestyle/General + Sports + Technology,1,5.059090173223248e-06
+Education/Explainers + Lifestyle/General + Sports + Vehicles/Motorsport,1,5.059090173223248e-06
+Education/Explainers + Lifestyle/General + Vehicles/Motorsport + Video games,1,5.059090173223248e-06
+Education/Explainers + Music + News/Society/Politics + Video games,1,5.059090173223248e-06
+Education/Explainers + Music + Video games,1,5.059090173223248e-06
+Education/Explainers + News/Society/Politics + Religion + Video games,1,5.059090173223248e-06
+Education/Explainers + News/Society/Politics + Technology,1,5.059090173223248e-06
+Education/Explainers + News/Society/Politics + Travel,1,5.059090173223248e-06
+Education/Explainers + Technology,1,5.059090173223248e-06
+Education/Explainers + Vehicles/Motorsport + Video games,1,5.059090173223248e-06
+Entertainment/General + Fashion/Beauty + Film/TV/Humor + Lifestyle/General + News/Society/Politics + Religion,1,5.059090173223248e-06
+Entertainment/General + Fashion/Beauty + Health/Fitness + Lifestyle/General + Sports,1,5.059090173223248e-06
+Entertainment/General + Fashion/Beauty + Hobby/General interests + Lifestyle/General + Video games,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Food + Health/Fitness + Lifestyle/General + News/Society/Politics,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Food + Lifestyle/General + News/Society/Politics,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Food + Lifestyle/General + Religion,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Food + Lifestyle/General + Video games,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Food + News/Society/Politics,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Food + Video games,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Health/Fitness + Hobby/General interests + Lifestyle/General + Sports,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Health/Fitness + Lifestyle/General + Religion,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music + News/Society/Politics + Religion,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music + Sports,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Lifestyle/General + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Hobby/General interests + Music,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Pets/Animals + Religion,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Pets/Animals + Sports,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Pets/Animals + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Technology + Travel,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Lifestyle/General + Vehicles/Motorsport + Video games,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Music + News/Society/Politics + Religion + Video games,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Music + News/Society/Politics + Sports,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Music + News/Society/Politics + Video games,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Music + Religion + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + News/Society/Politics + Religion + Sports,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Pets/Animals + Video games,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Sports + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + Film/TV/Humor + Technology,1,5.059090173223248e-06
+Entertainment/General + Food + Hobby/General interests + Lifestyle/General + Technology,1,5.059090173223248e-06
+Entertainment/General + Food + Lifestyle/General + News/Society/Politics,1,5.059090173223248e-06
+Entertainment/General + Food + Lifestyle/General + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + Food + Video games,1,5.059090173223248e-06
+Entertainment/General + Health/Fitness,1,5.059090173223248e-06
+Entertainment/General + Health/Fitness + Hobby/General interests + Lifestyle/General + Music,1,5.059090173223248e-06
+Entertainment/General + Health/Fitness + Hobby/General interests + Lifestyle/General + Sports,1,5.059090173223248e-06
+Entertainment/General + Health/Fitness + Lifestyle/General + Travel,1,5.059090173223248e-06
+Entertainment/General + Health/Fitness + Lifestyle/General + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + Health/Fitness + Music,1,5.059090173223248e-06
+Entertainment/General + Hobby/General interests + Lifestyle/General + Music + News/Society/Politics + Religion,1,5.059090173223248e-06
+Entertainment/General + Hobby/General interests + Lifestyle/General + Music + Pets/Animals,1,5.059090173223248e-06
+Entertainment/General + Hobby/General interests + Lifestyle/General + Music + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + Hobby/General interests + Lifestyle/General + Music + Video games,1,5.059090173223248e-06
+Entertainment/General + Hobby/General interests + Lifestyle/General + News/Society/Politics + Religion,1,5.059090173223248e-06
+Entertainment/General + Hobby/General interests + Lifestyle/General + News/Society/Politics + Sports + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + Hobby/General interests + Lifestyle/General + Pets/Animals + Sports,1,5.059090173223248e-06
+Entertainment/General + Hobby/General interests + Lifestyle/General + Technology + Video games,1,5.059090173223248e-06
+Entertainment/General + Lifestyle/General + News/Society/Politics + Pets/Animals + Religion,1,5.059090173223248e-06
+Entertainment/General + Lifestyle/General + News/Society/Politics + Technology,1,5.059090173223248e-06
+Entertainment/General + Lifestyle/General + News/Society/Politics + Travel,1,5.059090173223248e-06
+Entertainment/General + Lifestyle/General + Pets/Animals + Travel,1,5.059090173223248e-06
+Entertainment/General + Lifestyle/General + Sports + Travel,1,5.059090173223248e-06
+Entertainment/General + Music + News/Society/Politics + Religion + Video games,1,5.059090173223248e-06
+Entertainment/General + Music + Vehicles/Motorsport,1,5.059090173223248e-06
+Entertainment/General + News/Society/Politics + Religion + Video games,1,5.059090173223248e-06
+Fashion/Beauty + Film/TV/Humor + Health/Fitness + Lifestyle/General,1,5.059090173223248e-06
+Fashion/Beauty + Film/TV/Humor + Lifestyle/General + News/Society/Politics,1,5.059090173223248e-06
+Fashion/Beauty + Health/Fitness + Lifestyle/General + Sports,1,5.059090173223248e-06
+Fashion/Beauty + Hobby/General interests + Lifestyle/General + News/Society/Politics + Video games,1,5.059090173223248e-06
+Fashion/Beauty + Lifestyle/General + News/Society/Politics + Technology,1,5.059090173223248e-06
+Fashion/Beauty + Lifestyle/General + Travel + Video games,1,5.059090173223248e-06
+Fashion/Beauty + News/Society/Politics + Religion,1,5.059090173223248e-06
+Film/TV/Humor + Food + Health/Fitness + Lifestyle/General + News/Society/Politics,1,5.059090173223248e-06
+Film/TV/Humor + Food + Lifestyle/General + Music,1,5.059090173223248e-06
+Film/TV/Humor + Food + Lifestyle/General + Pets/Animals,1,5.059090173223248e-06
+Film/TV/Humor + Health/Fitness + Hobby/General interests + Lifestyle/General + Music + Sports,1,5.059090173223248e-06
+Film/TV/Humor + Health/Fitness + Lifestyle/General + Pets/Animals,1,5.059090173223248e-06
+Film/TV/Humor + Health/Fitness + Lifestyle/General + Sports,1,5.059090173223248e-06
+Film/TV/Humor + Health/Fitness + Music,1,5.059090173223248e-06
+Film/TV/Humor + Health/Fitness + News/Society/Politics,1,5.059090173223248e-06
+Film/TV/Humor + Health/Fitness + News/Society/Politics + Religion,1,5.059090173223248e-06
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Music + Sports,1,5.059090173223248e-06
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + News/Society/Politics,1,5.059090173223248e-06
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Pets/Animals + Sports,1,5.059090173223248e-06
+Film/TV/Humor + Hobby/General interests + Lifestyle/General + Religion,1,5.059090173223248e-06
+Film/TV/Humor + Lifestyle/General + Music + Sports,1,5.059090173223248e-06
+Film/TV/Humor + Lifestyle/General + News/Society/Politics + Sports,1,5.059090173223248e-06
+Film/TV/Humor + Lifestyle/General + Sports + Vehicles/Motorsport,1,5.059090173223248e-06
+Film/TV/Humor + Lifestyle/General + Technology + Video games,1,5.059090173223248e-06
+Film/TV/Humor + Music + Video games,1,5.059090173223248e-06
+Film/TV/Humor + Sports + Vehicles/Motorsport,1,5.059090173223248e-06
+Food + Health/Fitness + Lifestyle/General + Music,1,5.059090173223248e-06
+Food + Health/Fitness + Lifestyle/General + News/Society/Politics,1,5.059090173223248e-06
+Food + Health/Fitness + Lifestyle/General + News/Society/Politics + Religion,1,5.059090173223248e-06
+Food + Health/Fitness + Lifestyle/General + Sports,1,5.059090173223248e-06
+Food + Health/Fitness + Lifestyle/General + Technology,1,5.059090173223248e-06
+Food + Health/Fitness + Lifestyle/General + Video games,1,5.059090173223248e-06
+Food + Hobby/General interests + Lifestyle/General + Pets/Animals + Vehicles/Motorsport,1,5.059090173223248e-06
+Food + Lifestyle/General + News/Society/Politics + Travel,1,5.059090173223248e-06
+Food + Lifestyle/General + Travel + Vehicles/Motorsport,1,5.059090173223248e-06
+Food + Sports,1,5.059090173223248e-06
+Food + Video games,1,5.059090173223248e-06
+Health/Fitness + Hobby/General interests + Lifestyle/General + Technology,1,5.059090173223248e-06
+Health/Fitness + Lifestyle/General + Music + News/Society/Politics,1,5.059090173223248e-06
+Health/Fitness + Lifestyle/General + News/Society/Politics + Religion + Video games,1,5.059090173223248e-06
+Health/Fitness + Lifestyle/General + News/Society/Politics + Sports,1,5.059090173223248e-06
+Health/Fitness + Lifestyle/General + News/Society/Politics + Vehicles/Motorsport,1,5.059090173223248e-06
+Health/Fitness + Lifestyle/General + Sports + Video games,1,5.059090173223248e-06
+Health/Fitness + Music + News/Society/Politics,1,5.059090173223248e-06
+Health/Fitness + Music + News/Society/Politics + Religion,1,5.059090173223248e-06
+Health/Fitness + News/Society/Politics + Video games,1,5.059090173223248e-06
+Health/Fitness + Sports,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Music + Pets/Animals + Sports,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Music + Religion + Travel,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Music + Sports + Travel,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Music + Vehicles/Motorsport,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + News/Society/Politics + Technology + Video games,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Pets/Animals + Video games,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Sports + Technology,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Sports + Technology + Vehicles/Motorsport,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Technology + Travel + Vehicles/Motorsport,1,5.059090173223248e-06
+Hobby/General interests + Lifestyle/General + Travel + Video games,1,5.059090173223248e-06
+Lifestyle/General + Music + News/Society/Politics + Religion + Vehicles/Motorsport,1,5.059090173223248e-06
+Lifestyle/General + Music + News/Society/Politics + Religion + Video games,1,5.059090173223248e-06
+Lifestyle/General + Music + Pets/Animals + Sports,1,5.059090173223248e-06
+Lifestyle/General + Music + Pets/Animals + Travel,1,5.059090173223248e-06
+Lifestyle/General + Music + Religion + Sports,1,5.059090173223248e-06
+Lifestyle/General + Music + Religion + Technology + Vehicles/Motorsport,1,5.059090173223248e-06
+Lifestyle/General + Music + Religion + Video games,1,5.059090173223248e-06
+Lifestyle/General + Music + Sports + Vehicles/Motorsport,1,5.059090173223248e-06
+Lifestyle/General + Music + Technology + Vehicles/Motorsport,1,5.059090173223248e-06
+Lifestyle/General + Music + Vehicles/Motorsport + Video games,1,5.059090173223248e-06
+Lifestyle/General + News/Society/Politics + Pets/Animals + Vehicles/Motorsport,1,5.059090173223248e-06
+Lifestyle/General + News/Society/Politics + Pets/Animals + Video games,1,5.059090173223248e-06
+Lifestyle/General + News/Society/Politics + Religion + Video games,1,5.059090173223248e-06
+Lifestyle/General + News/Society/Politics + Sports + Vehicles/Motorsport + Video games,1,5.059090173223248e-06
+Lifestyle/General + News/Society/Politics + Sports + Video games,1,5.059090173223248e-06
+Lifestyle/General + News/Society/Politics + Travel + Vehicles/Motorsport,1,5.059090173223248e-06
+Lifestyle/General + Religion + Vehicles/Motorsport,1,5.059090173223248e-06
+Lifestyle/General + Religion + Video games,1,5.059090173223248e-06
+Lifestyle/General + Sports + Technology + Vehicles/Motorsport,1,5.059090173223248e-06
+Music + News/Society/Politics + Pets/Animals + Religion,1,5.059090173223248e-06
+Music + News/Society/Politics + Religion + Video games,1,5.059090173223248e-06
+Music + Pets/Animals,1,5.059090173223248e-06
+Music + Sports + Video games,1,5.059090173223248e-06
+Music + Technology + Video games,1,5.059090173223248e-06
+News/Society/Politics + Sports + Video games,1,5.059090173223248e-06
+News/Society/Politics + Travel,1,5.059090173223248e-06
+Religion + Video games,1,5.059090173223248e-06
+Sports + Technology,1,5.059090173223248e-06
+Sports + Vehicles/Motorsport + Video games,1,5.059090173223248e-06

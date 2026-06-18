@@ -1,0 +1,92 @@
+candidate_a,candidate_b,n_channels,pct_nonempty_channels
+Film/TV/Humor,Music,7217,0.0365114537801521
+News/Society/Politics,Religion,6967,0.0352466812368463
+Education/Explainers,News/Society/Politics,2950,0.0149243160110085
+Music,Religion,2867,0.014504411526631
+Film/TV/Humor,News/Society/Politics,2388,0.0120811073336571
+Music,News/Society/Politics,2038,0.0103104257730289
+Education/Explainers,Health/Fitness,1428,0.0072243807673627
+Education/Explainers,Technology,1083,0.0054789946576007
+Film/TV/Humor,Video games,713,0.0036071312935081
+Sports,Vehicles/Motorsport,653,0.0033035858831147
+Film/TV/Humor,Sports,650,0.0032884086125951
+Education/Explainers,Film/TV/Humor,637,0.0032226404403432
+Health/Fitness,News/Society/Politics,594,0.0030050995628946
+Film/TV/Humor,Food,514,0.0026003723490367
+Food,Health/Fitness,469,0.0023727132912417
+Film/TV/Humor,Pets/Animals,468,0.0023676542010684
+Film/TV/Humor,Religion,448,0.002266472397604
+Education/Explainers,Religion,416,0.0021045815120608
+Health/Fitness,Sports,344,0.0017403270195887
+Film/TV/Humor,Health/Fitness,324,0.0016391452161243
+Food,Travel,300,0.0015177270519669
+News/Society/Politics,Sports,269,0.001360895256597
+News/Society/Politics,Vehicles/Motorsport,263,0.0013305407155577
+Education/Explainers,Music,252,0.0012748907236522
+Music,Video games,247,0.0012495952727861
+Health/Fitness,Music,234,0.0011838271005342
+Technology,Vehicles/Motorsport,234,0.0011838271005342
+Music,Technology,231,0.0011686498300145
+Food,Pets/Animals,226,0.0011433543791484
+News/Society/Politics,Technology,202,0.001021936214991
+Education/Explainers,Vehicles/Motorsport,197,0.0009966407641249797
+Film/TV/Humor,Technology,190,0.000961227132912417
+Sports,Video games,179,0.0009055771410069612
+Music,Sports,166,0.0008398089687550591
+Health/Fitness,Religion,142,0.0007183908045977011
+Film/TV/Humor,Vehicles/Motorsport,140,0.0007082726242512547
+Vehicles/Motorsport,Video games,131,0.0006627408126922454
+Technology,Video games,130,0.0006576817225190222
+Film/TV/Humor,Travel,119,0.0006020317306135664
+Music,Travel,115,0.0005817953699206735
+Education/Explainers,Food,114,0.0005767362797474503
+Travel,Vehicles/Motorsport,114,0.0005767362797474503
+Fashion/Beauty,Music,113,0.000571677189574227
+News/Society/Politics,Travel,105,0.000531204468188441
+Food,Music,97,0.000490731746802655
+Music,Vehicles/Motorsport,91,0.0004603772057633155
+Food,News/Society/Politics,76,0.0003844908531649668
+Music,Pets/Animals,75,0.0003794317629917436
+Pets/Animals,Sports,68,0.00034401813177918085
+Fashion/Beauty,Food,67,0.00033895904160595756
+Fashion/Beauty,Film/TV/Humor,59,0.0002984863202201716
+Food,Technology,57,0.0002883681398737251
+News/Society/Politics,Video games,54,0.00027319086935405536
+Fashion/Beauty,Health/Fitness,53,0.0002681317791808321
+Education/Explainers,Travel,48,0.00024283632831471587
+Sports,Travel,48,0.00024283632831471587
+Pets/Animals,Travel,46,0.0002327181479682694
+Religion,Travel,42,0.0002124817872753764
+Fashion/Beauty,Travel,40,0.0002023636069289299
+Education/Explainers,Video games,39,0.00019730451675570665
+Health/Fitness,Pets/Animals,33,0.00016694997571636716
+Food,Video games,32,0.00016189088554314392
+Food,Religion,28,0.00014165452485025094
+Health/Fitness,Vehicles/Motorsport,28,0.00014165452485025094
+Education/Explainers,Pets/Animals,26,0.00013153634450380444
+News/Society/Politics,Pets/Animals,21,0.0001062408936376882
+Pets/Animals,Religion,21,0.0001062408936376882
+Fashion/Beauty,News/Society/Politics,18,9.106362311801844e-05
+Health/Fitness,Technology,18,9.106362311801844e-05
+Education/Explainers,Fashion/Beauty,17,8.600453294479521e-05
+Education/Explainers,Sports,17,8.600453294479521e-05
+Fashion/Beauty,Sports,16,8.094544277157196e-05
+Fashion/Beauty,Technology,15,7.588635259834871e-05
+Sports,Technology,14,7.082726242512547e-05
+Technology,Travel,14,7.082726242512547e-05
+Food,Vehicles/Motorsport,13,6.576817225190222e-05
+Food,Sports,12,6.070908207867897e-05
+Health/Fitness,Travel,12,6.070908207867897e-05
+Pets/Animals,Vehicles/Motorsport,12,6.070908207867897e-05
+Religion,Technology,12,6.070908207867897e-05
+Religion,Vehicles/Motorsport,12,6.070908207867897e-05
+Religion,Video games,10,5.059090173223248e-05
+Religion,Sports,9,4.5531811559009226e-05
+Pets/Animals,Video games,8,4.047272138578598e-05
+Fashion/Beauty,Pets/Animals,7,3.5413631212562736e-05
+Fashion/Beauty,Religion,7,3.5413631212562736e-05
+Health/Fitness,Video games,7,3.5413631212562736e-05
+Fashion/Beauty,Vehicles/Motorsport,6,3.0354541039339484e-05
+Fashion/Beauty,Video games,5,2.529545086611624e-05
+Pets/Animals,Technology,4,2.023636069289299e-05
+Travel,Video games,2,1.0118180346446495e-05

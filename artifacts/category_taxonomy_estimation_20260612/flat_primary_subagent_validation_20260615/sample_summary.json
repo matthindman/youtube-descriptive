@@ -1,0 +1,29 @@
+{
+  "blind_evidence_path": "/Users/hindman/Documents/GitHub/youtube-descriptive/artifacts/category_taxonomy_estimation_20260612/flat_primary_subagent_validation_20260615/flat_primary_subagent_blind_evidence_1000.csv",
+  "primary_label_counts": {
+    "Business": 1,
+    "Education/Knowledge": 22,
+    "Entertainment/General": 19,
+    "Fashion/Beauty": 15,
+    "Film/TV/Humor": 193,
+    "Food": 50,
+    "Health/Fitness": 27,
+    "Hobby/General interests": 55,
+    "Lifestyle/General": 93,
+    "Military": 1,
+    "Music": 225,
+    "Performing arts": 5,
+    "Pets/Animals": 15,
+    "Politics/News": 24,
+    "Religion": 24,
+    "Society/General": 11,
+    "Sports": 33,
+    "Technology": 25,
+    "Travel": 5,
+    "Vehicles": 32,
+    "Video games": 125
+  },
+  "reference_path": "/Users/hindman/Documents/GitHub/youtube-descriptive/artifacts/category_taxonomy_estimation_20260612/flat_primary_subagent_validation_20260615/flat_primary_subagent_reference_1000.csv",
+  "sample_size": 1000,
+  "seed": "flat_primary_subagent_validation_20260615_v1"
+}

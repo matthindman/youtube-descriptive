@@ -93,6 +93,11 @@ Run-level QA summaries carry `inference_hash_buckets`, `bucket_start`, `bucket_e
 only the matching run/bucket summary scope. Global capped samples, such as
 `yt_lid_v3_suspect_tail_audit_sample`, are emitted only for full-range runs.
 
+The notebook writes `yt_lid_v3_run_progress` throughout the run. Each successful Delta write appends a
+`delta_write_committed` marker with the target table and scope, and uncaught notebook failures attempt to
+append a `notebook_failed` marker with the last recorded stage and exception summary. Progress logging is
+best-effort and nonfatal; completed Delta writes remain the authoritative saved output for retrying a bucket.
+
 Partition sizing is computed from the number of valid segments:
 `ceil(valid_segments / target_segments_per_partition)`, clamped by `min_num_partitions` and
 `max_num_partitions`. The notebook also sets `spark.sql.shuffle.partitions` to this effective value. When
@@ -212,6 +217,11 @@ DeepSeek:  deepseek-v4-pro, deepseek-v4-flash
 OpenAI, Anthropic, and Gemini use their provider batch APIs. DeepSeek uses the OpenAI-compatible
 `https://api.deepseek.com/chat/completions` path directly and writes parser-compatible result JSONL under
 `results_input_dir`.
+
+The panel notebook writes `yt_lid_v3_llm_panel_run_progress` with run-scoped Delta commit markers and
+best-effort `notebook_failed` markers. DeepSeek direct results append to existing result JSONL rather than
+truncating it, and reruns skip request IDs that already have successful responses; import deduplication keeps
+one vote per stored request.
 
 ## 10c. Initial LLM secrets/API validation run
 

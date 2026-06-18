@@ -270,6 +270,242 @@ Intermediate or cross-cutting labels:
 | Role-playing_video_game | 2 | 1 | Child of Video_game_culture, parent-like for some game subgenres |
 | Vehicle | 1 | 1 | Child of Lifestyle, parent-like for Motorsport |
 
+## Parent Category Overlap Among Common Parent-Like Labels
+
+I also estimated overlap among parent-like labels with empirical role `empirical_parent` or `intermediate_or_crosscutting_parent` and prevalence above 2 percent of nonempty channel-label arrays. This produced 9 labels over 197,664 nonempty channels.
+
+The direct overlap matrix is the percent of all nonempty channels that have both labels. Because the parent prevalences vary sharply, from 48.19 percent for `Lifestyle_(sociology)` to 3.04 percent for `Vehicle`, the companion conditional and lift matrices are necessary for interpretation.
+
+Full outputs:
+
+- `parent_overlap_20260613/parent_overlap_summary.md`
+- `parent_overlap_20260613/parent_overlap_joint_prevalence_matrix_pct.csv`
+- `parent_overlap_20260613/parent_overlap_conditional_matrix_pct.csv`
+- `parent_overlap_20260613/parent_overlap_lift_matrix.csv`
+
+![Parent overlap joint and conditional heatmaps](parent_overlap_20260613/parent_overlap_joint_and_conditional_heatmaps.png)
+
+![Parent overlap lift heatmap](parent_overlap_20260613/parent_overlap_lift_heatmap.png)
+
+Main patterns:
+
+- Highest absolute joint overlap is `Lifestyle_(sociology)` + `Entertainment`: 14.79 percent of nonempty channels.
+- The strongest near-nesting patterns are `Pop_music` -> `Music` at 99.53 percent, `Action_game` -> `Video_game_culture` at 99.92 percent, `Role-playing_video_game` -> `Video_game_culture` at 99.97 percent, and `Vehicle` -> `Lifestyle_(sociology)` at 98.64 percent.
+- `Action_game` and `Role-playing_video_game` are tightly co-labeled: 6.26 percent of all nonempty channels have both, with lift 10.51x relative to independence.
+- Many broad cross-domain pairs are below independence despite nontrivial absolute counts. For example, `Lifestyle_(sociology)` + `Music` covers 4.38 percent of channels but has lift 0.41x because both labels are common.
+
+### Lumped Music and Video Game Parent View
+
+The previous matrix intentionally exposed intermediate parent-like labels, but that can overstate parent overlap because `Pop_music`, `Action_game`, and `Role-playing_video_game` are mostly nested inside `Music` or `Video_game_culture`. I therefore reran the parent overlap after collapsing:
+
+- all music labels into `Music_combined`
+- all video game labels into `Video_game_combined`
+
+Full outputs:
+
+- `lumped_parent_overlap_20260613/lumped_parent_overlap_summary.md`
+- `lumped_parent_overlap_20260613/joint_prevalence_matrix_pct.csv`
+- `lumped_parent_overlap_20260613/conditional_matrix_pct.csv`
+- `lumped_parent_overlap_20260613/lift_matrix.csv`
+
+![Lumped parent overlap heatmaps](lumped_parent_overlap_20260613/joint_and_conditional_heatmaps.png)
+
+After lumping, the major absolute overlap remains `Lifestyle_(sociology)` + `Entertainment` at 14.79 percent. `Entertainment` + `Music_combined` is 5.41 percent, and `Lifestyle_(sociology)` + `Music_combined` is 4.63 percent. Most other cross-parent overlaps are small in absolute terms. In prevalence-adjusted terms, `Sport` + `Vehicle` has lift 2.81x and `Lifestyle_(sociology)` + `Vehicle` has lift 2.05x, reflecting a specific cross-cutting vehicle/lifestyle pattern rather than broad parent overlap.
+
+### Lifestyle and Entertainment Child Overlap
+
+I then focused only on children with strong or moderate empirical parent edges to `Lifestyle_(sociology)` or `Entertainment`. I included children that appear in more than 1 percent of Lifestyle cases or more than 1 percent of Entertainment cases.
+
+Full outputs:
+
+- `lifestyle_entertainment_child_overlap_20260613/lifestyle_entertainment_child_overlap_summary.md`
+- `lifestyle_entertainment_child_overlap_20260613/joint_prevalence_matrix_pct.csv`
+- `lifestyle_entertainment_child_overlap_20260613/conditional_matrix_pct.csv`
+- `lifestyle_entertainment_child_overlap_20260613/lift_matrix.csv`
+
+![Lifestyle and Entertainment child overlap heatmaps](lifestyle_entertainment_child_overlap_20260613/joint_and_conditional_heatmaps.png)
+
+The largest child overlaps are within Entertainment: `Film` + `Television_program` covers 4.26 percent of the Lifestyle/Entertainment union, and `Film` + `Humour` covers 3.78 percent. The strongest Lifestyle child associations are more specific: `Health` + `Physical_fitness` has lift 16.41x, and `Hobby` + `Fashion` has lift 3.42x. These child-level matrices show why broad Lifestyle/Entertainment overlap is hard to interpret without splitting into children.
+
+## Draft Flat One-Level Classifier
+
+The raw YouTube topic field is multi-label, but the project now needs a single flat one-level categorization system where every channel receives exactly one intuitive main-topic label. I treat this as a deterministic projection from the observed YouTube label set to a project-defined primary label. This projection is not a claim that the source data are single-label; it is a documented decision tree for reducing the existing label array into one flat category.
+
+The draft materialized table is:
+
+```text
+dev_sean.matt.yt_channel_topic_flat_primary_draft_20260615
+```
+
+The local implementation and report are:
+
+```text
+.codex_databricks/sql_flat_primary_draft_create_20260615.sql
+.codex_databricks/render_flat_primary_draft_analysis_20260615.py
+flat_primary_draft_20260615/flat_primary_draft_report.md
+```
+
+Requested rules applied in this draft:
+
+- `Film`, `Television_program`, and `Humour` are lumped into `Film/TV/Humor`.
+- `Health` and `Physical_fitness` are lumped into `Health/Fitness`.
+- All music labels are lumped into `Music`.
+- All video game labels are lumped into `Video games`.
+- `Hobby` is treated as a fallback. If a channel has `Hobby` plus any more specific mapped topic, the channel is assigned to the more specific topic. `Hobby/General interests` is used only when Hobby is standalone or only broad parent labels remain.
+- Music is primary whenever it is present.
+- Vehicles outrank Sports when both vehicle and sport labels are present.
+- Video games remain above Film/TV/Humor when both are present.
+
+Draft decision tree, applied in order:
+
+1. Any music label -> `Music`
+2. Any video game label -> `Video games`
+3. `Film`, `Television_program`, or `Humour` -> `Film/TV/Humor`
+4. `Vehicle` -> `Vehicles`
+5. Any sport label, including `Motorsport` and `Professional_wrestling` -> `Sports`
+6. `Religion` -> `Religion`
+7. `Politics` -> `Politics/News`
+8. `Food` -> `Food`
+9. `Health` or `Physical_fitness` -> `Health/Fitness`
+10. `Technology` -> `Technology`
+11. `Pet` -> `Pets/Animals`
+12. `Fashion` or `Physical_attractiveness` -> `Fashion/Beauty`
+13. `Tourism` -> `Travel`
+14. `Performing_arts` -> `Performing arts`
+15. `Business` -> `Business`
+16. `Military` -> `Military`
+17. `Knowledge` -> `Education/Knowledge`
+18. `Hobby`, only when no specific topic matched -> `Hobby/General interests`
+19. Broad-only `Society` -> `Society/General`
+20. Broad-only `Lifestyle_(sociology)` -> `Lifestyle/General`
+21. Broad-only `Entertainment` -> `Entertainment/General`
+22. Missing, empty, or unmapped labels -> `Uncategorized`
+
+The resulting primary-label distribution over 197,664 nonempty category arrays is:
+
+| Primary label | Channels | Percent |
+|---|---:|---:|
+| Music | 44,371 | 22.45 |
+| Film/TV/Humor | 35,410 | 17.91 |
+| Video games | 23,957 | 12.12 |
+| Lifestyle/General | 20,417 | 10.33 |
+| Hobby/General interests | 10,440 | 5.28 |
+| Food | 9,974 | 5.05 |
+| Sports | 6,139 | 3.11 |
+| Vehicles | 5,601 | 2.83 |
+| Politics/News | 5,309 | 2.69 |
+| Education/Knowledge | 5,287 | 2.67 |
+| Health/Fitness | 5,255 | 2.66 |
+| Religion | 5,113 | 2.59 |
+| Technology | 4,790 | 2.42 |
+| Entertainment/General | 3,682 | 1.86 |
+| Pets/Animals | 3,249 | 1.64 |
+| Fashion/Beauty | 3,203 | 1.62 |
+| Society/General | 2,646 | 1.34 |
+| Travel | 1,643 | 0.83 |
+| Performing arts | 526 | 0.27 |
+| Business | 347 | 0.18 |
+| Military | 305 | 0.15 |
+
+![Draft primary flat label distribution](flat_primary_draft_20260615/primary_flat_distribution.png)
+
+Before tie-breaking, 67.62 percent of nonempty channels have exactly one specific candidate primary label, 12.81 percent have two, 0.74 percent have three, and 0.02 percent have four. The remaining 18.81 percent have no specific candidate and are handled by broad or residual fallback rules.
+
+The most important ambiguity pairs before tie-breaking are:
+
+| Candidate pair | Channels | Percent |
+|---|---:|---:|
+| Film/TV/Humor + Music | 5,288 | 2.68 |
+| Music + Religion | 2,867 | 1.45 |
+| Music + Performing arts | 2,238 | 1.13 |
+| Film/TV/Humor + Video games | 2,072 | 1.05 |
+| Education/Knowledge + Health/Fitness | 1,428 | 0.72 |
+| Education/Knowledge + Technology | 1,083 | 0.55 |
+| Sports + Vehicles | 1,017 | 0.51 |
+
+![Draft primary ambiguity pairs](flat_primary_draft_20260615/top_ambiguous_candidate_pairs.png)
+
+For `Hobby`, 18,992 channels have the raw Hobby label. The draft tree assigns 10,440 of them to `Hobby/General interests` and reassigns 8,552 to a more specific primary topic. The most common specific reassignments are `Fashion/Beauty`, `Music`, `Film/TV/Humor`, `Food`, `Technology`, `Pets/Animals`, `Video games`, `Sports`, `Vehicles`, and `Travel`.
+
+![Hobby reassignment under draft tree](flat_primary_draft_20260615/hobby_reassignment_distribution.png)
+
+### Heldout Rule-Variant Validation
+
+I validated the priority changes by reusing the existing 1,000-channel multi-label LLM validation run. For each model's predicted label set and each reference YouTube label set, I applied competing flat decision trees and scored one-label agreement on the heldout-test split. The primary scorer was `gemini-3.5-flash` with the `prob_label_threshold_closure_postprocessed` prediction variant, which was the strongest model/variant in the earlier multi-label validation. I then ran an expanded sweep over the other plausible lump/split candidates: Motorsport to Vehicles, Professional_wrestling to Film/TV/Humor, Performing_arts to Film/TV/Humor, Military to Politics/News, Business to Politics/News, and Food before Film/TV/Humor.
+
+Full outputs:
+
+```text
+flat_primary_validation_iteration_20260615/flat_primary_validation_iteration_report.md
+flat_primary_validation_iteration_20260615/primary_scorer_rule_variant_metrics.csv
+flat_primary_validation_iteration_20260615/film_tv_humor_video_game_collision_sample_100.csv
+```
+
+Heldout flat accuracy for the primary scorer:
+
+| Rule variant | Channels | Flat accuracy | Correct | Film+game collisions | Collision accuracy |
+|---|---:|---:|---:|---:|---:|
+| Prior draft | 599 | 63.77 | 382 | 11 | 63.64 |
+| Music primary, Vehicles over Sports | 599 | 63.94 | 383 | 11 | 63.64 |
+| Film/TV/Humor over Video games | 599 | 63.77 | 382 | 11 | 54.55 |
+| Motorsport to Vehicles | 599 | 63.94 | 383 | 11 | 63.64 |
+| Professional_wrestling to Film/TV/Humor | 599 | 63.94 | 383 | 11 | 63.64 |
+| Performing_arts to Film/TV/Humor | 599 | 63.77 | 382 | 11 | 63.64 |
+| Military to Politics/News | 599 | 63.94 | 383 | 11 | 63.64 |
+| Business to Politics/News | 599 | 63.61 | 381 | 11 | 63.64 |
+| Food before Film/TV/Humor | 599 | 63.77 | 382 | 11 | 63.64 |
+
+Mean heldout flat accuracy across all 32 model/prediction-variant combinations:
+
+| Rule variant | Mean accuracy | Median accuracy | Max accuracy |
+|---|---:|---:|---:|
+| Prior draft | 56.77 | 59.93 | 64.61 |
+| Music primary, Vehicles over Sports | 57.62 | 59.77 | 64.44 |
+| Film/TV/Humor over Video games | 57.01 | 59.60 | 64.11 |
+| Motorsport to Vehicles | 57.62 | 59.77 | 64.44 |
+| Professional_wrestling to Film/TV/Humor | 57.62 | 59.77 | 64.44 |
+| Performing_arts to Film/TV/Humor | 57.51 | 59.93 | 64.27 |
+| Military to Politics/News | 57.62 | 59.77 | 64.44 |
+| Business to Politics/News | 57.49 | 59.93 | 64.27 |
+| Food before Film/TV/Humor | 57.66 | 59.93 | 64.44 |
+
+![Primary scorer rule variant accuracy](flat_primary_validation_iteration_20260615/primary_scorer_rule_variant_accuracy.png)
+
+The requested Music and Vehicle priority change improved the primary heldout scorer by 0.17 percentage points and improved the mean across all model variants by 0.85 percentage points. Moving Film/TV/Humor above Video games reduced the primary heldout scorer by 0.17 percentage points and reduced Film+game collision accuracy from 63.64 percent to 54.55 percent. In the expanded sweep, no candidate improved the primary scorer beyond the Music/Vehicle tree. The best mean-across-models candidate was Food before Film/TV/Humor, but its mean gain over the Music/Vehicle tree was only 0.04 percentage points and it did not improve the primary scorer. Under the stated one-percentage-point stopping rule, this iteration stops.
+
+I also drew 100 full-universe channels with both Film/TV/Humor and Video-game labels and inspected channel names plus recent video titles/descriptions with a keyword-assisted pass. The sample was mixed rather than clearly film-dominant or game-dominant:
+
+| Evidence assessment | Cases | Percent |
+|---|---:|---:|
+| Insufficient keyword evidence | 31 | 31.00 |
+| Mostly film/TV/humor or adaptation | 27 | 27.00 |
+| Mostly video-game play or discussion | 26 | 26.00 |
+| Mixed or ambiguous | 16 | 16.00 |
+
+Because the evidence sample is mixed and the heldout flat score worsens when Film/TV/Humor is moved above Video games, the current decision is to keep Video games above Film/TV/Humor and treat this collision as a mandatory validation stratum in future human/LLM review.
+
+Other lump/split candidates for validation:
+
+- `Motorsport` vs. direct `Vehicle`: direct `Vehicle` channels now map to `Vehicles` before `Sports`, but `Motorsport` without `Vehicle` still maps to `Sports`.
+- `Professional_wrestling`: currently maps to `Sports`, but it may behave like entertainment in viewer intuition.
+- `Performing_arts`: currently separate, but may need to fold into `Film/TV/Humor` or a broader `Arts/Performance` label.
+- `Politics/News`, `Military`, `Business`, and `Society/General`: these may need a broader `News/Society/Politics` label if coders cannot reliably distinguish them.
+- `Education/Knowledge`: `Knowledge` is broad and may need to be renamed `Education/Explainers` or merged after inspection.
+- `Hobby/General interests`: this residual should be audited because it may hide topics that the YouTube label set does not expose directly.
+
+Validation plan for the flat classifier:
+
+1. Freeze `flat_primary_draft_20260615` as the first version of the deterministic projection.
+2. Draw a stratified sample by assigned primary label, oversampling rare labels and all fallback labels.
+3. Also stratify by ambiguity: 0, 1, 2, and 3+ specific candidate labels before tie-breaking.
+4. Blind-code sampled channels from channel descriptions and recent video titles into the proposed flat label set without showing the YouTube labels or tree result.
+5. Use two independent coders, or one coder plus an LLM adjudication pass, for high-impact ambiguous strata.
+6. Estimate overall accuracy, macro-F1, per-label precision/recall, and a confusion matrix against the blinded flat-label judgments.
+7. Report Wilson or bootstrap confidence intervals, especially for small labels.
+8. Specifically audit `Film/TV/Humor` vs. `Music`, `Film/TV/Humor` vs. `Video games`, `Vehicles` vs. `Sports`, `Music` vs. `Religion`, and Hobby reassignments.
+9. Revise the tree only after statistically meaningful confusion patterns are confirmed, then rerun on a fresh heldout sample.
+10. For each candidate rule change, score the deterministic projection against heldout LLM predictions collapsed to the same flat label set; stop iterating when the next candidate change improves heldout flat accuracy by no more than 1 percentage point.
+
 ## Examples of Strong Learned Edges
 
 | Child | Parent | Train confidence | Heldout confidence |

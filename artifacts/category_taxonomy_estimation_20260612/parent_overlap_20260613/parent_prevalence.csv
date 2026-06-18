@@ -1,0 +1,10 @@
+row_rank,parent_a,empirical_role_a,prevalence_a,n_parent_a_channels
+1,Lifestyle_(sociology),empirical_parent,0.4819491662619394,95264
+2,Entertainment,empirical_parent,0.3453385543143921,68261
+3,Music,empirical_parent,0.2205712724623603,43599
+4,Video_game_culture,empirical_parent,0.1236239274728832,24436
+5,Pop_music,intermediate_or_crosscutting_parent,0.1033015622470455,20419
+6,Action_game,intermediate_or_crosscutting_parent,0.0785423749392909,15525
+7,Role-playing_video_game,intermediate_or_crosscutting_parent,0.0758054071555771,14984
+8,Sport,empirical_parent,0.0373209082078678,7377
+9,Vehicle,intermediate_or_crosscutting_parent,0.0303950137607252,6008

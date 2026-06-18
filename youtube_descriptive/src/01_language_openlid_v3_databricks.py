@@ -48,6 +48,7 @@ dbutils.library.restartPython()
 # COMMAND ----------
 import os
 import shutil
+import sys
 from typing import Dict, Iterable, Iterator, List, Optional, Tuple
 
 import pandas as pd
@@ -743,6 +744,18 @@ def write_delta(df, table_full: str, partition_cols: Optional[List[str]] = None,
     if partition_cols:
         writer = writer.partitionBy(*partition_cols)
     writer.saveAsTable(table_full)
+    try:
+        record_progress(
+            "delta_write_committed",
+            metrics={
+                "table": table_full,
+                "replace_where": active_replace_where or "<full_overwrite>",
+                "partition_cols": ",".join(partition_cols or []),
+            },
+        )
+    except NameError:
+        # record_progress is defined below; write_delta is not called before then in normal notebook flow.
+        pass
     if OPTIMIZE_AFTER_WRITE and zorder_cols:
         try:
             spark.sql(f"OPTIMIZE {table_full} ZORDER BY ({', '.join(zorder_cols)})")
@@ -750,7 +763,20 @@ def write_delta(df, table_full: str, partition_cols: Optional[List[str]] = None,
             print(f"WARNING: OPTIMIZE failed for {table_full}: {exc}")
 
 
+_PROGRESS_STATE = {"stage": "initializing", "status": "starting"}
+if not hasattr(sys, "_yt_lid_v3_original_excepthook"):
+    sys._yt_lid_v3_original_excepthook = sys.excepthook
+
+
+def _progress_value(value: object) -> Optional[str]:
+    if value is None:
+        return None
+    return str(value)[:4000]
+
+
 def record_progress(stage: str, status: str = "ok", metrics: Optional[Dict[str, object]] = None) -> None:
+    _PROGRESS_STATE["stage"] = stage
+    _PROGRESS_STATE["status"] = status
     rows = [
         (
             RUN_ID,
@@ -761,7 +787,7 @@ def record_progress(stage: str, status: str = "ok", metrics: Optional[Dict[str, 
             stage,
             status,
             str(k),
-            None if v is None else str(v),
+            _progress_value(v),
         )
         for k, v in (metrics or {"event": "1"}).items()
     ]
@@ -773,14 +799,43 @@ def record_progress(stage: str, status: str = "ok", metrics: Optional[Dict[str, 
         )
         .withColumn("event_timestamp", F.current_timestamp())
     )
-    (
-        progress_df.write
-        .format("delta")
-        .mode("append")
-        .option("mergeSchema", "true")
-        .saveAsTable(run_progress_full)
-    )
-    print(f"Progress: {stage} [{status}] -> {run_progress_full}")
+    try:
+        (
+            progress_df.write
+            .format("delta")
+            .mode("append")
+            .option("mergeSchema", "true")
+            .saveAsTable(run_progress_full)
+        )
+        print(f"Progress: {stage} [{status}] -> {run_progress_full}")
+    except Exception as exc:  # noqa: BLE001 - progress logging must not be able to kill the run
+        print(f"WARNING: failed to record progress stage={stage!r} status={status!r}: {exc}")
+
+
+def _record_uncaught_failure(exc_type, exc_value, exc_traceback) -> None:
+    if getattr(sys, "_yt_lid_v3_recording_uncaught_failure", False):
+        sys._yt_lid_v3_original_excepthook(exc_type, exc_value, exc_traceback)
+        return
+    sys._yt_lid_v3_recording_uncaught_failure = True
+    try:
+        record_progress(
+            "notebook_failed",
+            status="error",
+            metrics={
+                "last_progress_stage": _PROGRESS_STATE.get("stage"),
+                "last_progress_status": _PROGRESS_STATE.get("status"),
+                "exception_type": getattr(exc_type, "__name__", str(exc_type)),
+                "exception_message": str(exc_value),
+            },
+        )
+    except Exception as progress_exc:  # noqa: BLE001 - never mask the original notebook failure
+        print(f"WARNING: failed to persist uncaught-failure progress marker: {progress_exc}")
+    finally:
+        sys._yt_lid_v3_recording_uncaught_failure = False
+        sys._yt_lid_v3_original_excepthook(exc_type, exc_value, exc_traceback)
+
+
+sys.excepthook = _record_uncaught_failure
 
 
 record_progress(

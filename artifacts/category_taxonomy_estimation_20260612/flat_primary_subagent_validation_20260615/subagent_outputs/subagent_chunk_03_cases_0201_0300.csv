@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+201,Food,high,"Chef channel with paneer, Hyderabadi curry, pulihora, drinks, chicken, mango recipes.",Cooking evidence is dominant.
+202,Music,high,Song teasers and official lyric video for Chase Wright EP and albums.,None.
+203,Film/TV/Humor,medium,"Tamil short titles include jokes, reactions, love marriage vs arranged marriage.",Short titles are brief but comedy cues dominate.
+204,Society/General,medium,"TV magazine covers Antarctica, religion and science, ceviche, celebrity mystery, vasectomy.",Mixed public-interest program rather than one narrow topic.
+205,Film/TV/Humor,medium,Repeated funny 3D animal cartoon/game-like long slide videos.,"Uses game wording, but evidence reads as animated kids humor."
+206,Lifestyle/General,high,"Day-in-life, routines, self-care, nails, meals, cozy nights.",Some food/beauty content but lifestyle vlog is broader.
+207,Entertainment/General,low,Recent titles are only laughing emojis.,Evidence suggests entertainment but no specific topic is visible.
+208,Health/Fitness,high,"Fitness creator links workout plans and discusses gym, martial arts, body comparisons.",Commentary style is secondary to fitness/body theme.
+209,Health/Fitness,high,"ThaiHealth/สสส videos discuss mental health, child wellbeing, workplace health, prevention.",None.
+210,Pets/Animals,high,"Repeated snake, cobra, frog, goat and animal encounter shorts.",Comedy framing is secondary to animal-centered content.
+211,Entertainment/General,medium,"Viral clips about trampoline skills, sandcastle, metal detecting, hydrodipping, claw machines.",Mixed spectacle/viral shorts with no single topical domain.
+212,Video games,high,"Mario Kart, Wii Fit, Pokemon, Nintendo Switch gaming content.",None.
+213,Food,high,"Meat tasting box, barbecue assembly, steak preparation, Divina Carni sponsorship.",One YouTube-partnership video is off-topic.
+214,Entertainment/General,medium,"Mixed short-video stories about cats, family, Mario Kart surprise, and children.",No stable subject beyond general viral entertainment.
+215,Film/TV/Humor,high,Turkish dad/family funny shorts and prank-like situations.,A Galatasaray mention is incidental.
+216,Film/TV/Humor,high,Nigel and Marmalade scripted character episodes and behind-the-scenes voice-over.,None.
+217,Religion,high,"Sermons, spiritual accountability, pastor testimony, salt of the earth.",None.
+218,Education/Knowledge,medium,"Amazing facts shorts cover biology, Kaaba, ancient surgery, water, sneezing, angels.","Some religious/viral topics, but fact/explainer format dominates."
+219,Music,high,"Speed Gang lyric videos, music releases, features, Spotify links.",None.
+220,Society/General,medium,"Persian TVPLUS has celebrity history, Dubai investment, work profile, mixed magazine items.",Broad magazine channel; not one narrow topic.
+221,Film/TV/Humor,high,Official Lucky Luke cartoon episodes and Dalton adventure clips.,None.
+222,Politics/News,high,"Official Ukrainian president office updates on war, government, regions, America dialogue.",None.
+223,Religion,high,"Tamil spiritual talks about Shiva, kuladeivam, enlightenment, festivals.",None.
+224,Religion,high,"God, Jesus, faith, Psalms 23 and 91, devotional messages.",Some music covers appear but religious message dominates.
+225,Music,high,"Projota rap posts, live singing, rap hashtags, music nostalgia.",None.
+226,Film/TV/Humor,high,Thai-dubbed Chinese drama episodes and romance serial clips.,None.
+227,Film/TV/Humor,high,"RoboFuse children cartoons, rescue vehicles, Car City adventures.",Vehicle content is within animated story episodes.
+228,Lifestyle/General,high,"Couple/family channel with pregnancy, kids, date night, pranks, postpartum driving.",Pranks are part of family lifestyle content.
+229,Entertainment/General,medium,"Short viral stunts, train crashes, candy challenge, family joke clips.",Fun-facts name but titles are general spectacle entertainment.
+230,Health/Fitness,high,"Psychology and mental health explainers on cognitive distortions, addiction, relationships.",None.
+231,Religion,high,"Most recent videos are Quran, azan, Islamic status shorts.",One comedy/Marwadi self-promo video is an outlier.
+232,Fashion/Beauty,high,"Korean skincare, night routine, makeover, makeup transition, makeup melt-off.",Motivational shorts are secondary.
+233,Lifestyle/General,low,"Personal date/location posts, museum mention, Alsace/Germany, greetings.",Sparse evidence and no clear topic.
+234,Film/TV/Humor,medium,"School teacher/student shorts with lateness, hiding, jokes, classroom situations.","School setting could imply education, but content appears comedic."
+235,Video games,high,"GTA 5, Sons of the Forest, Youtubers Life gameplay series.",None.
+236,Society/General,medium,"Podcast/shorts about love, youth empowerment, disagreements, relationships, voice.",Artist branding appears but topic is relationship/social discussion.
+237,Film/TV/Humor,high,"Movie, TV and Marvel content including Devil Wears Prada 2 and series recommendations.",Some brand candy promo attached to Marvel.
+238,Vehicles,medium,"Cultivator, mower, tractor-like farm machines and field equipment demos.",Agricultural equipment rather than ordinary road vehicles.
+239,Sports,high,"Football players Evra, Toure, Dembele and jersey promotions.",None.
+240,Music,high,"Official visualizers, acoustic performance, songs by Noel Kharman.",None.
+241,Film/TV/Humor,high,Arabic movie clips and comedy/drama film descriptions with actors and directors.,None.
+242,Music,high,"METRICKZ rap tracks, album streaming links, producer credits.",None.
+243,Film/TV/Humor,high,"BR Chopra TV serial episodes, Naagin storyline and show descriptions.",None.
+244,Film/TV/Humor,medium,"Natoo videos include comedic reactions, Disneyland behind scenes, personal comedy-style vlogs.","Some lifestyle elements, but creator/video tone is comedy entertainment."
+245,Music,high,"Alok DJ/music posts, official visualizer, remix, event content.",None.
+246,Music,high,"Pakistani pop songs, old hit songs, music videos.",None.
+247,Education/Knowledge,medium,"How-to/technique videos on sewing thread, food wrapping, woodworking, safety warnings.",Topics are mixed but instructional.
+248,Music,medium,Video Star and musical.ly lip-sync/cover performances around songs.,"Could be performance/editing, but song-based videos dominate."
+249,Hobby/General interests,high,"Toys R Us product videos for LEGO, Mario, Tomica, cameras, digital toys.",Retail/promotional format but toy hobby subject dominates.
+250,Vehicles,high,"Bicycle choice, bike bells, gravel riding, Moscow cycling, dream bike.","Cycling sport overlaps, but bike reviews/ownership dominate."
+251,Fashion/Beauty,high,"Bridal makeup, Kerala wedding makeup, beauty tips for brides.",Family/temple shorts are secondary.
+252,Hobby/General interests,high,"Dumpster diving finds, store trash reveals, scavenging and recovered goods.","Some humor, but dumpster-diving hobby is dominant."
+253,Video games,high,"Assassin’s Creed, Atomic Heart boss fight, Black Flag gameplay clips.",None.
+254,Entertainment/General,medium,"Mixed funny animal, prank, candy, survival and joke shorts.",No single subject dominates.
+255,Film/TV/Humor,high,Thai funny shorts with repeated funny/comedy tags and gag situations.,None.
+256,Music,high,"Mura Masa official videos, EP release, live club footage, new songs.",None.
+257,Lifestyle/General,high,"Pregnancy ultrasound, Dubai travel, business-class flight, home decor, meal prep.",Food/travel appear within lifestyle vlog context.
+258,Entertainment/General,medium,"Candy, playground, cute/funny reaction shorts for kids.","Sparse titles, but general kids entertainment is clearest."
+259,Video games,high,"GTA 5 mod Boboiboy gameplay with vehicles, monsters, Hot Wheels.",None.
+260,Film/TV/Humor,medium,"Husband-wife scripted shorts with refusals, apologies, couple scenarios.","Relationship theme overlaps with lifestyle, but skit framing dominates."
+261,Music,high,Spanish nursery rhymes and kids songs including Five Little Ducks and Three Little Pigs.,Educational app mentions are secondary.
+262,Film/TV/Humor,low,"Titles are memes, funny tags, and reaction emojis.",Evidence is sparse but humor cues are present.
+263,Video games,high,"Animated skits centered on Donkey Kong, Shadow, Sonic, Eggman, Sonic Team.",Game-culture animation fits video games guidance.
+264,Vehicles,medium,Repeated car hood and car-entry gag videos centered on cars.,"Comedic format, but vehicle object dominates evidence."
+265,Music,high,"Arabic and Spanish DJ remixes, Afro House, dance remix channel.",None.
+266,Music,high,"Bangla sad/folk songs, singer credits, best-of song collections.",None.
+267,Film/TV/Humor,high,"Mini reviews of Avatar, Zootopia, Predator and other films.",None.
+268,Video games,high,"Best/worst games, Marvel Cosmic Invasion gameplay, arcade runs.",None.
+269,Vehicles,high,"Car reviews/news for Mazda, BMW, Audi, Citroen, Dacia, VW.",None.
+270,Music,high,"Bryann T songs, music video, behind the scenes, artist collaborations with Jesus themes.","Christian theme present, but evidence is music releases."
+271,Politics/News,high,"Parliament, Bengal election, Modi, BJP, Mamata, breaking news hashtags.",None.
+272,Vehicles,high,"NIVA Grand Sport build, UAZ repair, car service and automotive parts.",None.
+273,Technology,high,"Premiere Pro, VFX tricks, editing plugins, iPhone video editing tools.","Education format, but technology/software subject dominates."
+274,Film/TV/Humor,high,Spanish-dubbed La Novia de Estambul drama episodes and romantic clips.,None.
+275,Video games,high,Vampire Survivors spinoff and Plants vs Zombies 3 gameplay walkthroughs.,None.
+276,Music,high,"Songs, lyrics, composing, lyric video, debut EP.",None.
+277,Video games,high,"Free Fire tutorials, emulator download, ranking strategy.",None.
+278,Film/TV/Humor,medium,"Indonesian funny/relatable shorts about kids, sudden wealth, guessing, characters.","Titles are brief, but comedic entertainment dominates."
+279,Society/General,medium,"Radio magazine covers music interview, film/series, relationships, health, personal advice.",Rock/music branding but recent evidence is broad talk-show content.
+280,Music,high,Kids songs and nursery rhymes with lyrics and actions.,None.
+281,Film/TV/Humor,high,Eena Meena Deeka and Vir the Robot Boy cartoon episodes.,None.
+282,Food,high,"Air-fryer chicken, sancocho, pork seasoning plus recipe/home channel framing.",Some vlog/routine posts are secondary.
+283,Education/Knowledge,medium,"Fact-style shorts about China items, Tianyu Mountain, Japan toilets, fast photography.",Sensational format but knowledge/facts subject is clearest.
+284,Technology,medium,"Redmi phone review, RAM unboxing, tech/product unboxings.",One protein unboxing and livestream make evidence thin.
+285,Music,high,"Official music videos, hip-hop concert, music producer and artist credits.",None.
+286,Film/TV/Humor,high,"LGBTQIA web series episodes, final episode live, series presentation clips.",Some music show content is secondary.
+287,Music,high,"Brega/funk DJ tracks, remixes, artist lineups, repertoire hashtags.",None.
+288,Music,high,"Candan Erçetin songs, lyrics, Spotify links, music clips.",None.
+289,Education/Knowledge,medium,"Top/list videos on Disney behind the scenes, stadiums, holdout homeowners, real places.","Entertainment tone, but explainer/list facts dominate."
+290,Hobby/General interests,high,"RC trucks, tanks, trains, planes and scale models.",Vehicle subjects are RC hobby-focused.
+291,Music,high,"Musical instruments, singing classes, music gurus, bhajan content.",Spiritual references are secondary to music training/performance.
+292,Lifestyle/General,high,"Family swimming, baby/kids challenges, grocery, anniversary date, birthday.",None.
+293,Film/TV/Humor,high,"Relatable shorts, workplace/family skits, imposter game gone wrong, creepy uncle.",None.
+294,Food,high,"Ching’s Secret food brand, Schezwan fried rice masala, Desi Chinese ads/recipes.",Music-video ads are promotional format for food brand.
+295,Film/TV/Humor,medium,"Marathi relationship, family, cricket comedy and funny shorts.","Some social message/religious-political references appear, but skits dominate."
+296,Hobby/General interests,high,"Kinder Surprise and toy unboxing with Shrek, Power Rangers, Pokemon, Peppa Pig.",None.
+297,Video games,high,"Official Brawl Stars updates, rewards, hypercharge, in-game event tasks.",None.
+298,Film/TV/Humor,high,"Thai movie trailers, teasers, OST and film release promos.",Music video is tied to film soundtrack.
+299,Music,high,"Milica Pavlovic live performances, songs, music label and booking details.",None.
+300,Religion,high,"Church devotional and prophetic videos, pastor sermon, Christian church links.",None.

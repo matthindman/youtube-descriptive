@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+401,Film/TV/Humor,high,Repeated #funny #comedy #drama family skit titles about Sari and Emak.,Comedy-drama shorts rather than daily family lifestyle.
+402,Film/TV/Humor,medium,"SSP TV titles mention roles in series, production houses, and live entertainment.","Some youth/orientation items, but series/TV evidence dominates."
+403,Food,low,Recent titles are almost entirely fruit and food emojis.,"No text beyond emojis, so topic is thin."
+404,Film/TV/Humor,high,"Hermanos de Leche videos are jokes and commentary on parents, exes, interviews, and everyday situations.","Could be podcast/social commentary, but humor framing is central."
+405,Lifestyle/General,medium,"Personal-story titles cover confession, debt, exams, arrest, and family estrangement.",Gaming link appears only as secondary-channel promotion.
+406,Entertainment/General,medium,"Viral fact/curiosity shorts span bike seats, dog tantrums, food trades, jewelry tricks, showers, babies, and cats.",Mixed topics with no stable subject beyond viral entertainment.
+407,Education/Knowledge,high,"Chemistry/science demos include sodium lamp, sound via light, solar cell, dry ice, and elemental calcium.",None.
+408,Pets/Animals,high,"ExpertoAnimal videos discuss dogs, cats, pet behavior, genes, and animal biomechanics.","Some humor, but animal care/education is primary."
+409,Music,high,Los Canelos de Durango uploads are song titles by the band.,None.
+410,Music,high,Mayada El Hennawy channel posts Arabic singer/music clips with song emojis and artist branding.,None.
+411,Entertainment/General,medium,"Mixed viral shorts include Jesus, cats, candy, baby, food, hangnail, and funny prank content.",Highly mixed; no single topical niche.
+412,Politics/News,medium,"Titles include private school news, police, Hindu-Muslim unity, West Bengal, BJP, and Narendra Modi.","Some human-interest viral stories, but news/politics appears repeatedly."
+413,Entertainment/General,medium,Shorts repeat soft toothpaste crushing and funny/trending titles.,"Could be satisfying/ASMR, but no specific allowed topic fits better."
+414,Video games,high,"Animations feature Poppy Playtime, Steal a Brainrot, Skibidi, Player, and game challenge framing.","Animated format, but game characters/challenges dominate."
+415,Film/TV/Humor,high,Rotten Tomatoes Classic Trailers posts official movie trailers.,None.
+416,Society/General,medium,"Contexto Histórico shorts cover influencer sentencing, cartel kidnapping, medical oddity, and public outrage incidents.","Could overlap news, but evidence is broader strange/social history explainers."
+417,Hobby/General interests,high,"Embroidery sampler restoration, stitching challenges, and knitting/stitching show content.",None.
+418,Video games,high,"Unboxings and reviews center on Crimson Desert, ROG Xbox Ally, Resident Evil, Fortnite, and gaming PCs.","Includes tech hardware, but gaming use is primary."
+419,Entertainment/General,medium,"Short scripted/satisfying scenarios about magical beads, erasers, bracelets, car cleaning, slippers, and rescue.","Some craft-like objects, but general viral shorts overall."
+420,Video games,high,"Official PUBG Mobile Malaysia posts gameplay, esports, beta updates, and PUBGM league content.",None.
+421,Film/TV/Humor,high,"NBCUniversal Anime/Music posts TV anime PVs, clips, character comments, and radio tied to anime series.","Channel name includes Music, but listed evidence is anime/TV."
+422,Video games,high,"Black Ops 7 sniper classes, camo, updates, and tournament gameplay.",None.
+423,Video games,high,"Minecraft, Poppy Playtime, mods, lava jumps, blocks, and game challenge titles.",None.
+424,Lifestyle/General,high,"Vlogs about family day in Tijuana, week with me, birthday, Christmas kids, and engagement party.",None.
+425,Film/TV/Humor,medium,"Indonesian horror/mystic story titles about haunted ambulance, corpses, occult debt, and ghostly cafes.","Could be folklore storytelling, but horror entertainment framing is strongest."
+426,Education/Knowledge,medium,"Explainers cover TV/movie references, historical dance epidemic, cemetery exploration, and Don Ramon tattoo meaning.",Mixed with travel/exploration and TV references.
+427,Video games,high,"Asmongold highlights include World of Warcraft cinematics, WoW Classic reactions, and streamer/guild content.","Streamer highlight format, but gaming culture is central."
+428,Video games,high,"WePlay broadcasts BLAST Premier esports matches with Liquid, G2, NAVI, FaZe, and Vitality.","Esports treated as video games, not traditional sports."
+429,Business,medium,"Local service/business promotion: Ayurvedic clinic, low-cost business, farm tour, furniture shop, car AC service.","Mixed local-interest videos, but promotional business/service evidence dominates."
+430,Music,high,"Bangla Islamic gojol/ghazal song uploads with singer, lyric, tune, and audio metadata.","Religious theme, but content is music performance."
+431,Vehicles,high,Channel and titles focus on electric/funny bikes repeatedly.,Humor framing is secondary to bike content.
+432,Religion,high,"Church ministry videos include testimonies, spiritual authority teaching, worship service, preaching, and donations.",None.
+433,Entertainment/General,medium,Challenge and optical-choice shorts plus Messi/Yamal recognition prompts.,"Some soccer names, but not organized sports coverage."
+434,Music,high,"House/tech-house uploads, remixes, extended mixes, Spotify playlist, and Beatport links.",None.
+435,Film/TV/Humor,high,Crayon Shin-chan/anime commentary and clips with anime/manga hashtags.,None.
+436,Music,high,"La Nueva Luna cumbia songs, official audio/video, lyrics, live performance clips.",None.
+437,Video games,medium,EAFC/FIFA/mobile football skills edits with game hashtags and player names.,"Soccer subject appears through game edits, so video games edges sports."
+438,Music,high,"Udit Narayan and Bollywood song collections, rare songs, singers, and movie song metadata.","Film source material, but uploads are songs."
+439,Video games,high,"Spanish gaming news/commentary on Witcher 3, Succubus, Cyberpunk, PlayStation, and video game companies.",None.
+440,Entertainment/General,low,"Mixed viral/humor and surreal satisfying ASMR shorts about pranks, animals, beds, and staircases.",Evidence is scattered; no stable topic beyond viral entertainment.
+441,Performing arts,high,"Dance festival/social dance coverage: bachata, salsa, kizomba, Jack & Jill, bootcamp.","Music present, but dance performance/event coverage is primary."
+442,Lifestyle/General,medium,"Karime Kooler discusses dates, awkward questions, first kisses, celebrity crushes, and social relationships.","Talk-show entertainment, but lifestyle/relationship topics dominate."
+443,Film/TV/Humor,high,Humor De Cuadra posts family comedy skits with #humor and #comedia.,None.
+444,Film/TV/Humor,high,"Brazilian telenovela recaps/previews for Tres Gracas, Vale Tudo, Dona de Mim, and Globo shows.",None.
+445,Film/TV/Humor,medium,"Recap-style titles about fictional leads, mermaid blood, divine powers, evil, and Kamen Rider.","One education-like line, but fantasy/TV recap evidence dominates."
+446,Video games,high,"Spanish gaming channel posts Gears of War, Fortnite Remix, Gears E-Day, and Fortnite live events.",None.
+447,Film/TV/Humor,high,"Reviews/reactions to Isla Tentaciones, Benidorm Fest, and reality/TV entertainment.","Some music reaction, but TV/reality commentary dominates."
+448,Sports,high,"Azulcrema TV is 100 percent Americanista with Club America football history, players, and women team matches.",None.
+449,Vehicles,high,Driving tips and car content about manual vs automatic and learning to drive.,None.
+450,Hobby/General interests,high,"Painting instruction for oil/acrylic, palettes, old master methods, and painter advice.","Could be education, but hobby art instruction is primary."
+451,Fashion/Beauty,high,"AI-generated children fashion runway, catwalk, modeling, clothing styles, and fashion enthusiasts.",None.
+452,Education/Knowledge,high,Japanese trivia/science/psychology/human body/animal facts shorts.,None.
+453,Film/TV/Humor,high,"Official movie trailers for Free Guy, Despicable Me 2, The Raven, and other films.",None.
+454,Entertainment/General,low,All titles repeat Best videos of the year you must watch with trending short tags.,No topical detail beyond generic viral video compilation.
+455,Politics/News,high,"Myra Media posts political/news updates about Nara Lokesh, Chandrababu, Sachin event, and official updates.","Channel also says film updates, but evidence is political/news heavy."
+456,Health/Fitness,high,"Health & Glow posts blood pressure, weight loss, hair care, diet plan, and water therapy health tips.","Beauty hair-care overlaps, but health framing dominates."
+457,Film/TV/Humor,medium,Zoom TV channel posts kids news specials and Lego Ninjago episode previews.,Mixed children news and TV programming; TV content is most consistent.
+458,Film/TV/Humor,medium,Italian shorts include comedy/funny tags and lightly titled skits.,Sparse dated titles lower confidence.
+459,Film/TV/Humor,high,Janta Films posts fictional romantic short films with actors and film disclaimers.,None.
+460,Film/TV/Humor,high,"Animated Marvel, Dragon Ball, Spider-Man, Invincible, parody, humor, meme, fanmade content.",None.
+461,Religion,high,"Catholic Marian prayer, prophecies, Pope, church attack, Carlo Acutis, and devotional book links.",None.
+462,Entertainment/General,medium,Michael Jackson-themed dance/costume challenges plus variety stunt shorts.,"Music/dance references exist, but channel is broader variety entertainment."
+463,Religion,medium,"Evidence includes Krishna bhajan, Radhe Krishna song, Bageshwar Dham, devotional video, and religious craft.","Some lipsync, art, and gadget shorts make it mixed."
+464,Politics/News,high,"Duterte/Sara impeachment, anti-money-laundering, Davao, and political slogans dominate.",None.
+465,Entertainment/General,medium,"Challenge/prank/adventure titles: coldest place survival, food order test, wake-up methods, sour lollipop prank, flip in an hour.","Could be lifestyle challenges, but general entertainment is stronger."
+466,Entertainment/General,medium,"Mixed shorts repost/feature tools, zombies, food, gadgets, and viral facts.",No stable topic beyond viral shorts.
+467,Hobby/General interests,high,"DIY, home repair, handyman, survival skills, plumbing, electrical wiring, woodworking, and carpentry hacks.","Education-style, but practical hobby/DIY is primary."
+468,Music,high,"Guitar gear, pedals, guitarist influences, musician career, bass/guitar equipment, and original music links.","Technology gear appears, but music-making is primary."
+469,Music,medium,All recent titles repeat a Hindi lyric-like phrase about love.,"Sparse evidence, but repeated song/lyric phrasing suggests music/lipsync."
+470,Film/TV/Humor,high,"Animated parodies of IT Welcome to Derry, Pennywise podcast spoilers, trailers, and anthology shorts.","Podcast format appears, but TV/horror parody content dominates."
+471,Music,high,"Billboard channel posts artist interviews, music news, streamers, performances, and song/artist discussion.",None.
+472,Education/Knowledge,high,"Fact/explainer shorts about names, watch display times, AI history fact checks, maps, whales, owls, and hair whorls.",None.
+473,Music,high,Electronic music releases/remixes with Beatport links and artist/label metadata.,None.
+474,Health/Fitness,medium,Motivation shorts include back day and exercise/training variation language.,Some aesthetic/lifestyle posts; fitness evidence is present but thin.
+475,Politics/News,high,"Tanzania TV news programs, headlines, newspapers, political accusations, and live public affairs segments.",Sports headline appears among newspaper items but not primary.
+476,Video games,high,"LEGO Fortnite/NINJAGO gameplay, items, builds, Battle Bus, and game update content.","LEGO brand present, but videos are Fortnite gameplay."
+477,Education/Knowledge,high,"Space station, SpaceX/NASA launches, Starship tests, and space mission explainers.","Technology overlap, but educational space coverage is primary."
+478,Film/TV/Humor,high,Yeralash film journal posts scripted children film sketches and acting course content.,Performing arts course is secondary.
+479,Music,high,"Children nursery rhymes and songs like Wheels on the Bus, vegetable song, and educational music for kids.","Educational kids content, but songs are the format/topic."
+480,Film/TV/Humor,medium,Portuguese shorts are mostly laughter emojis and humorous captions like dont tell anyone and its true.,"Sparse evidence, but comedy cues dominate."
+481,Music,high,"Alyssa Baker cover songs, acoustic performances, lyric video, Spotify links, and song releases.",None.
+482,Entertainment/General,medium,"Los Marquina challenge/olympics series, casting, behind-the-scenes, and family/group competition episodes.","Uses sports disciplines, but framed as creator challenge entertainment."
+483,Film/TV/Humor,high,"Spanish short skits about police, bandits, workers, invisible wall, and comic situations.",None.
+484,Film/TV/Humor,high,Joey Salads posts prank/social-experiment videos and funny relationship/baby reaction content.,"Some parenting/safety topics, but prank entertainment dominates."
+485,Music,high,"Justin Stone uploads demos, freestyles, music videos, lyrics, and quitting music discussion.",None.
+486,Politics/News,medium,"Shorts feature Macron, Trump, politics hashtags, plus NFL/football celebrity items.",Mixed politics and sports; politics appears most repeated and explicit.
+487,Politics/News,high,"Telangana/Andhra news coverage with KTR, Kavitha, KCR, Chandrababu, BRS leaders, and political war of words.","Some sports celebrity event items, but news politics dominates."
+488,Film/TV/Humor,medium,"Hindi emotional/motivational shorts with robbery, stolen scooter, goons, blast, and customer skit scenarios.","Motivation tags exist, but scripted dramatic shorts dominate."
+489,Military,high,"Indonesian cadet/military academy content: Akmil, AAU, AAL, TNI, taruna, parade/drumband.","Drumband appears, but military academy focus dominates."
+490,Music,high,"Official King Crimson album visualizers, songs, extracts, and track listings.",None.
+491,Lifestyle/General,medium,"Indian kids influencer/family/travel, kid dance, scooter, baby shampoo, and baby oil promotions.",Mixed children products and family influencer content.
+492,Film/TV/Humor,high,Gujarati Rekha comedy videos with artist lists and #Comedy in every title.,None.
+493,Travel,medium,"Videos visit stores, caves, unusual places, tunnels, and local deals, often as sponsored explorations.","Some business/promo and vehicle parts content, but location exploration is broader."
+494,Film/TV/Humor,high,"Family comedy, humor, memes, funny dance, balloon challenge, and short skits.","One football training and animal item, but humor dominates."
+495,Hobby/General interests,medium,"Handmade MDF wall hangings, Radha/Krishna crafts, woolen blanket, handmade mala, mirror and shringar items.","Religious devotional objects, but craft making is central."
+496,Religion,high,"Islamic student, Babri Masjid work, salam, peaceful azan, and mosque-construction titles.","One funny child video, but Islamic/mosque evidence dominates."
+497,Lifestyle/General,high,"Personal creator posts mukbang, hair/GRWM, school day, hate comments, baking, and intimate life story.","Food and beauty appear, but overall channel is lifestyle/vlog."
+498,Food,high,"Indonesian cooking titles: somay recipe, capcay, dimsum, noodles/egg, chicken, ceker mercon.",None.
+499,Film/TV/Humor,high,"TVAd TV posts Vietnamese VTV gameshows, TV drama previews, and broadcast program content.","Game shows can be entertainment, but TV programming is primary."
+500,Entertainment/General,high,"AMP challenge videos: coin stack, impossible dime, street basketball draft, grip strength, guess the country.","Some sports challenges, but group challenge entertainment dominates."

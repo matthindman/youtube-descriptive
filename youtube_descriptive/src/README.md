@@ -30,6 +30,14 @@ Historical implementation plans and review handoffs are not active runbooks.
 5. `README_category_llm.md`
    - API-key setup, reference-label options, model configuration, batch-file workflow, evaluation procedure, and full-corpus guidance.
 
+6. `youtube_topic_treemap_v2.py`
+   - Hierarchy-aware YouTube `topicCategories` treemap pipeline.
+   - Reads `config/youtube_topic_hierarchy_v2.yaml`, writes channel-topic projection/allocation tables, diagnostics, and Plotly treemap HTML.
+
+7. `treemap_spec.md`
+   - Design contract for the hierarchy-aware top-of-ocean YouTube topic treemap.
+   - Specifies topic hierarchy config, allocation rules, diagnostics, artifacts, and acceptance checks.
+
 ## Historical language-detection records
 
 - `lang_detect_revision_spec.md`: v3 design contract used for the rewrite.
@@ -44,10 +52,28 @@ Workspace UI: import each `.py` file as a Databricks notebook.
 Databricks CLI:
 
 ```bash
-databricks workspace import ./01_language_openlid_v3_databricks.py /Users/<you>/youtube/01_language_openlid_v3_databricks.py --format SOURCE --language PYTHON --overwrite
-databricks workspace import ./01b_language_lid_v3_subscriber_cohort_analysis_databricks.py /Users/<you>/youtube/01b_language_lid_v3_subscriber_cohort_analysis_databricks.py --format SOURCE --language PYTHON --overwrite
-databricks workspace import ./02_category_llm_youtube_databricks.py /Users/<you>/youtube/02_category_llm_youtube_databricks.py --format SOURCE --language PYTHON --overwrite
+databricks workspace import /Users/<you>/youtube/01_language_openlid_v3_databricks.py --file ./01_language_openlid_v3_databricks.py --format SOURCE --language PYTHON --overwrite
+databricks workspace import /Users/<you>/youtube/01b_language_lid_v3_subscriber_cohort_analysis_databricks.py --file ./01b_language_lid_v3_subscriber_cohort_analysis_databricks.py --format SOURCE --language PYTHON --overwrite
+databricks workspace import /Users/<you>/youtube/02_category_llm_youtube_databricks.py --file ./02_category_llm_youtube_databricks.py --format SOURCE --language PYTHON --overwrite
+databricks workspace import /Users/<you>/youtube/youtube_topic_treemap_v2.py --file ./youtube_topic_treemap_v2.py --format SOURCE --language PYTHON --overwrite
 ```
+
+For `youtube_topic_treemap_v2.py`, run from a Databricks Repo checkout when possible so
+`config/youtube_topic_hierarchy_v2.yaml` is available. If importing the notebook by itself, import or upload the
+YAML too and set the `hierarchy_config_path` widget to that readable workspace, `/dbfs`, or `dbfs:/` path.
+
+One-command Databricks launch for the v2 treemap, using the current CLI syntax and existing project cluster:
+
+```bash
+bash .codex_databricks/run_youtube_topic_treemap_v2_20260617.sh
+```
+
+The helper runs all Databricks CLI calls with
+`env DATABRICKS_AUTH_STORAGE=plaintext databricks -p matt.hindman@researchaccelerator.org ...`. It imports
+`youtube_topic_treemap_v2.py`, uploads `config/youtube_topic_hierarchy_v2.yaml` to DBFS, submits the notebook
+task on existing cluster `0601-203643-bkxsqffg`, waits up to three hours, and fetches the notebook acceptance
+payload. Override `RUN_DATE`, `WORKSPACE_DIR`, `CLUSTER_ID`, `TOP_N_CHANNELS`, `SNAPSHOT_DATE`, or source-table
+environment variables when needed.
 
 Run order:
 
@@ -59,3 +85,5 @@ Run order:
 5. Run `02_category_llm_youtube_databricks.py` in `labeled_validation` mode with `submit_batches=false`.
 6. Submit provider batches or hand JSONL files to the API owner.
 7. Import results and evaluate before any full-unlabeled category run.
+8. Run `youtube_topic_treemap_v2.py` after the metrics, channel, language, and YouTube `topicCategories` tables
+   are readable; inspect the printed reconciliation metrics and the `diagnostics.md` artifact before using the HTML.

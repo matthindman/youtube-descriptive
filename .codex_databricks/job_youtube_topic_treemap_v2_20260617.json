@@ -1,0 +1,31 @@
+{
+  "run_name": "youtube_topic_treemap_v2_20260617",
+  "tasks": [
+    {
+      "task_key": "youtube_topic_treemap_v2",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 10800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/youtube_topic_treemap_v2",
+        "base_parameters": {
+          "run_date": "20260617",
+          "hierarchy_config_path": "dbfs:/FileStore/youtube_topic_treemap_top_ocean_20260617/config/youtube_topic_hierarchy_v2.yaml",
+          "topic_table": "dev_sean.default.channel_category",
+          "metrics_table_candidates": "dev_sean.default.yt_channel_stats_full,prod_tads.youtube_too.yt_sl_channels_metrics",
+          "channel_table": "prod_tads.youtube_too.yt_sl_channels",
+          "language_table": "dev_sean.matt.yt_lid_v3_channels",
+          "language_run_id": "default",
+          "top_n_channels": "200000",
+          "top_k_languages": "25",
+          "top_n_channels_per_leaf": "10",
+          "max_plot_rows": "20000",
+          "snapshot_min_completeness_fraction": "0.90",
+          "output_catalog": "dev_sean",
+          "output_schema": "matt",
+          "write_delta_tables": "true",
+          "artifact_dir": "/dbfs/FileStore/youtube_topic_treemap_top_ocean_20260617"
+        }
+      }
+    }
+  ]
+}

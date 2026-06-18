@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+301,Music,medium,Ambient/song titles with Spotify SoundCloud links and sample credits,Philosophical titles but music links dominate
+302,Travel,medium,Rome Italy Milan Duomo street views and travel shorts,Some food and street musician clips mixed in
+303,Politics/News,high,BBC London reports on dog attacks earthquakes apprenticeships and local public issues,News organization and story format are clear
+304,Video games,high,Witcher 3 deleted scenes Priscilla song and game music discussion,One piano cover but all centered on The Witcher game
+305,Music,high,Artist posts new songs album tracks official audio tour and merch,One booktok short is incidental
+306,Film/TV/Humor,medium,Hindi rhymes movie explanation and funny shorts/comedy clips,Mixed kids music and comedy evidence
+307,Entertainment/General,medium,Thai live streams viewer donations and variety live clips,Topic unclear beyond livestream entertainment
+308,Pets/Animals,high,Husky dog videos about egg hunt bath time puppy and dog life,No ambiguity
+309,Film/TV/Humor,high,Cartoon edits featuring Simpsons Teen Titans Rick and Morty Family Guy FNAF,Uses game characters but cartoon edits dominate
+310,Film/TV/Humor,high,Indonesian prank and comic shorts with exaggerated scenarios,No specific non-humor topic
+311,Lifestyle/General,high,Vlogmas Christmas studio inventory dog evening clothes swap and daily life vlogs,Some charity mention is incidental
+312,Music,high,Auto-generated YouTube topic songs by Alex Ubago with composers producers and vocals,No ambiguity
+313,Religion,medium,Prayer biblical questions and Christmas/family faith-themed titles,Several general child/family titles mixed in
+314,Technology,high,Insta360 X5 selfie stick camera and drone accessory ads,Music only appears as background songs
+315,Video games,medium,FIFA 19 Ultimate Team coin methods and FUT Champions rewards,First KFC challenge is off-topic mixed evidence
+316,Film/TV/Humor,high,Indonesian character comedy shorts and prank-like scenarios,No other topic recurs
+317,Lifestyle/General,medium,Natural living village life family ties shopping cooking and chores,Food appears but channel is broader rural lifestyle
+318,Film/TV/Humor,high,NTV reality show Bangla TV contestant and family reality show clips,No ambiguity
+319,Politics/News,high,Ghana Talkshop political commentary on Mahama parliamentarians and military government,Satirical host but civic editorial focus dominates
+320,Music,high,Auto-generated BONES tracks distributed by EMPIRE from TeenWitch,No ambiguity
+321,Food,medium,Butcher meat sucuk orders cattle for slaughter and food shipping,Also livestock/farm market content
+322,Politics/News,high,KOMPAS TV breaking news on train crash victims rescue and cabinet reshuffle,No ambiguity
+323,Video games,high,GTA 5 manhunt QSMP Poppy Playtime Roblox Free Fire gameplay,No ambiguity
+324,Video games,high,Shadowverse Worlds Beyond deck and card introductions,No ambiguity
+325,Business,high,Cryptocurrency Web3 RWA tokenomics whitelist and project promotion,Crypto business/finance focus is clear
+326,Music,high,Thai molam samcha immortal songs and band/contact performance titles,One equipment pickup but music performance dominates
+327,Food,high,Korean street food egg bread tteokbokki ramen with prices and locations,No ambiguity
+328,Politics/News,medium,Covai Post reports public health committee gifts crash and local event coverage,One TCP header artifact appears in evidence
+329,Lifestyle/General,medium,Dutch vlogs about book office and personal projects plus car review,Vehicle content present but broader personal vlog evidence
+330,Video games,medium,Spanish shorts mention server base and recurring Abrahaham character scenarios,Likely gaming/roleplay but evidence is terse
+331,Health/Fitness,high,Pregnancy iron tablets baby risk anemia nutrition and prenatal advice,No ambiguity
+332,Business,high,Banking/credit card BonusFlaş campaigns shopping bonuses and brand ads,No ambiguity
+333,Video games,high,Minecraft Vault Hunters features updates and community design,No ambiguity
+334,Fashion/Beauty,medium,Sneaker cleaning sneakerhead grails and shoe culture,Colon cancer updates are mixed in
+335,Sports,high,Galatasaray Fenerbahçe Süper Lig football and Okan Buruk clips,Political figure appears only in sports context
+336,Music,high,LL COOL J music videos songs VMAs recap streaming and merch,No ambiguity
+337,Film/TV/Humor,medium,French cringe retrospective and comic Dr Guzz videos,Some Twitch/personality framing but humor dominates
+338,Sports,medium,Cricket IPL Journey to Jersey clips with Varun interview and cricket discussion,One Meta shoot vlog is mixed in
+339,Film/TV/Humor,medium,Emotional viral shorts with staged thief injury and family drama scenarios,Music hashtags appear but not the main topic
+340,Business,medium,Crypto Web3 AI token project and TikTok growth marketing content,Marketing-growth video mixed with crypto
+341,Video games,medium,Sprunki Incredibox OC animation and game/mod references,Animation style but game-culture references dominate
+342,Hobby/General interests,high,Tabletop wargame miniature painting for Dystopian Wars and Konflikt 47,No ambiguity
+343,Film/TV/Humor,high,Arabic dramatic scene clips about family conflicts and scripted situations,No ambiguity
+344,Film/TV/Humor,high,CBC artist interviews SNL Arabic and film festival entertainment clips,No ambiguity
+345,Lifestyle/General,medium,Personal Cambodia return vlog concert Hyrox MMA camp and transit commentary,Mixed travel sports and lifestyle evidence
+346,Music,high,Cumbia Inka songs and music performance titles,No ambiguity
+347,Education/Knowledge,medium,Podcast/interview on mystery author JJ Benítez Moon secrets and narratives,Speculative topic but knowledge/interview format dominates
+348,Pets/Animals,high,Dog and cat clips about furry companions and pet affection,AI-created but animal topic is clear
+349,Vehicles,high,GT3 RS Nürburgring/Ring Police car-focused office and driving content,No ambiguity
+350,Music,high,Italian rap press day type beat and music magazine channel evidence,No ambiguity
+351,Hobby/General interests,high,Bonsai learning lifting bonsai material from ground to pot and bonsai guests,No ambiguity
+352,Religion,medium,Spirituality religion God Islam Christianity and music-video morality discussion,Artist/music context mixed with faith commentary
+353,Health/Fitness,high,Therapy trauma borderline anxiety depression TEPT and mental health analysis,No ambiguity
+354,Education/Knowledge,high,English lessons on a vs an and there is vs there are,No ambiguity
+355,Sports,high,Megawati volleyball club Hyundai Hillstate final and Proliga coverage,No ambiguity
+356,Music,high,Children's lullabies and Swedish kids songs,Kids programming but songs are central
+357,Lifestyle/General,high,Weekly vlog meeting boyfriend family self-care concert and relationship challenge,No ambiguity
+358,Music,high,Official music video Dreaming by Yusuf Eksioglu with streaming and artist links,No ambiguity
+359,Film/TV/Humor,high,Comedy shorts about mom bad mood smallest bed picking up girls and boy vs mom,No ambiguity
+360,Video games,high,Fortnite skins gameplay map battle pass collaborations and news,No ambiguity
+361,Film/TV/Humor,high,Tamil cinema updates actor speeches and film-related celebrity clips,No ambiguity
+362,Fashion/Beauty,high,Korean fashion flea market clothing shoes glasses sunglasses and brands,No ambiguity
+363,Fashion/Beauty,high,Boutique saree arrivals online orders and clothing sales,No ambiguity
+364,Military,high,Defense Review Chinese naval ships Iran war planning weapons and military news,Politics/news present but military focus dominates
+365,Hobby/General interests,high,Pokemon cards TCG pack openings and collector content,No ambiguity
+366,Film/TV/Humor,high,Gujarati Jitu Mangu comedy videos and shorts,No ambiguity
+367,Video games,high,Korean horror game gameplay with Steam download links and game titles,No ambiguity
+368,Society/General,medium,Russian commentary on best/worst things in USA and internet safety/chatbot topic,Mixed personal opinion and social commentary
+369,Vehicles,high,Diecast model car collection shorts featuring Lexus Mercedes Chevrolet Pagani BMW,No ambiguity
+370,Lifestyle/General,medium,Uzbek family prank wedding team car and household/social videos,Comedy elements but family life dominates
+371,Lifestyle/General,high,Italian family daily life kids dinner dialect shopping and home moments,No ambiguity
+372,Society/General,low,Repeated real story hashtag with no usable specific topic,Very sparse evidence
+373,Sports,high,Ronaldo Messi football soccer FIFA/FC Mobile tags and football edits,Game tags present but athlete/football focus dominates
+374,Entertainment/General,medium,Jasmine Masters live streams with Patti LaBelle singing clips and gay bar posts,Mixed music and personality livestream evidence
+375,Religion,high,Christian songs Palm Sunday Way of the Cross Mother Mary Jesus Hosanna,No ambiguity
+376,Video games,high,Pokemon GO Pokemon Moon Plague Inc and game-focused descriptions,No ambiguity
+377,Film/TV/Humor,medium,Turkish short skits about teacher doctor hospital and classroom scenarios,One game-related title but skits dominate
+378,Entertainment/General,medium,KouKou Brothers lifestyle explosion variety clips and event/game promotion,Mixed variety content without one specific topic
+379,Religion,high,Hindu pravachan Bageshwar Dham Hanuman Sant Indradev devotional videos,No ambiguity
+380,Entertainment/General,low,Cinematic viral creative shorts with farming fruit airplane and mobile editing,No stable specific topic beyond viral shorts
+381,Lifestyle/General,high,Dating diaries docuseries glow-up and personal relationship journey,No ambiguity
+382,Education/Knowledge,medium,Motivational psychology facts life-changing advice and human behaviour shorts,Self-help educational framing dominates
+383,Music,high,Robyn artist posts new version vinyl reissue listening links and song titles,No ambiguity
+384,Lifestyle/General,high,Marriage home routine hair cut night routine and personal vlogs,No ambiguity
+385,Video games,high,Clash Royale card updates hero bowler TV Royale and game facts,No ambiguity
+386,Video games,high,CarX Drift Racing developer streams updates and game social links,Vehicle theme but game title/company dominates
+387,Politics/News,high,Hindi crime news reports on Kanpur horror case accident and murder stories,No ambiguity
+388,Film/TV/Humor,medium,Indonesian moral drama clips about family sacrifice boss and helping others,Copyright note suggests reposted scripted clips
+389,Food,high,Recipes for marshmallow treats hot chocolate wagyu steak turkey and dinner,No ambiguity
+390,Film/TV/Humor,high,Downton Abbey official clips episode scenes and TV compilations,No ambiguity
+391,Hobby/General interests,medium,DIY upcycling cleaning satisfying hacks and craft/life-hack content,Mixes curiosity clips with DIY branding
+392,Film/TV/Humor,high,Hindi animated stories comedy cartoon and bedtime story content,No ambiguity
+393,Film/TV/Humor,high,Dragon Ball manga/anime review and Gohan/Goku content,No ambiguity
+394,Film/TV/Humor,high,Produced skits and sentimental scenes with staged reunion/rescue shorts,No ambiguity
+395,Lifestyle/General,medium,Marriage prank girlfriend comedy song shoot Goa and outfit/personal shorts,Mixed music/comedy/fashion but vlog couple life dominates
+396,Music,medium,Frozen songs labeled Musica with film song uploads,Film source but song clips are the main content
+397,Education/Knowledge,high,English Heritage history site livestreams and Victorian Way historical cookery,No ambiguity
+398,Film/TV/Humor,high,Malayalam movie scenes full movies actors and plot descriptions,No ambiguity
+399,Film/TV/Humor,medium,Film movie anime hashtags and repost-style entertainment shorts,Several generic cleaning hashtags make topic partly noisy
+400,Entertainment/General,low,Mixed TikTok reposts comedy fishing snake music movie and gator clips,No single topic dominates

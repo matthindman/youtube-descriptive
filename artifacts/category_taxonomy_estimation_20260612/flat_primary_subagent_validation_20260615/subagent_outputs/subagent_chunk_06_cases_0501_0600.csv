@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+501,Film/TV/Humor,medium,Sonic and Digital Circus fan comics; Hazbin and Elemental voice/comic shorts,Some gameplay appears but fan cartoon/comic dubbing dominates
+502,Hobby/General interests,high,Cuboro marble run builds and demonstrations,Clear construction hobby content
+503,Pets/Animals,high,Animal fact shorts about cats fish jungle cats and chicks,Some general viral facts but animal clips dominate
+504,Performing arts,medium,Dance performances and performer app content from Aiysha Saagar,Also includes lifestyle/modeling promo material
+505,Music,high,Official Punjabi songs lyric videos and music releases,Clear record label music channel
+506,Business,medium,Podcast clips on entrepreneurship social media work and customer behavior,General podcast range but business themes recur
+507,Vehicles,high,Jeep off-road rat rod wrecker and classic Chevy shop projects,Clear vehicle-centered channel
+508,Food,high,Doritos product ads for Twist flavor and snack promotion,Brand advertising but food product is central
+509,Film/TV/Humor,high,Funny mother baby doctor and reaction shorts,Short scripted comedy format
+510,Lifestyle/General,medium,Jukilop family influencer edits about Juanito Kim and family moments,Entertainment edits but family influencer life is central
+511,Film/TV/Humor,medium,Short skits with zombies cats food and family situations,Could be lifestyle but staged funny shorts dominate
+512,Lifestyle/General,medium,Personal videos comments fashion try-ons and storytime about life change,Mixed entertainment and lifestyle evidence
+513,Music,high,Sonia Morales anniversary performances and streaming music links,Clear artist music channel
+514,Music,high,Farid official lyric and music videos,Clear artist music channel
+515,Education/Knowledge,medium,YouTube copyright strike and terminated channel recovery tutorials,Creator-business overlap but instructional focus
+516,Sports,high,Boxing fight highlights knockouts and bout details,Clear fight sports channel
+517,Film/TV/Humor,high,Chhota Bheem Tamil cartoon episodes and kids cartoon videos,Clear animation/cartoon channel
+518,Film/TV/Humor,high,French comedy duo with humorous questions challenges and entertainment bits,Some gaming discussion but comedy variety dominates
+519,Pets/Animals,high,Dog puppy duckling and pet viral clips,Clear pet and animal content
+520,Sports,high,La Liga Real Madrid Barcelona Atletico and UCL football edits,Clear soccer content
+521,Video games,high,NIKKE Wuthering Waves NTE Monster Hunter and game livestream content,Clear gaming channel
+522,Entertainment/General,medium,Challenge videos card collecting body transformation and 24-hour concepts,Mixed topics without one topical domain
+523,Fashion/Beauty,high,L'Oreal skincare cream sunscreen and beauty product promotions,Clear beauty brand channel
+524,Health/Fitness,high,Bonesetting chiropractic frozen shoulder and back pain therapy videos,Clear therapy/health content
+525,Pets/Animals,high,Snake rescue python cobra and wildlife handling videos,Clear animal rescue content
+526,Health/Fitness,high,Doctor interviews on gastroenterology pregnancy dermatology ENT diabetes and first aid,Clear medical health channel
+527,Film/TV/Humor,high,Hindi full movies teasers and film parts from Rajlaxmi Movies,Clear movie channel
+528,Education/Knowledge,medium,Book publisher presentations new releases and author talks,Books and spirituality products but knowledge/literary focus
+529,Video games,high,Smash Bros and Roblox gameplay shorts,Clear gaming content
+530,Film/TV/Humor,high,Fictional CGI cinematic shorts with animals family drama and action,Clear animated story entertainment
+531,Film/TV/Humor,high,Hindi moral stories and cartoon kahani videos,Clear cartoon story channel
+532,Music,high,Children's songs about colors counting trains and nature,Music format is central
+533,Entertainment/General,low,Experimental short videos with music and odd clip titles,Ambiguous between music and internet entertainment
+534,Fashion/Beauty,medium,Fashion Nova SHEIN accessories and beauty-adjacent trend shorts,Some general influencer trends
+535,Lifestyle/General,high,Family vlog about kids birthdays cheer competition driving and surgery,Clear family lifestyle content
+536,Business,medium,Vim Liquid and ProClean product advertisement spots,Brand advertising with no better product-domain label
+537,Film/TV/Humor,medium,AI-generated film trailers series concepts and movie scenes,AI angle present but film content dominates
+538,Lifestyle/General,high,Travel daily life relationship and study-abroad vlogs,Clear personal lifestyle vlog
+539,Music,high,Cavaleiros do Forro vocal performance and music clips,Clear band/music content
+540,Music,high,Fernandinho worship songs live sets and acoustic performances,Religious theme but songs dominate
+541,Music,high,Vietnamese bolero song compilations and music playlists,Clear music channel
+542,Music,medium,Wedding geet Bhojpuri songs and music-tagged shorts,Some funny viral clips mixed in
+543,Politics/News,medium,Morocco Algeria Maduro and current-affairs commentary,Football reactions mixed with politics/news
+544,Music,high,Burak Yeter tracks mixes and official audio releases,Clear music artist channel
+545,Film/TV/Humor,high,Fictional horror stories creepypastas and scary shorts,Clear scripted horror entertainment
+546,Video games,high,Garry's Mod nextbot chase gameplay shorts,Clear gaming content
+547,Education/Knowledge,high,English lessons online classes and academy course promotions,Clear education channel
+548,Music,high,Ethiopian music official videos and music shorts,Clear music channel
+549,Sports,high,Roman Reigns WWE wrestling clips and Royal Rumble moments,Wrestling treated as sports per guidance
+550,Technology,high,Mobile repair soldering connector and charging port tutorials,Clear electronics repair content
+551,Film/TV/Humor,high,Russian cartoon fairy-tale shorts,Clear animation/cartoon content
+552,Film/TV/Humor,medium,Radio Carolina humor segments jokes and entertainment talk,Radio format but humor is explicit
+553,Fashion/Beauty,medium,Sunscreen lip balm perfume and shopping product shorts,Mixed consumer products but beauty appears central
+554,Lifestyle/General,high,Bengali minivlogs about home family cooking rituals and husband,Clear daily life minivlog content
+555,Film/TV/Humor,high,Funny family prank and reaction shorts,Clear comedy short format
+556,Sports,high,IPL cricket news controversies match moments and player stories,Clear sports news content
+557,Video games,high,Pokemon shiny recolors and Pokemon discussion,Clear gaming franchise content
+558,Film/TV/Humor,high,Turkish comedy/skit shorts with staged situations,Clear short humor content
+559,Religion,medium,Dzikir sholawat maulid and religious live streams,Some random phone videos mixed in
+560,Hobby/General interests,high,Tool accessories drills sockets wiring and wood chopping demos,Clear tools/DIY interest content
+561,Music,high,Regional Mexican band official videos lyric videos and romantic song clips,Clear band/music content
+562,Film/TV/Humor,high,Simpsons clips parody scenes and episode compilations,Clear TV/cartoon content
+563,Vehicles,high,Mustang Supra Bugatti Hayabusa Ferrari and Camaro vehicle clips,Clear vehicle content
+564,Film/TV/Humor,medium,Narrated funny viral scenarios with babies cats and pranks,Animal clips appear but humor narration dominates
+565,Music,high,Don Q EP official audio visualizers freestyles and rap releases,Clear music artist channel
+566,Pets/Animals,high,Veterinary dog and cat care castration fever dental and deworming videos,Pet health but animals are central
+567,Politics/News,high,Trump Congress firearms AI and political podcast/news commentary,Clear politics/news channel
+568,Hobby/General interests,medium,Wild boar hunting action and outdoor hunt videos,Hunting could be sport but outdoor hobby is stronger
+569,Video games,medium,Horror game playthroughs plus ghost debunking and Goosebumps reviews,Mixed horror entertainment but games recur
+570,Video games,high,Super Mario World kaizo and speedrun gameplay shorts,Clear gaming content
+571,Education/Knowledge,high,IAS academy exam prep current affairs banking SSC and TNPSC lessons,Clear education channel
+572,Film/TV/Humor,high,Full Hindi movies Bollywood comedy thriller and action films,Clear movie channel
+573,Music,high,Dubstep house drum and bass jungle and trance DJ mixes,Clear music mix channel
+574,Sports,high,NBA baseball and sports studio analysis from sports network,Clear sports channel
+575,Film/TV/Humor,high,Russian jokes anecdotes and humor shorts,Clear humor content
+576,Politics/News,high,Geopolitics diplomacy Ukraine war maps and current affairs,Clear politics/geopolitics content
+577,Fashion/Beauty,high,Creative makeup beauty products cosplay and jewelry shorts,Clear beauty/fashion content
+578,Music,high,Romanian rap freestyles official videos albums and CD shop,Clear music artist channel
+579,Film/TV/Humor,high,Chavo Simpsons Disney Zootopia South Park and lost media commentary,Clear TV/movie/cartoon entertainment
+580,Sports,high,Golf clips with Nelly Korda Scottie Scheffler Rory and clubs,Clear golf sports content
+581,Religion,high,Christian news testimony martyrdom churches and faith stories,Politics/news present but Christian framing dominates
+582,Music,high,Christian songs hymns and worship music,Music format dominates religious theme
+583,Music,high,Bhojpuri song videos singers lyrics and new song releases,Clear music channel
+584,Entertainment/General,medium,Viral emotional and funny commentary clips with fair-use descriptions,Not clearly one specific topical domain
+585,Film/TV/Humor,high,3D animated stories with Spiderman Squid Game and monsters,Clear animation/story content
+586,Music,high,Moroccan Chaabi artist performances and song clips,Clear music content
+587,Film/TV/Humor,medium,French funny skit/reaction shorts about accents friends and challenges,Some lifestyle but humor dominates
+588,Hobby/General interests,high,Fishing rigs lures knots bait and catfish methods,Clear fishing hobby content
+589,Travel,high,Vlogs traveling to a tribe and living in an ancient castle,Clear travel vlog evidence
+590,Video games,high,Modern Warfare and Black Ops trickshot gameplay videos,Clear gaming content
+591,Lifestyle/General,high,Personal pregnancy family and daily-life shorts,Clear lifestyle influencer content
+592,Video games,high,Android mobile games Total Football and game recommendation videos,Clear gaming channel
+593,Film/TV/Humor,high,Fictional funny shorts and scripted moral/drama clips,Clear short scripted entertainment
+594,Hobby/General interests,medium,DIY craft clay RC car and creative project shorts,Some comedy framing but craft tags dominate
+595,Film/TV/Humor,high,Drama street comedy horror ghost and social drama episodes,Clear scripted drama channel
+596,Food,high,Cooking tips recipes garlic onions chili burns turkey stock and kitchen advice,Clear food/cooking content
+597,Music,medium,Mabel artist clips festival performance song snippets and studio content,NFL video is outlier
+598,Video games,high,Minecraft mod build battles pranks and roleplay,Clear Minecraft gaming content
+599,Lifestyle/General,high,Japanese family/sister vlogs Disney surprise drinks birthdays and daily moments,Clear family lifestyle channel
+600,Video games,high,BGMI esports finals aftermovie player interviews and mobile challenge coverage,Clear esports/gaming content

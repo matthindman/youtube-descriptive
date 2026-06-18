@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+101,Music,high,SZA Topic uploads auto-generated songs and soundtrack track Save The Day,None
+102,Entertainment/General,medium,Viral wholesome shorts about tattoos supermarket turtles and family memories,Mixed feel-good clips without one topical focus
+103,Film/TV/Humor,high,Comedy sketch titles like if ants talked and if I were a delivery person,Some vehicle jokes appear but humor is central
+104,Fashion/Beauty,high,Home remedies for teeth whitening skin tanning and facial hair removal,Some household remedy content mixed in
+105,Music,high,Pagode playlists samba tags and music performance clips,None
+106,Film/TV/Humor,medium,Recent videos are true-crime documentary parody and audio drama style clips,Older/random phone shorts make channel focus less clean
+107,Music,high,Official MV and official audio releases by Chom Chumkasian,None
+108,Video games,high,Mobile Legends gameplay and MLBB creator tags across recent videos,None
+109,Entertainment/General,medium,Arabic reaction shock and family entertainment shorts with mic/prank framing,Could overlap with music but evidence is broader entertainment
+110,Education/Knowledge,medium,Fact-style scary and mystery shorts labeled facts with dangerous river and ghost themes,Sensational horror framing lowers confidence
+111,Video games,high,Warframe weekly resets free items codes and live stream links,None
+112,Video games,high,Roblox 99 Nights in the Forest and Tsunami Escape shorts,None
+113,Music,high,Plan B official videos remixes album links and songs,None
+114,Film/TV/Humor,high,Bigg Boss Tamil season promo and TV show clips,None
+115,Politics/News,high,Vietnamese current affairs news about Israel Iran weather and local incidents,None
+116,Film/TV/Humor,high,Full English horror movies from Boxoffice HORROR,None
+117,Film/TV/Humor,high,Behind-the-scenes TV actor and set videos for Indian serials,None
+118,Hobby/General interests,high,Watercolor speedpaint art videos for Genshin and BTS,None
+119,Entertainment/General,medium,Celebrity final-performance compilations and paranormal EVP clips,Mixes personal update and paranormal content
+120,Entertainment/General,medium,UFO paranormal conspiracy and scary top-list videos,Fact-like but presented as entertainment
+121,Video games,high,Roblox Rainbow Friends and 99 Nights gameplay videos,None
+122,Music,high,Karaoke music tracks and live beat versions,None
+123,Music,high,Music history commentary about musicians albums critics and famous artists,None
+124,Food,high,Convenience store Costco Carrefour and restaurant food tasting videos,One Japan travel video mixed in
+125,Food,high,Podcast episodes focus on restaurant reviewers chefs bakeries and food influencers,None
+126,Fashion/Beauty,medium,Makeup lipstick trick and beauty-themed shorts,Some generic viral music tags make focus noisy
+127,Film/TV/Humor,high,Couple comedy prank challenge shorts,None
+128,Education/Knowledge,high,Paleontology explainers about dinosaurs fossils amber and dinosaur sounds,None
+129,Health/Fitness,high,Gymtok gymbro fitness and boxing event content,None
+130,Entertainment/General,medium,Challenge interview and variety entertainment videos,Food challenge appears but channel is broader
+131,Film/TV/Humor,high,Reality TV clips for Real Housewives and Below Deck on Universal DIVA,None
+132,Food,high,Cake decorating chocolate technique and edible print cake videos,None
+133,Fashion/Beauty,medium,Cosplay fashion acne Q&A and beauty/fashion shorts,Game character cosplay appears but presentation is style-focused
+134,Film/TV/Humor,high,Arabic dubbed drama episodes from Hikayat Hob,None
+135,Music,high,Jazz guitar improvisation arrangements and tabs,None
+136,Film/TV/Humor,high,Movie and Marvel reviews including Scary Movie Joker and Evil Dead,None
+137,Sports,medium,Skateboarding clips and skate challenges with abandoned supermarket skating,Some gaming and gear clips mixed in
+138,Video games,high,ARC Raiders gameplay raids impressions and cinematic runs,None
+139,Vehicles,high,Car reviews new vehicle previews dashcam and Malaysian auto news,None
+140,Entertainment/General,medium,Arabic challenge videos with cars food 24-hour and family routines,Broad creator challenge format
+141,Hobby/General interests,medium,Reviews and builds of miniature models toys clocks and product curiosities,Includes some gadget review content
+142,Film/TV/Humor,high,A&E TV clips from WWE biography police and Storage Wars episodes,None
+143,Film/TV/Humor,high,Italian comedy sketches about school dating and childhood situations,None
+144,Sports,high,Persija Jakarta football highlights training and press conferences,None
+145,Music,high,Rap artist Mondo Marcio songs live recap and album anniversary,None
+146,Film/TV/Humor,high,Monster High Russian cartoon episodes for children,None
+147,Vehicles,high,Cars BMW Kawasaki bike and car-lover shorts,None
+148,Lifestyle/General,medium,Couple vlog and relationship short videos,Light comedy format but personal couple content dominates
+149,Video games,high,Minecraft minigames challenges and Minecraft shorts,None
+150,Hobby/General interests,high,Balloon twisting tutorials for flowers animals and decorations,None
+151,Lifestyle/General,low,Personal shorts about relationships age appearance and daily moments,Evidence is sparse and mixed
+152,Music,high,Tamil indie songs live performances and lyric video Dhrogam,None
+153,Fashion/Beauty,low,Korean skincare era video plus limited personal content,Only two recent videos available
+154,Technology,medium,3D printer and 3D prints are repeated central topics,Some lifestyle and amputee humor mixed in
+155,Music,high,Regional romantic song videos and singer Briseyda content,None
+156,Fashion/Beauty,high,Haircut durag and 360 waves grooming videos,None
+157,Hobby/General interests,medium,Apartment renovation furnishing and home repair content,Could overlap with real-estate business
+158,Hobby/General interests,high,E-waste scrapping silver recovery circuit boards and scrap yard runs,None
+159,Music,high,Sherine Topic auto-generated music releases,None
+160,Video games,high,Overkill's The Walking Dead PAYDAY and game multiplayer setup videos,None
+161,Video games,high,Melon Sandbox and Geometry Dash game shorts,None
+162,Film/TV/Humor,medium,Short staged funny clips about kids fights and viral scenarios,Channel name says facts but evidence is skit-like
+163,Hobby/General interests,high,Toy demos 3D printed toys plush dolls and car toys,None
+164,Entertainment/General,medium,Afghan TV variety with drama comedy concert and talk show clips,Broad TV channel mix
+165,Film/TV/Humor,high,Comedy skit series such as Mufta Dost and Lalchi Driver,None
+166,Sports,high,Sunrisers IPL cricket travel locker room and match content,None
+167,Lifestyle/General,high,Daily vlog and mini vlog shorts about personal and family activities,None
+168,Film/TV/Humor,medium,Arabic short story and comedy-style scripted clips,Some song-like shorts mixed in
+169,Education/Knowledge,medium,Learning syllables reading and hijaiyah letters for children,Some Rubik and holiday clips mixed in
+170,Food,high,Mukbang eating shows with dumplings Taco Bell chicken and lobster,None
+171,Pets/Animals,high,Dog Whisperer dog behavior training and Cesar Millan clips,None
+172,Education/Knowledge,high,Agricultural extension lectures policies and INIA science development content,None
+173,Video games,high,Roblox Blox Fruits shorts,None
+174,Fashion/Beauty,high,Sarees cotton suits silk suits and fashion collection promos,None
+175,Film/TV/Humor,high,Behind-the-scenes actor biographies and Soviet cinema stories,None
+176,Health/Fitness,medium,Pharma channel ads for fatigue recovery health tonic and health management,Also includes beverage ads
+177,Video games,high,PUBG Mobile gaming videos crate openings and gameplay clips,None
+178,Entertainment/General,low,Repeated cute short titles with minimal usable detail,Evidence is very thin
+179,Performing arts,high,Dance videos and Dance Moms related content,None
+180,Lifestyle/General,medium,Vlogs about apartment decor birthday school outfits bikinis and makeup,Fashion and beauty are secondary
+181,Lifestyle/General,high,Family parenting marriage and daily life shorts with occasional country music,None
+182,Pets/Animals,high,Funny cat reverse videos featuring Cat Barsik,None
+183,Travel,high,Japan station guides shrines hiking Asakusa and Tokyo shopping travel videos,None
+184,Religion,high,Tamil Hindu temple festival and Swami kovil procession videos,None
+185,Hobby/General interests,high,Disney Cars diecast reviews races and toy collecting,None
+186,Education/Knowledge,high,Physics and JEE exam preparation lessons and study strategy,None
+187,Music,high,Arabic song uploads and singer performance videos,None
+188,Lifestyle/General,low,Personal shorts with dated posts and casual reactions,Evidence lacks clear topical detail
+189,Music,high,Official MV teaser dance techno and music-video behind-the-scenes,None
+190,Music,high,Bhojpuri songs audio and video releases with singer credits,None
+191,Politics/News,high,Vietnamese newspaper news on Iran Trump transport incidents and current affairs,None
+192,Video games,high,Roblox NPC content and gaming stream references,None
+193,Technology,high,HP printer computer repair setup and troubleshooting support tutorials,None
+194,Film/TV/Humor,low,Repeated Kpop Demon Hunters and Huntrix tags point to animated media fandom,Evidence is hashtag-only
+195,Food,medium,Surreal cooking ASMR mukbang and eating adventure videos,Animated meme style makes topic less direct
+196,Music,high,Vietnamese bolero and song compilation videos,None
+197,Film/TV/Humor,high,Comedy reaction and humor shorts with recurring funny skit framing,None
+198,Business,medium,Ricola brand channel with product marketing farmer stories and ads,Product is food/health adjacent
+199,Music,high,Rodney Atkins country music lyric video and song promo shorts,None
+200,Video games,high,Minecraft house build tutorials and timelapse videos,None

@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+701,Lifestyle/General,medium,Personal shorts with products prayer and holiday poems,Mixed evidence across lifestyle products and poems
+702,Sports,high,TNT basketball highlights and player interviews,No major ambiguity
+703,Politics/News,high,Daily Ittefaq political and local news reports,No major ambiguity
+704,Fashion/Beauty,high,Hair color haircut and treatment shorts,No major ambiguity
+705,Video games,high,PS5 games PS Plus and PlayStation news,No major ambiguity
+706,Music,high,Song uploads by named singers and music descriptions,No major ambiguity
+707,Film/TV/Humor,medium,Funny short scenarios and transformed clips,Could be broad viral entertainment
+708,Film/TV/Humor,high,Japanese quiz variety eating challenges and jokes,No major ambiguity
+709,Film/TV/Humor,medium,Superhero and Wednesday character evolution clips,Some Steal a Brainrot gaming signals
+710,Film/TV/Humor,high,Kids funny comedy shorts and ghost gags,No major ambiguity
+711,Film/TV/Humor,medium,Animated anime cartoon and meme shorts,Some game character references
+712,Lifestyle/General,low,Cosplay costume and casual personal shorts,Sparse mixed evidence
+713,Film/TV/Humor,medium,Cartoon comedy and pop culture gag titles,Some titles are cryptic
+714,Food,medium,Eden Cheese holiday brand campaign videos,Food brand ads more than recipes
+715,Food,high,Air fryer recipes cakes salmon and waffles,No major ambiguity
+716,Music,high,Cover songs songwriting and singer content,No major ambiguity
+717,Vehicles,high,Classic cars muscle cars restorations and burnouts,No major ambiguity
+718,Business,high,Mutual fund strategy market volatility and NFO videos,No major ambiguity
+719,Video games,medium,Payday style heist game references and character gags,Titles are sparse
+720,Music,high,Official topic tracks and album songs,No major ambiguity
+721,Lifestyle/General,medium,Personal rural home goats cooking and village life videos,Some comedy elements
+722,Music,high,Official audio live songs and album content,No major ambiguity
+723,Religion,high,Islamic sheikh lectures imams Allah and paradise,No major ambiguity
+724,Food,medium,ZapEat repeats would you eat this food prompt,Very little title detail
+725,Video games,high,Kingdom Hearts timeline episodes and game montage,No major ambiguity
+726,Video games,high,Minecraft and Roblox series compilations,No major ambiguity
+727,Sports,medium,IPL predictions and 1xBet sports betting promos,Betting promotion dominates
+728,Health/Fitness,medium,Weight loss reality show transformations and trainers,TV format creates some ambiguity
+729,Entertainment/General,medium,Creator events fan gifts merch and stunt shorts,Mixed lifestyle and entertainment
+730,Music,high,Kids songs nursery rhymes and singalong videos,Educational elements are secondary
+731,Travel,medium,Travel couple visits Serra Negra and road channel,Some home construction content
+732,Entertainment/General,medium,Mixed viral challenges odd news and shorts,Broad variety without one topic
+733,Film/TV/Humor,high,Japanese comedy variety prank and laugh clips,No major ambiguity
+734,Politics/News,high,Lebanon Iraq Israel Iran and regional politics news,No major ambiguity
+735,Technology,high,LINE app moments calendar and feature videos,No major ambiguity
+736,Music,high,Grupo Kvrass live songs and vallenato performances,No major ambiguity
+737,Performing arts,high,Dance tutorials hook steps and dance covers,No major ambiguity
+738,Vehicles,high,Truck inspection Volvo repairs and night hauling,Some travel vlog framing
+739,Music,high,Live songs instrumentals and llanero performances,No major ambiguity
+740,Hobby/General interests,high,Crochet patterns scarves hats and tutorials,No major ambiguity
+741,Film/TV/Humor,medium,Funny tier lists school rules and social commentary,Could be broad entertainment
+742,Business,high,HDFC Life insurance savings investing and leadership videos,No major ambiguity
+743,Hobby/General interests,high,Beyblade unboxings reviews battles and tournaments,No major ambiguity
+744,Music,high,Single official Haryanvi song video,Only one record but label is clear
+745,Music,high,Official topic tracks by Crush,No major ambiguity
+746,Food,medium,Restaurant food sale and McDonalds shorts,Some unrelated local promo videos
+747,Entertainment/General,medium,TikTok Facebook YouTube and creator challenge videos,Mixed viral creator topics
+748,Food,high,Recipe shorts for mugcake burgers pizza and appetizers,No major ambiguity
+749,Music,high,Live music performances by bands and singers,No major ambiguity
+750,Performing arts,high,Dance and festival baile shorts,No major ambiguity
+751,Film/TV/Humor,high,Film trailer and Telugu pre release event speeches,No major ambiguity
+752,Hobby/General interests,high,Glassblowing ornaments pumpkins and process videos,No major ambiguity
+753,Film/TV/Humor,high,Bengali scripted story parts and drama titles,No major ambiguity
+754,Education/Knowledge,high,Explainer videos on politics science and history,No major ambiguity
+755,Business,medium,Business boarding house savings and finance advice,Mixed with family and religious themes
+756,Film/TV/Humor,medium,Funny shorts and comedy sketches with some school content,Mixed education snippets
+757,Hobby/General interests,high,DIY metal casting wind generator and workshop experiments,Some science education overlap
+758,Video games,high,99 Nights in the Forest gameplay tips and tests,No major ambiguity
+759,Sports,high,Cricket players IPL Ashes and match moments,No major ambiguity
+760,Music,high,Chris Brown live performances and songs,No major ambiguity
+761,Hobby/General interests,high,Clay art and craft projects of devotional figures,Religious subjects but craft is central
+762,Video games,high,Pokemon games teams secrets and discussion,No major ambiguity
+763,Technology,high,AI tools website creation video editing and audio separation,No major ambiguity
+764,Food,high,Mango popsicle bread pizza biriyani and lime juice,No major ambiguity
+765,Lifestyle/General,high,Family update beauty lookbook and personal shorts,No major ambiguity
+766,Food,high,Cooking dishes inspired by films and cartoons,No major ambiguity
+767,Film/TV/Humor,high,AI funny absurd story shorts and character gags,No major ambiguity
+768,Video games,high,GTA Pokemon Dragon Quest and PlayStation gaming videos,No major ambiguity
+769,Film/TV/Humor,high,Scripted rich poor school and family drama stories,No major ambiguity
+770,Film/TV/Humor,high,Scripted series episodes teasers and drama arcs,No major ambiguity
+771,Film/TV/Humor,high,Teletubbies episodes and kids TV programs,No major ambiguity
+772,Lifestyle/General,high,Couple daily life shopping food and Disney outings,No major ambiguity
+773,Performing arts,high,Afrodance choreography and dance class videos,No major ambiguity
+774,Music,high,Official artist lyrics live performance and song clips,No major ambiguity
+775,Education/Knowledge,medium,English and Javanese language learning comedy,Humor is also prominent
+776,Food,high,Baking cooking recipes and dessert shorts,No major ambiguity
+777,Politics/News,low,Channel name is news but titles are only dates,Evidence is very sparse
+778,Hobby/General interests,high,Toy robot Gundam and Transformers unboxings,No major ambiguity
+779,Video games,high,Official Elite Dangerous game updates and tutorials,No major ambiguity
+780,Music,high,Music label teasers live performances and longplay,No major ambiguity
+781,Hobby/General interests,medium,Fishing boating and water incident commentary,Some boat vehicle overlap
+782,Music,high,Eddy Herrera concerts venues and tour clips,No major ambiguity
+783,Film/TV/Humor,high,Princess Batman and Joker scripted kids entertainment,No major ambiguity
+784,Education/Knowledge,high,Science and nature explainers on physics and space,No major ambiguity
+785,Entertainment/General,medium,AI edits pranks YouTuber commentary and one music clip,Mixed topics
+786,Performing arts,medium,Dance acting and wedding performance shorts,Mixed with personal posts
+787,Music,high,Official Jorge Vercillo songs clips and tour documentary,No major ambiguity
+788,Lifestyle/General,medium,Student life fandom goods and photocard packing,Could be hobby fandom content
+789,Performing arts,high,Magic tricks reveals and challenge performances,No major ambiguity
+790,Film/TV/Humor,high,UpDating staged dating show clips,Relationships are in show format
+791,Hobby/General interests,high,Woodworking concrete garden and shop DIY projects,No major ambiguity
+792,Politics/News,high,TVT news politics labor STF Trump and public issues,No major ambiguity
+793,Film/TV/Humor,high,Film and TV set behind the scenes and show promos,No major ambiguity
+794,Film/TV/Humor,high,QosLike television reality romance show clips,No major ambiguity
+795,Music,high,Ethiopian songs albums singers and band credits,No major ambiguity
+796,Politics/News,high,Pension Bienestar payments health rights and Sheinbaum news,No major ambiguity
+797,Education/Knowledge,high,Teacher development reading listening and speaking lessons,No major ambiguity
+798,Video games,high,Gameplay episodes horror games and gaming hashtags,No major ambiguity
+799,Technology,high,Mechanical keyboard reviews builds and hardware tests,No major ambiguity
+800,Education/Knowledge,high,Chemistry element experiments and science demonstrations,Meme tone but science is central

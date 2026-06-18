@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+801,Lifestyle/General,high,Personal Korean Vietnam vlog titles about visitors staff dates cafe work,Travel and business links appear but personal vlog focus dominates
+802,Music,high,DJ sets and live trap reggaeton dembow mixes dominate recent titles,Barber branding appears but recent evidence is mostly music
+803,Politics/News,medium,Thai TV public affairs items on hospital donations royal medical projects and officials,Some community culture and medical topics included
+804,Video games,high,Rust raid cam base and clan titles throughout,None
+805,Travel,high,Travel documentary titles on Argentina Patagonia Kurils Uzbekistan Afghanistan and Brazil,Some geopolitical framing appears
+806,Politics/News,low,Breaking news style titles on Maduro Trump floods tsunami and odd events,Channel name suggests singer songwriter and evidence is mixed
+807,Fashion/Beauty,medium,Sneaker releases and Foot Locker product shorts about Jordan Vans Converse Kobe,Retail product marketing rather than beauty content
+808,Vehicles,high,Car reviews drag races and model comparisons for Corvette Audi BMW Cadillac and Honda,None
+809,Video games,high,Gaming branded channel with find quests horror rooms and ocean ruler gameplay titles,None
+810,Music,high,Singer concert lyric and tour related James Arthur titles,None
+811,Education/Knowledge,medium,Mystery creature nature fact and engineering explainer titles,Horror and legend entertainment framing appears
+812,Music,high,Live song performances and singers from Shoke Studio dominate,None
+813,Technology,high,Smartphone gadget and gaming handheld review titles,None
+814,Music,high,Nursery rhyme kids song and family song titles dominate,Kids animation format but songs dominate
+815,Music,high,Orchestra live sessions cumbia pachanga and music tributes,None
+816,Pets/Animals,high,Capybara animal and pet funny shorts dominate,Uses humor hashtags
+817,Film/TV/Humor,high,Repeated Junya and Sagawa funny meme comedy shorts,None
+818,Vehicles,high,Pagani roadster design raduno and automotive partner videos,None
+819,Entertainment/General,medium,Viral baby dance and cute baby hashtag shorts,Sparse hashtag titles make topic broad
+820,Music,high,Country artist podcast concerts and music business titles,None
+821,Film/TV/Humor,high,Filmibeat celebrity TV film and actor interview coverage,One general news title appears
+822,Film/TV/Humor,high,Relatable relationship school and desi household comedy skits,None
+823,Entertainment/General,medium,Ranking style viral baby animal singing car and sports clips,Mixed viral topics with no single vertical
+824,Music,high,Portuguese kids songs nursery music and educational cartoon songs,Educational cartoon framing but songs dominate
+825,Music,high,Artist Topic channel with instrumental sped up and track titles,None
+826,Film/TV/Humor,high,Thai horror short film and movie titles from The Ghost Studio,None
+827,Politics/News,high,Dedi Mulyadi police illegal mining and public action titles,None
+828,Film/TV/Humor,medium,TV drama previews comedy clips and program teasers from MBS,Broad broadcaster with mixed entertainment shows
+829,Hobby/General interests,high,MediBang digital drawing tool and illustration how-to titles,Software tutorial framing but art practice dominates
+830,Lifestyle/General,high,Best friend relationship and friendship shorts,None
+831,Music,high,Spanish JunyTony children's songs and nursery rhyme titles,None
+832,Music,high,Guitar lesson and acoustic song tutorial titles,None
+833,Music,medium,Nadine Lustre singing performance and fan event clips,Celebrity fan clips include photoshoot and fashion
+834,Lifestyle/General,medium,Family IRL live vlogs challenges farm and home activities,Challenge and skit elements appear
+835,Health/Fitness,high,IVF specialist doctor titles about newborns bleeding pregnancy and baby care,None
+836,Religion,high,Quran recitation titles,None
+837,Hobby/General interests,medium,Farm implements rotavators seeders and agriculture machinery titles,Tractor machinery overlaps vehicles
+838,Hobby/General interests,high,Permaculture irrigation biodigester bamboo and rural site course titles,Instructional course framing appears
+839,Travel,medium,Thailand trip farewell gratitude and heartwarming travel moments,Some human interest lifestyle clips appear
+840,Music,high,Official Arabic song and music video releases by Mashael,None
+841,Video games,high,Video game curiosities betas secrets and controversial game titles,None
+842,Film/TV/Humor,medium,Karen instant karma and funny police compilation titles,Also broad viral social clips
+843,Video games,high,Battle Cats Roblox and other gameplay challenge titles,None
+844,Music,high,4MINUTE and Hyuna music videos teasers and album audio,None
+845,Politics/News,high,Korean newspaper live political commentary and corruption allegation titles,None
+846,Vehicles,medium,Racecar and car lap record comparisons with F1 and Porsche titles,Could overlap racing sport or simulation gaming
+847,Film/TV/Humor,medium,Dramatic wedding ex sneaking out and reveal story titles,Presented like personal drama so lifestyle overlap exists
+848,Film/TV/Humor,high,Ram Charan film glimpses RRR intros and cinema event speeches,None
+849,Performing arts,medium,Dance lip-sync expression and love-status shorts,Personal creator lifestyle framing also appears
+850,Politics/News,high,Local police crime business sports and community news titles from FOX5,None
+851,Entertainment/General,medium,Portuguese trend couple and laugh challenge shorts,Humor is present but titles are broad trends
+852,Fashion/Beauty,medium,Product shorts on mangalsutra saree face lift decor and hacks,Mixed shopping and home decor products
+853,Music,high,BTS and K-pop performance fan shorts dominate,None
+854,Food,high,Recipe chef dessert burger and stuffed pepper shorts,None
+855,Fashion/Beauty,medium,Tattoo models artists and tattoo shop tour titles,Tattoo art overlaps hobby culture
+856,Music,high,Band tour bluegrass folk metal covers and live music titles,None
+857,Video games,high,Roblox Squid Game Sprunki obby and story gameplay titles,None
+858,Uncategorized,low,Miscellaneous personal name clips soccer product and music event titles,No coherent channel topic from titles
+859,Lifestyle/General,medium,Family vacation cruise shopping detox interview and recipe vlog titles,Recent titles include substantial travel content
+860,Film/TV/Humor,high,Sibling and family short comedy situations,None
+861,Religion,medium,Repeated Jesus protection faith edit titles plus viral shorts,Later titles are generic viral edits
+862,Music,high,Lifehouse live acoustic lyric video and tour titles,None
+863,Film/TV/Humor,high,Humor and frutinovela comedy shorts,None
+864,Music,high,La Konga cuarteto cumbia vocals live and official video titles,None
+865,Film/TV/Humor,high,Movie public reviews Bigg Boss and actor entertainment shorts,None
+866,Vehicles,high,Audi Subaru Mercedes BMW and sedan car titles from racing team,None
+867,Film/TV/Humor,high,Movie trailers free films and film recommendation shorts,None
+868,Music,high,Mallu Magalhaes song videos tour documentary and VEVO stream,None
+869,Music,high,La Beriso lyric video song titles,None
+870,Music,high,Smokey Robinson Topic song track titles,None
+871,Film/TV/Humor,high,Teacher high school funny and comedy shorts,None
+872,Video games,high,Roblox Sammy story and school shorts throughout,None
+873,Film/TV/Humor,high,Hindi funny comedy shorts about shopkeeper pranks,None
+874,Entertainment/General,medium,Food drink and balloon challenge shorts,Several food items but challenge format dominates
+875,Video games,medium,Football game team building TOTS Bayern Messi and Ronaldo challenge titles,Sports theme overlaps with soccer itself
+876,Entertainment/General,medium,Translated viral shorts about people animals farms fish and surprises,Animal clips appear but viral variety dominates
+877,Food,high,Outdoor cooking food breakfast and meat recipe titles,None
+878,Video games,high,FNAF and Subnautica gameplay titles,None
+879,Music,high,Slash music video album making and tracklist titles,None
+880,Society/General,low,Mixed commentary on ETF breastfeeding Trump CRO ChatGPT travel and restaurants,Very broad personal commentary with no single vertical
+881,Film/TV/Humor,high,Zee Kannada TV serial webisodes scenes and episodes,None
+882,Music,high,Lil Uzi Vert official music video audio and song process titles,None
+883,Food,high,Chef Lazerson recipe breakfast starch and cooking titles,None
+884,Film/TV/Humor,high,Hindi action comedy horror and drama movie upload titles,None
+885,Lifestyle/General,high,Family Sweden daily life school pickup and personal vlog titles,None
+886,Film/TV/Humor,high,Anime couple Kanna and sad clip edit titles,None
+887,Performing arts,medium,Dance love status and personal performance shorts,Personal lifestyle creator framing also appears
+888,Music,high,Kesha official lyric audio and music video releases,None
+889,Film/TV/Humor,high,Frozen Tinkerbell Epic and animation character edits,None
+890,Film/TV/Humor,medium,Family child funny shorts with mom dad and Hridyansh,Family vlog overlap exists
+891,Hobby/General interests,high,Log cabin wooden house build timelapse repeated across titles,None
+892,Video games,high,Fallout 4 episodes and gaming series titles,None
+893,Film/TV/Humor,high,Tamil crime thriller and crime story drama titles,None
+894,Video games,medium,Gaming named channel with hack trick challenge and Tausir shorts,Titles are sparse beyond gaming identity
+895,Video games,high,Casual game titles such as Pet Salon Snail Bob Baby Panda and truck game,None
+896,Sports,medium,WWE live SmackDown CM Punk and wrestling beginner titles,Mixed with RPG and Stranger Things commentary
+897,Video games,medium,MoistCr1TiKaL clips on Red Dead Xbox Assassin's Creed and NBA,Also includes sports and general reaction clips
+898,Technology,high,Smartphone smartwatch and gadget review titles,None
+899,Performing arts,high,Dance competition improv GRWM routines and dance team titles,None
+900,Music,high,Kurdish music album official audio soundtrack and video titles,None

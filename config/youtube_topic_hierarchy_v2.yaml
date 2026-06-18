@@ -1,0 +1,132 @@
+# Canonical scaffold for the hierarchy-aware YouTube topic treemap v2.
+#
+# This represents YouTube topicCategories metadata. It is not a researcher-defined
+# content taxonomy. Unknown labels must remain visible as unmapped topics until
+# they are deliberately added here.
+
+families:
+  Music:
+    parent_slugs:
+      - music
+    children:
+      christian_music: Christian music
+      classical_music: Classical music
+      country: Country
+      electronic_music: Electronic music
+      hip_hop_music: Hip hop music
+      independent_music: Independent music
+      jazz: Jazz
+      music_of_asia: Music of Asia
+      music_of_latin_america: Music of Latin America
+      pop_music: Pop music
+      reggae: Reggae
+      rhythm_and_blues: Rhythm and blues
+      rock_music: Rock music
+      soul_music: Soul music
+
+  Gaming:
+    parent_slugs:
+      - gaming
+      - video_game_culture
+    children:
+      action_game: Action game
+      action-adventure_game: Action-adventure game
+      casual_game: Casual game
+      music_video_game: Music video game
+      puzzle_video_game: Puzzle video game
+      racing_video_game: Racing video game
+      role-playing_video_game: Role-playing video game
+      simulation_video_game: Simulation video game
+      sports_game: Sports game
+      strategy_video_game: Strategy video game
+
+  Sports:
+    parent_slugs:
+      - sports
+    children:
+      american_football: American football
+      baseball: Baseball
+      basketball: Basketball
+      boxing: Boxing
+      cricket: Cricket
+      football: Football
+      association_football: Association football
+      golf: Golf
+      ice_hockey: Ice hockey
+      mixed_martial_arts: Mixed martial arts
+      motorsport: Motorsport
+      tennis: Tennis
+      volleyball: Volleyball
+
+  Entertainment:
+    parent_slugs:
+      - entertainment
+    children:
+      humor: Humor
+      humour: Humor
+      movies: Movies
+      film: Movies
+      movie: Movies
+      performing_arts: Performing arts
+      professional_wrestling: Professional wrestling
+      tv_shows: TV shows
+      television: TV shows
+      television_program: TV shows
+
+  Lifestyle:
+    parent_slugs:
+      - lifestyle
+      - lifestyle_(sociology)
+    children:
+      fashion: Fashion
+      fitness: Fitness
+      physical_fitness: Fitness
+      food: Food
+      hobby: Hobby
+      pets: Pets
+      physical_attractiveness: Physical attractiveness / Beauty
+      beauty: Physical attractiveness / Beauty
+      technology: Technology
+      tourism: Tourism
+      vehicles: Vehicles
+
+  Society:
+    parent_slugs:
+      - society
+    children:
+      business: Business
+      health: Health
+      military: Military
+      politics: Politics
+      religion: Religion
+
+  Knowledge:
+    parent_slugs:
+      - knowledge
+    children: {}
+
+  Other:
+    parent_slugs: []
+    children: {}
+
+aliases:
+  association_football: football
+  football: football
+  humour: humor
+  television_program: tv_shows
+  television: tv_shows
+  tv_show: tv_shows
+  tv_shows: tv_shows
+  lifestyle_(sociology): lifestyle
+  physical_fitness: fitness
+  physical_attractiveness: physical_attractiveness
+  beauty: physical_attractiveness
+
+mapping_notes:
+  - Professional wrestling belongs under Entertainment in the canonical scaffold.
+  - Motorsport belongs under Sports.
+  - Vehicles belongs under Lifestyle.
+  - Technology belongs under Lifestyle.
+  - Health belongs under Society.
+  - Knowledge is a top-level Other topics node, not a child of Society.
+  - Do not move labels to more intuitive human categories; represent YouTube's scheme.

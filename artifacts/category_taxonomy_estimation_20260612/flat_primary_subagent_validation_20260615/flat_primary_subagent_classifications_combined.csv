@@ -1,0 +1,1001 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes,source_file,subagent_primary_label_raw
+1,Sports,high,Bodybuilding armwrestling and strength athlete news.,Could overlap fitness but competition focus dominates.,subagent_chunk_01_cases_0001_0100.csv,Sports
+2,Video games,high,PUBG streams and gaming creator videos.,Some general reaction humor but gaming is central.,subagent_chunk_01_cases_0001_0100.csv,Video games
+3,Entertainment/General,medium,ViralHog posts mixed viral clips and incidents.,Many animal clips but channel is broader viral UGC.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+4,Music,high,Official music videos remixes and acoustic songs.,,subagent_chunk_01_cases_0001_0100.csv,Music
+5,Film/TV/Humor,high,Spider-Noir The Boys DC and Marvel show coverage.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+6,Religion,medium,Church social media website and design advice.,Marketing format but church context is central.,subagent_chunk_01_cases_0001_0100.csv,Religion
+7,Film/TV/Humor,medium,Short comedic family skits and funny scenarios.,Evidence is short-form skit based.,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+8,Music,high,KR$NA official music videos and visualisers.,,subagent_chunk_01_cases_0001_0100.csv,Music
+9,Film/TV/Humor,high,Comedic school and YouTuber skits plus film trailer.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+10,Food,high,Cooking hacks steak stir-fry desserts and meals.,,subagent_chunk_01_cases_0001_0100.csv,Food
+11,Fashion/Beauty,high,Hair colour and hair aloe beauty product ads.,,subagent_chunk_01_cases_0001_0100.csv,Fashion/Beauty
+12,Lifestyle/General,medium,Family visits daily events seafood outing and personal updates.,Mixed vlog evidence.,subagent_chunk_01_cases_0001_0100.csv,Lifestyle/General
+13,Sports,high,Cricket challenges batting bowling and sixes.,,subagent_chunk_01_cases_0001_0100.csv,Sports
+14,Entertainment/General,medium,Celebrity drama scandal and reaction-style stories.,Some crime/social topics but entertainment framing dominates.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+15,News/Society/Politics,medium,Clean energy utility board and conservation policy panels.,Environmental nonprofit content overlaps society.,subagent_chunk_01_cases_0001_0100.csv,Politics/News
+16,Music,high,Wedding performances singers and live musical events.,,subagent_chunk_01_cases_0001_0100.csv,Music
+17,Film/TV/Humor,high,Animated comedy shorts and prank animations.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+18,Video games,high,PUBG and PUBG Mobile shorts.,,subagent_chunk_01_cases_0001_0100.csv,Video games
+19,Film/TV/Humor,medium,Children toy car stories and cartoon-like videos.,Vehicle toys not real vehicle topic.,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+20,Film/TV/Humor,high,Illustrated recreations of comedy and meme skits.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+21,Technology,high,Smartphone specs prices designs and feature leaks.,,subagent_chunk_01_cases_0001_0100.csv,Technology
+22,Film/TV/Humor,high,Gumball and Smiling Friends TV clips and promos.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+23,Technology,high,Arduino Raspberry Pi robotics PCB and electronics kits.,,subagent_chunk_01_cases_0001_0100.csv,Technology
+24,Film/TV/Humor,medium,Chinese animated story shorts with recurring characters.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+25,News/Society/Politics,high,War preparation Europe military exercises and current affairs.,Military themes but framed as public affairs commentary.,subagent_chunk_01_cases_0001_0100.csv,Politics/News
+26,Music,high,Denise Rosenthal songs lyric videos and artist posts.,,subagent_chunk_01_cases_0001_0100.csv,Music
+27,News/Society/Politics,high,Novara current affairs politics Israel Trump and Labour.,,subagent_chunk_01_cases_0001_0100.csv,Politics/News
+28,Fashion/Beauty,high,Beauty cream beard and hair growth product reviews.,,subagent_chunk_01_cases_0001_0100.csv,Fashion/Beauty
+29,Film/TV/Humor,high,Comedy shorts and funny desi skits.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+30,Entertainment/General,medium,Staged kindness and surprise money videos.,Social-help theme but entertainment format dominates.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+31,News/Society/Politics,medium,Gen Z interviews about stress school future and social risks.,Some education/school content but social survey focus.,subagent_chunk_01_cases_0001_0100.csv,Society/General
+32,Lifestyle/General,low,Sparse personal Australia/Hungarian vlog updates.,Limited recent evidence.,subagent_chunk_01_cases_0001_0100.csv,Lifestyle/General
+33,Film/TV/Humor,high,Prank videos including wasabi hiding and phone pranks.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+34,Film/TV/Humor,medium,TV actor couple edits and drama-themed shorts.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+35,Hobby/General interests,high,Notebook front page decoration calligraphy and art ideas.,,subagent_chunk_01_cases_0001_0100.csv,Hobby/General interests
+36,Health/Fitness,medium,Narcissist abuse healing manipulation and emotional wellness advice.,Relationship content overlaps society.,subagent_chunk_01_cases_0001_0100.csv,Health/Fitness
+37,Music,high,Relaxing Mozart classical piano and Christmas music.,,subagent_chunk_01_cases_0001_0100.csv,Music
+38,Vehicles/Motorsport,medium,Mountain bikes e-bikes restorations and bike-path tests.,Cycling can overlap sports.,subagent_chunk_01_cases_0001_0100.csv,Vehicles
+39,Hobby/General interests,medium,DIY projects tricks crafts illusions and hacks.,Mixed creative-hack content.,subagent_chunk_01_cases_0001_0100.csv,Hobby/General interests
+40,Film/TV/Humor,high,Reaction videos to funny clips and comedy moments.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+41,Sports,high,UEFA Euro football match live streams.,,subagent_chunk_01_cases_0001_0100.csv,Sports
+42,Entertainment/General,medium,Mixed short skits with food pool candy and jokes.,Some food items but not primarily cooking.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+43,Film/TV/Humor,medium,Short friendship and tough-guy skit videos.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+44,Sports,high,Streetball basketball challenges and matches.,,subagent_chunk_01_cases_0001_0100.csv,Sports
+45,Entertainment/General,medium,Satisfying shocking and viral reaction clips.,Sparse topical detail.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+46,Film/TV/Humor,high,Enrico Brignano comedy clips trailers and stage material.,Could be performing arts but comedy is central.,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+47,Video games,high,Free Fire gameplay shorts and clutch videos.,,subagent_chunk_01_cases_0001_0100.csv,Video games
+48,News/Society/Politics,high,Crypto NFTs memecoins Bitcoin trading and investing.,,subagent_chunk_01_cases_0001_0100.csv,Business
+49,Entertainment/General,medium,Random meme shorts across cats cars tech and fails.,No single topical focus.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+50,Technology,high,Phone tablet mini PC and gadget reviews.,,subagent_chunk_01_cases_0001_0100.csv,Technology
+51,News/Society/Politics,high,Class struggle reformism capitalism and social dispute commentary.,,subagent_chunk_01_cases_0001_0100.csv,Politics/News
+52,Sports,high,MMA BJJ technique drills workouts and armbars.,,subagent_chunk_01_cases_0001_0100.csv,Sports
+53,Film/TV/Humor,medium,Dramatic short-film style clips and repeated audio warnings.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+54,Food,medium,Kitchen masala vathal podi and food product shorts.,Some non-food product posts.,subagent_chunk_01_cases_0001_0100.csv,Food
+55,Religion,high,Quran surah memorization lessons.,,subagent_chunk_01_cases_0001_0100.csv,Religion
+56,Education/Explainers,medium,Children learning with farm toys tractors and trucks.,Toy-entertainment format but learning framing.,subagent_chunk_01_cases_0001_0100.csv,Education/Knowledge
+57,Education/Explainers,medium,Children learning with farm toys tractors and trucks.,Toy-entertainment format but learning framing.,subagent_chunk_01_cases_0001_0100.csv,Education/Knowledge
+58,Video games,high,Battlefield 1 gameplay sniping and tank moments.,,subagent_chunk_01_cases_0001_0100.csv,Video games
+59,Film/TV/Humor,high,Animated cartoon family and character stories.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+60,Music,high,Live band songs cumbias rancheras and music tutorials.,,subagent_chunk_01_cases_0001_0100.csv,Music
+61,Film/TV/Humor,high,Spanish humor shorts with trolling and punchlines.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+62,Lifestyle/General,high,Night routine room tour makeup gifts haul and skincare.,,subagent_chunk_01_cases_0001_0100.csv,Lifestyle/General
+63,Technology,high,Gadgets inventions smart drill and Amazon tech finds.,,subagent_chunk_01_cases_0001_0100.csv,Technology
+64,Film/TV/Humor,high,Relatable comedy skits and funny short videos.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+65,News/Society/Politics,high,Official Maharashtra police employment AI and state event videos.,,subagent_chunk_01_cases_0001_0100.csv,Politics/News
+66,Music,high,Bollywood song videos and full music tracks.,,subagent_chunk_01_cases_0001_0100.csv,Music
+67,Lifestyle/General,medium,Personal vlogs shopping food travel and relationship moments.,Travel appears often but creator lifestyle is broader.,subagent_chunk_01_cases_0001_0100.csv,Lifestyle/General
+68,Film/TV/Humor,high,DC Marvel Batman Supergirl and movie news.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+69,Sports,high,ASEAN football highlights live matches and goals.,,subagent_chunk_01_cases_0001_0100.csv,Sports
+70,Sports,high,Football training rules recovery and drills.,,subagent_chunk_01_cases_0001_0100.csv,Sports
+71,Hobby/General interests,medium,Claw machines arcade games kuji and Pokemon card machines.,Arcade content overlaps games/travel.,subagent_chunk_01_cases_0001_0100.csv,Hobby/General interests
+72,Sports,high,MMA fights UFC shorts and fight podcasts.,,subagent_chunk_01_cases_0001_0100.csv,Sports
+73,Hobby/General interests,low,Repeated log cabin build titles with mixed odd clips.,Evidence is noisy and inconsistent.,subagent_chunk_01_cases_0001_0100.csv,Hobby/General interests
+74,Film/TV/Humor,high,K-pop public dance covers and performance clips.,Music adjacent but dance performance is central.,subagent_chunk_01_cases_0001_0100.csv,Performing arts
+75,Music,high,Band concerts official songs and music posts.,,subagent_chunk_01_cases_0001_0100.csv,Music
+76,Entertainment/General,low,Random trampoline baby dance and hashtag shorts.,Evidence is sparse and repetitive.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+77,Film/TV/Humor,medium,Movie uploads trailers and film-related videos.,Some unrelated old game/tutorial evidence.,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+78,Entertainment/General,medium,Scripted kindness and moral-story shorts.,Could be society but staged entertainment dominates.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+79,Video games,low,GameBooster channel with Ball run evidence.,Very sparse evidence.,subagent_chunk_01_cases_0001_0100.csv,Video games
+80,Video games,high,Friday Night Funkin mods cutscenes and walkthroughs.,,subagent_chunk_01_cases_0001_0100.csv,Video games
+81,Education/Explainers,high,SSC GD preparation and history lesson videos.,,subagent_chunk_01_cases_0001_0100.csv,Education/Knowledge
+82,Music,high,Sample packs drum kits drill loops and production resources.,,subagent_chunk_01_cases_0001_0100.csv,Music
+83,Music,high,Official music videos lyric videos and cover versions.,,subagent_chunk_01_cases_0001_0100.csv,Music
+84,Entertainment/General,medium,Mixed viral shorts across hacks people animals and places.,No stable topical focus.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+85,Film/TV/Humor,high,Spider-Man Superman Deadpool superhero story shorts.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+86,Technology,medium,HTC VIVERSE VR mobile worlds and virtual creation tools.,Some game content but tech brand focus.,subagent_chunk_01_cases_0001_0100.csv,Technology
+87,Video games,high,Roblox gameplay horror and challenge videos.,,subagent_chunk_01_cases_0001_0100.csv,Video games
+88,Entertainment/General,medium,Mixed viral moments with animals travel repairs and alarms.,No single topical focus.,subagent_chunk_01_cases_0001_0100.csv,Entertainment/General
+89,Film/TV/Humor,medium,Siren Head evolution horror-character shorts.,Repetitive sparse evidence.,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+90,Video games,high,League of Legends champion gameplay and reactions.,,subagent_chunk_01_cases_0001_0100.csv,Video games
+91,Film/TV/Humor,high,Animation comedy and Gartic Phone animator videos.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+92,Film/TV/Humor,high,Spider-Man cartoon and Scary Teacher style stories.,,subagent_chunk_01_cases_0001_0100.csv,Film/TV/Humor
+93,Music,medium,Kids singing group posts and performance snippets.,Lifestyle snippets also present.,subagent_chunk_01_cases_0001_0100.csv,Music
+94,Food,high,Mukbang ASMR snacks watermelon noodles and cooking.,,subagent_chunk_01_cases_0001_0100.csv,Food
+95,Hobby/General interests,high,Painting tutorials glass art pottery and acrylic markers.,,subagent_chunk_01_cases_0001_0100.csv,Hobby/General interests
+96,Music,high,Anıl Piyancı lyric videos and song collaborations.,,subagent_chunk_01_cases_0001_0100.csv,Music
+97,Lifestyle/General,high,Family birthdays holidays beach and daily vlog content.,,subagent_chunk_01_cases_0001_0100.csv,Lifestyle/General
+98,Video games,high,Guardian Tales guides walkthroughs units and dungeon clears.,,subagent_chunk_01_cases_0001_0100.csv,Video games
+99,Hobby/General interests,medium,Crop fertilizer programs for hazelnut olive banana avocado.,Agriculture education/business overlap.,subagent_chunk_01_cases_0001_0100.csv,Hobby/General interests
+100,Education/Explainers,medium,General curiosity explainers about science animals and hacks.,Mixed viral entertainment tone.,subagent_chunk_01_cases_0001_0100.csv,Education/Knowledge
+101,Music,high,SZA Topic uploads auto-generated songs and soundtrack track Save The Day,,subagent_chunk_02_cases_0101_0200.csv,Music
+102,Entertainment/General,medium,Viral wholesome shorts about tattoos supermarket turtles and family memories,Mixed feel-good clips without one topical focus,subagent_chunk_02_cases_0101_0200.csv,Entertainment/General
+103,Film/TV/Humor,high,Comedy sketch titles like if ants talked and if I were a delivery person,Some vehicle jokes appear but humor is central,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+104,Fashion/Beauty,high,Home remedies for teeth whitening skin tanning and facial hair removal,Some household remedy content mixed in,subagent_chunk_02_cases_0101_0200.csv,Fashion/Beauty
+105,Music,high,Pagode playlists samba tags and music performance clips,,subagent_chunk_02_cases_0101_0200.csv,Music
+106,Film/TV/Humor,medium,Recent videos are true-crime documentary parody and audio drama style clips,Older/random phone shorts make channel focus less clean,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+107,Music,high,Official MV and official audio releases by Chom Chumkasian,,subagent_chunk_02_cases_0101_0200.csv,Music
+108,Video games,high,Mobile Legends gameplay and MLBB creator tags across recent videos,,subagent_chunk_02_cases_0101_0200.csv,Video games
+109,Entertainment/General,medium,Arabic reaction shock and family entertainment shorts with mic/prank framing,Could overlap with music but evidence is broader entertainment,subagent_chunk_02_cases_0101_0200.csv,Entertainment/General
+110,Education/Explainers,medium,Fact-style scary and mystery shorts labeled facts with dangerous river and ghost themes,Sensational horror framing lowers confidence,subagent_chunk_02_cases_0101_0200.csv,Education/Knowledge
+111,Video games,high,Warframe weekly resets free items codes and live stream links,,subagent_chunk_02_cases_0101_0200.csv,Video games
+112,Video games,high,Roblox 99 Nights in the Forest and Tsunami Escape shorts,,subagent_chunk_02_cases_0101_0200.csv,Video games
+113,Music,high,Plan B official videos remixes album links and songs,,subagent_chunk_02_cases_0101_0200.csv,Music
+114,Film/TV/Humor,high,Bigg Boss Tamil season promo and TV show clips,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+115,News/Society/Politics,high,Vietnamese current affairs news about Israel Iran weather and local incidents,,subagent_chunk_02_cases_0101_0200.csv,Politics/News
+116,Film/TV/Humor,high,Full English horror movies from Boxoffice HORROR,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+117,Film/TV/Humor,high,Behind-the-scenes TV actor and set videos for Indian serials,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+118,Hobby/General interests,high,Watercolor speedpaint art videos for Genshin and BTS,,subagent_chunk_02_cases_0101_0200.csv,Hobby/General interests
+119,Entertainment/General,medium,Celebrity final-performance compilations and paranormal EVP clips,Mixes personal update and paranormal content,subagent_chunk_02_cases_0101_0200.csv,Entertainment/General
+120,Entertainment/General,medium,UFO paranormal conspiracy and scary top-list videos,Fact-like but presented as entertainment,subagent_chunk_02_cases_0101_0200.csv,Entertainment/General
+121,Video games,high,Roblox Rainbow Friends and 99 Nights gameplay videos,,subagent_chunk_02_cases_0101_0200.csv,Video games
+122,Music,high,Karaoke music tracks and live beat versions,,subagent_chunk_02_cases_0101_0200.csv,Music
+123,Music,high,Music history commentary about musicians albums critics and famous artists,,subagent_chunk_02_cases_0101_0200.csv,Music
+124,Food,high,Convenience store Costco Carrefour and restaurant food tasting videos,One Japan travel video mixed in,subagent_chunk_02_cases_0101_0200.csv,Food
+125,Food,high,Podcast episodes focus on restaurant reviewers chefs bakeries and food influencers,,subagent_chunk_02_cases_0101_0200.csv,Food
+126,Fashion/Beauty,medium,Makeup lipstick trick and beauty-themed shorts,Some generic viral music tags make focus noisy,subagent_chunk_02_cases_0101_0200.csv,Fashion/Beauty
+127,Film/TV/Humor,high,Couple comedy prank challenge shorts,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+128,Education/Explainers,high,Paleontology explainers about dinosaurs fossils amber and dinosaur sounds,,subagent_chunk_02_cases_0101_0200.csv,Education/Knowledge
+129,Health/Fitness,high,Gymtok gymbro fitness and boxing event content,,subagent_chunk_02_cases_0101_0200.csv,Health/Fitness
+130,Entertainment/General,medium,Challenge interview and variety entertainment videos,Food challenge appears but channel is broader,subagent_chunk_02_cases_0101_0200.csv,Entertainment/General
+131,Film/TV/Humor,high,Reality TV clips for Real Housewives and Below Deck on Universal DIVA,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+132,Food,high,Cake decorating chocolate technique and edible print cake videos,,subagent_chunk_02_cases_0101_0200.csv,Food
+133,Fashion/Beauty,medium,Cosplay fashion acne Q&A and beauty/fashion shorts,Game character cosplay appears but presentation is style-focused,subagent_chunk_02_cases_0101_0200.csv,Fashion/Beauty
+134,Film/TV/Humor,high,Arabic dubbed drama episodes from Hikayat Hob,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+135,Music,high,Jazz guitar improvisation arrangements and tabs,,subagent_chunk_02_cases_0101_0200.csv,Music
+136,Film/TV/Humor,high,Movie and Marvel reviews including Scary Movie Joker and Evil Dead,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+137,Sports,medium,Skateboarding clips and skate challenges with abandoned supermarket skating,Some gaming and gear clips mixed in,subagent_chunk_02_cases_0101_0200.csv,Sports
+138,Video games,high,ARC Raiders gameplay raids impressions and cinematic runs,,subagent_chunk_02_cases_0101_0200.csv,Video games
+139,Vehicles/Motorsport,high,Car reviews new vehicle previews dashcam and Malaysian auto news,,subagent_chunk_02_cases_0101_0200.csv,Vehicles
+140,Entertainment/General,medium,Arabic challenge videos with cars food 24-hour and family routines,Broad creator challenge format,subagent_chunk_02_cases_0101_0200.csv,Entertainment/General
+141,Hobby/General interests,medium,Reviews and builds of miniature models toys clocks and product curiosities,Includes some gadget review content,subagent_chunk_02_cases_0101_0200.csv,Hobby/General interests
+142,Film/TV/Humor,high,A&E TV clips from WWE biography police and Storage Wars episodes,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+143,Film/TV/Humor,high,Italian comedy sketches about school dating and childhood situations,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+144,Sports,high,Persija Jakarta football highlights training and press conferences,,subagent_chunk_02_cases_0101_0200.csv,Sports
+145,Music,high,Rap artist Mondo Marcio songs live recap and album anniversary,,subagent_chunk_02_cases_0101_0200.csv,Music
+146,Film/TV/Humor,high,Monster High Russian cartoon episodes for children,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+147,Vehicles/Motorsport,high,Cars BMW Kawasaki bike and car-lover shorts,,subagent_chunk_02_cases_0101_0200.csv,Vehicles
+148,Lifestyle/General,medium,Couple vlog and relationship short videos,Light comedy format but personal couple content dominates,subagent_chunk_02_cases_0101_0200.csv,Lifestyle/General
+149,Video games,high,Minecraft minigames challenges and Minecraft shorts,,subagent_chunk_02_cases_0101_0200.csv,Video games
+150,Hobby/General interests,high,Balloon twisting tutorials for flowers animals and decorations,,subagent_chunk_02_cases_0101_0200.csv,Hobby/General interests
+151,Lifestyle/General,low,Personal shorts about relationships age appearance and daily moments,Evidence is sparse and mixed,subagent_chunk_02_cases_0101_0200.csv,Lifestyle/General
+152,Music,high,Tamil indie songs live performances and lyric video Dhrogam,,subagent_chunk_02_cases_0101_0200.csv,Music
+153,Fashion/Beauty,low,Korean skincare era video plus limited personal content,Only two recent videos available,subagent_chunk_02_cases_0101_0200.csv,Fashion/Beauty
+154,Technology,medium,3D printer and 3D prints are repeated central topics,Some lifestyle and amputee humor mixed in,subagent_chunk_02_cases_0101_0200.csv,Technology
+155,Music,high,Regional romantic song videos and singer Briseyda content,,subagent_chunk_02_cases_0101_0200.csv,Music
+156,Fashion/Beauty,high,Haircut durag and 360 waves grooming videos,,subagent_chunk_02_cases_0101_0200.csv,Fashion/Beauty
+157,Hobby/General interests,medium,Apartment renovation furnishing and home repair content,Could overlap with real-estate business,subagent_chunk_02_cases_0101_0200.csv,Hobby/General interests
+158,Hobby/General interests,high,E-waste scrapping silver recovery circuit boards and scrap yard runs,,subagent_chunk_02_cases_0101_0200.csv,Hobby/General interests
+159,Music,high,Sherine Topic auto-generated music releases,,subagent_chunk_02_cases_0101_0200.csv,Music
+160,Video games,high,Overkill's The Walking Dead PAYDAY and game multiplayer setup videos,,subagent_chunk_02_cases_0101_0200.csv,Video games
+161,Video games,high,Melon Sandbox and Geometry Dash game shorts,,subagent_chunk_02_cases_0101_0200.csv,Video games
+162,Film/TV/Humor,medium,Short staged funny clips about kids fights and viral scenarios,Channel name says facts but evidence is skit-like,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+163,Hobby/General interests,high,Toy demos 3D printed toys plush dolls and car toys,,subagent_chunk_02_cases_0101_0200.csv,Hobby/General interests
+164,Entertainment/General,medium,Afghan TV variety with drama comedy concert and talk show clips,Broad TV channel mix,subagent_chunk_02_cases_0101_0200.csv,Entertainment/General
+165,Film/TV/Humor,high,Comedy skit series such as Mufta Dost and Lalchi Driver,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+166,Sports,high,Sunrisers IPL cricket travel locker room and match content,,subagent_chunk_02_cases_0101_0200.csv,Sports
+167,Lifestyle/General,high,Daily vlog and mini vlog shorts about personal and family activities,,subagent_chunk_02_cases_0101_0200.csv,Lifestyle/General
+168,Film/TV/Humor,medium,Arabic short story and comedy-style scripted clips,Some song-like shorts mixed in,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+169,Education/Explainers,medium,Learning syllables reading and hijaiyah letters for children,Some Rubik and holiday clips mixed in,subagent_chunk_02_cases_0101_0200.csv,Education/Knowledge
+170,Food,high,Mukbang eating shows with dumplings Taco Bell chicken and lobster,,subagent_chunk_02_cases_0101_0200.csv,Food
+171,Pets/Animals,high,Dog Whisperer dog behavior training and Cesar Millan clips,,subagent_chunk_02_cases_0101_0200.csv,Pets/Animals
+172,Education/Explainers,high,Agricultural extension lectures policies and INIA science development content,,subagent_chunk_02_cases_0101_0200.csv,Education/Knowledge
+173,Video games,high,Roblox Blox Fruits shorts,,subagent_chunk_02_cases_0101_0200.csv,Video games
+174,Fashion/Beauty,high,Sarees cotton suits silk suits and fashion collection promos,,subagent_chunk_02_cases_0101_0200.csv,Fashion/Beauty
+175,Film/TV/Humor,high,Behind-the-scenes actor biographies and Soviet cinema stories,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+176,Health/Fitness,medium,Pharma channel ads for fatigue recovery health tonic and health management,Also includes beverage ads,subagent_chunk_02_cases_0101_0200.csv,Health/Fitness
+177,Video games,high,PUBG Mobile gaming videos crate openings and gameplay clips,,subagent_chunk_02_cases_0101_0200.csv,Video games
+178,Entertainment/General,low,Repeated cute short titles with minimal usable detail,Evidence is very thin,subagent_chunk_02_cases_0101_0200.csv,Entertainment/General
+179,Film/TV/Humor,high,Dance videos and Dance Moms related content,,subagent_chunk_02_cases_0101_0200.csv,Performing arts
+180,Lifestyle/General,medium,Vlogs about apartment decor birthday school outfits bikinis and makeup,Fashion and beauty are secondary,subagent_chunk_02_cases_0101_0200.csv,Lifestyle/General
+181,Lifestyle/General,high,Family parenting marriage and daily life shorts with occasional country music,,subagent_chunk_02_cases_0101_0200.csv,Lifestyle/General
+182,Pets/Animals,high,Funny cat reverse videos featuring Cat Barsik,,subagent_chunk_02_cases_0101_0200.csv,Pets/Animals
+183,Travel,high,Japan station guides shrines hiking Asakusa and Tokyo shopping travel videos,,subagent_chunk_02_cases_0101_0200.csv,Travel
+184,Religion,high,Tamil Hindu temple festival and Swami kovil procession videos,,subagent_chunk_02_cases_0101_0200.csv,Religion
+185,Hobby/General interests,high,Disney Cars diecast reviews races and toy collecting,,subagent_chunk_02_cases_0101_0200.csv,Hobby/General interests
+186,Education/Explainers,high,Physics and JEE exam preparation lessons and study strategy,,subagent_chunk_02_cases_0101_0200.csv,Education/Knowledge
+187,Music,high,Arabic song uploads and singer performance videos,,subagent_chunk_02_cases_0101_0200.csv,Music
+188,Lifestyle/General,low,Personal shorts with dated posts and casual reactions,Evidence lacks clear topical detail,subagent_chunk_02_cases_0101_0200.csv,Lifestyle/General
+189,Music,high,Official MV teaser dance techno and music-video behind-the-scenes,,subagent_chunk_02_cases_0101_0200.csv,Music
+190,Music,high,Bhojpuri songs audio and video releases with singer credits,,subagent_chunk_02_cases_0101_0200.csv,Music
+191,News/Society/Politics,high,Vietnamese newspaper news on Iran Trump transport incidents and current affairs,,subagent_chunk_02_cases_0101_0200.csv,Politics/News
+192,Video games,high,Roblox NPC content and gaming stream references,,subagent_chunk_02_cases_0101_0200.csv,Video games
+193,Technology,high,HP printer computer repair setup and troubleshooting support tutorials,,subagent_chunk_02_cases_0101_0200.csv,Technology
+194,Film/TV/Humor,low,Repeated Kpop Demon Hunters and Huntrix tags point to animated media fandom,Evidence is hashtag-only,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+195,Food,medium,Surreal cooking ASMR mukbang and eating adventure videos,Animated meme style makes topic less direct,subagent_chunk_02_cases_0101_0200.csv,Food
+196,Music,high,Vietnamese bolero and song compilation videos,,subagent_chunk_02_cases_0101_0200.csv,Music
+197,Film/TV/Humor,high,Comedy reaction and humor shorts with recurring funny skit framing,,subagent_chunk_02_cases_0101_0200.csv,Film/TV/Humor
+198,News/Society/Politics,medium,Ricola brand channel with product marketing farmer stories and ads,Product is food/health adjacent,subagent_chunk_02_cases_0101_0200.csv,Business
+199,Music,high,Rodney Atkins country music lyric video and song promo shorts,,subagent_chunk_02_cases_0101_0200.csv,Music
+200,Video games,high,Minecraft house build tutorials and timelapse videos,,subagent_chunk_02_cases_0101_0200.csv,Video games
+201,Food,high,"Chef channel with paneer, Hyderabadi curry, pulihora, drinks, chicken, mango recipes.",Cooking evidence is dominant.,subagent_chunk_03_cases_0201_0300.csv,Food
+202,Music,high,Song teasers and official lyric video for Chase Wright EP and albums.,None.,subagent_chunk_03_cases_0201_0300.csv,Music
+203,Film/TV/Humor,medium,"Tamil short titles include jokes, reactions, love marriage vs arranged marriage.",Short titles are brief but comedy cues dominate.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+204,News/Society/Politics,medium,"TV magazine covers Antarctica, religion and science, ceviche, celebrity mystery, vasectomy.",Mixed public-interest program rather than one narrow topic.,subagent_chunk_03_cases_0201_0300.csv,Society/General
+205,Film/TV/Humor,medium,Repeated funny 3D animal cartoon/game-like long slide videos.,"Uses game wording, but evidence reads as animated kids humor.",subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+206,Lifestyle/General,high,"Day-in-life, routines, self-care, nails, meals, cozy nights.",Some food/beauty content but lifestyle vlog is broader.,subagent_chunk_03_cases_0201_0300.csv,Lifestyle/General
+207,Entertainment/General,low,Recent titles are only laughing emojis.,Evidence suggests entertainment but no specific topic is visible.,subagent_chunk_03_cases_0201_0300.csv,Entertainment/General
+208,Health/Fitness,high,"Fitness creator links workout plans and discusses gym, martial arts, body comparisons.",Commentary style is secondary to fitness/body theme.,subagent_chunk_03_cases_0201_0300.csv,Health/Fitness
+209,Health/Fitness,high,"ThaiHealth/สสส videos discuss mental health, child wellbeing, workplace health, prevention.",None.,subagent_chunk_03_cases_0201_0300.csv,Health/Fitness
+210,Pets/Animals,high,"Repeated snake, cobra, frog, goat and animal encounter shorts.",Comedy framing is secondary to animal-centered content.,subagent_chunk_03_cases_0201_0300.csv,Pets/Animals
+211,Entertainment/General,medium,"Viral clips about trampoline skills, sandcastle, metal detecting, hydrodipping, claw machines.",Mixed spectacle/viral shorts with no single topical domain.,subagent_chunk_03_cases_0201_0300.csv,Entertainment/General
+212,Video games,high,"Mario Kart, Wii Fit, Pokemon, Nintendo Switch gaming content.",None.,subagent_chunk_03_cases_0201_0300.csv,Video games
+213,Food,high,"Meat tasting box, barbecue assembly, steak preparation, Divina Carni sponsorship.",One YouTube-partnership video is off-topic.,subagent_chunk_03_cases_0201_0300.csv,Food
+214,Entertainment/General,medium,"Mixed short-video stories about cats, family, Mario Kart surprise, and children.",No stable subject beyond general viral entertainment.,subagent_chunk_03_cases_0201_0300.csv,Entertainment/General
+215,Film/TV/Humor,high,Turkish dad/family funny shorts and prank-like situations.,A Galatasaray mention is incidental.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+216,Film/TV/Humor,high,Nigel and Marmalade scripted character episodes and behind-the-scenes voice-over.,None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+217,Religion,high,"Sermons, spiritual accountability, pastor testimony, salt of the earth.",None.,subagent_chunk_03_cases_0201_0300.csv,Religion
+218,Education/Explainers,medium,"Amazing facts shorts cover biology, Kaaba, ancient surgery, water, sneezing, angels.","Some religious/viral topics, but fact/explainer format dominates.",subagent_chunk_03_cases_0201_0300.csv,Education/Knowledge
+219,Music,high,"Speed Gang lyric videos, music releases, features, Spotify links.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+220,News/Society/Politics,medium,"Persian TVPLUS has celebrity history, Dubai investment, work profile, mixed magazine items.",Broad magazine channel; not one narrow topic.,subagent_chunk_03_cases_0201_0300.csv,Society/General
+221,Film/TV/Humor,high,Official Lucky Luke cartoon episodes and Dalton adventure clips.,None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+222,News/Society/Politics,high,"Official Ukrainian president office updates on war, government, regions, America dialogue.",None.,subagent_chunk_03_cases_0201_0300.csv,Politics/News
+223,Religion,high,"Tamil spiritual talks about Shiva, kuladeivam, enlightenment, festivals.",None.,subagent_chunk_03_cases_0201_0300.csv,Religion
+224,Religion,high,"God, Jesus, faith, Psalms 23 and 91, devotional messages.",Some music covers appear but religious message dominates.,subagent_chunk_03_cases_0201_0300.csv,Religion
+225,Music,high,"Projota rap posts, live singing, rap hashtags, music nostalgia.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+226,Film/TV/Humor,high,Thai-dubbed Chinese drama episodes and romance serial clips.,None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+227,Film/TV/Humor,high,"RoboFuse children cartoons, rescue vehicles, Car City adventures.",Vehicle content is within animated story episodes.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+228,Lifestyle/General,high,"Couple/family channel with pregnancy, kids, date night, pranks, postpartum driving.",Pranks are part of family lifestyle content.,subagent_chunk_03_cases_0201_0300.csv,Lifestyle/General
+229,Entertainment/General,medium,"Short viral stunts, train crashes, candy challenge, family joke clips.",Fun-facts name but titles are general spectacle entertainment.,subagent_chunk_03_cases_0201_0300.csv,Entertainment/General
+230,Health/Fitness,high,"Psychology and mental health explainers on cognitive distortions, addiction, relationships.",None.,subagent_chunk_03_cases_0201_0300.csv,Health/Fitness
+231,Religion,high,"Most recent videos are Quran, azan, Islamic status shorts.",One comedy/Marwadi self-promo video is an outlier.,subagent_chunk_03_cases_0201_0300.csv,Religion
+232,Fashion/Beauty,high,"Korean skincare, night routine, makeover, makeup transition, makeup melt-off.",Motivational shorts are secondary.,subagent_chunk_03_cases_0201_0300.csv,Fashion/Beauty
+233,Lifestyle/General,low,"Personal date/location posts, museum mention, Alsace/Germany, greetings.",Sparse evidence and no clear topic.,subagent_chunk_03_cases_0201_0300.csv,Lifestyle/General
+234,Film/TV/Humor,medium,"School teacher/student shorts with lateness, hiding, jokes, classroom situations.","School setting could imply education, but content appears comedic.",subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+235,Video games,high,"GTA 5, Sons of the Forest, Youtubers Life gameplay series.",None.,subagent_chunk_03_cases_0201_0300.csv,Video games
+236,News/Society/Politics,medium,"Podcast/shorts about love, youth empowerment, disagreements, relationships, voice.",Artist branding appears but topic is relationship/social discussion.,subagent_chunk_03_cases_0201_0300.csv,Society/General
+237,Film/TV/Humor,high,"Movie, TV and Marvel content including Devil Wears Prada 2 and series recommendations.",Some brand candy promo attached to Marvel.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+238,Vehicles/Motorsport,medium,"Cultivator, mower, tractor-like farm machines and field equipment demos.",Agricultural equipment rather than ordinary road vehicles.,subagent_chunk_03_cases_0201_0300.csv,Vehicles
+239,Sports,high,"Football players Evra, Toure, Dembele and jersey promotions.",None.,subagent_chunk_03_cases_0201_0300.csv,Sports
+240,Music,high,"Official visualizers, acoustic performance, songs by Noel Kharman.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+241,Film/TV/Humor,high,Arabic movie clips and comedy/drama film descriptions with actors and directors.,None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+242,Music,high,"METRICKZ rap tracks, album streaming links, producer credits.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+243,Film/TV/Humor,high,"BR Chopra TV serial episodes, Naagin storyline and show descriptions.",None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+244,Film/TV/Humor,medium,"Natoo videos include comedic reactions, Disneyland behind scenes, personal comedy-style vlogs.","Some lifestyle elements, but creator/video tone is comedy entertainment.",subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+245,Music,high,"Alok DJ/music posts, official visualizer, remix, event content.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+246,Music,high,"Pakistani pop songs, old hit songs, music videos.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+247,Education/Explainers,medium,"How-to/technique videos on sewing thread, food wrapping, woodworking, safety warnings.",Topics are mixed but instructional.,subagent_chunk_03_cases_0201_0300.csv,Education/Knowledge
+248,Music,medium,Video Star and musical.ly lip-sync/cover performances around songs.,"Could be performance/editing, but song-based videos dominate.",subagent_chunk_03_cases_0201_0300.csv,Music
+249,Hobby/General interests,high,"Toys R Us product videos for LEGO, Mario, Tomica, cameras, digital toys.",Retail/promotional format but toy hobby subject dominates.,subagent_chunk_03_cases_0201_0300.csv,Hobby/General interests
+250,Vehicles/Motorsport,high,"Bicycle choice, bike bells, gravel riding, Moscow cycling, dream bike.","Cycling sport overlaps, but bike reviews/ownership dominate.",subagent_chunk_03_cases_0201_0300.csv,Vehicles
+251,Fashion/Beauty,high,"Bridal makeup, Kerala wedding makeup, beauty tips for brides.",Family/temple shorts are secondary.,subagent_chunk_03_cases_0201_0300.csv,Fashion/Beauty
+252,Hobby/General interests,high,"Dumpster diving finds, store trash reveals, scavenging and recovered goods.","Some humor, but dumpster-diving hobby is dominant.",subagent_chunk_03_cases_0201_0300.csv,Hobby/General interests
+253,Video games,high,"Assassin’s Creed, Atomic Heart boss fight, Black Flag gameplay clips.",None.,subagent_chunk_03_cases_0201_0300.csv,Video games
+254,Entertainment/General,medium,"Mixed funny animal, prank, candy, survival and joke shorts.",No single subject dominates.,subagent_chunk_03_cases_0201_0300.csv,Entertainment/General
+255,Film/TV/Humor,high,Thai funny shorts with repeated funny/comedy tags and gag situations.,None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+256,Music,high,"Mura Masa official videos, EP release, live club footage, new songs.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+257,Lifestyle/General,high,"Pregnancy ultrasound, Dubai travel, business-class flight, home decor, meal prep.",Food/travel appear within lifestyle vlog context.,subagent_chunk_03_cases_0201_0300.csv,Lifestyle/General
+258,Entertainment/General,medium,"Candy, playground, cute/funny reaction shorts for kids.","Sparse titles, but general kids entertainment is clearest.",subagent_chunk_03_cases_0201_0300.csv,Entertainment/General
+259,Video games,high,"GTA 5 mod Boboiboy gameplay with vehicles, monsters, Hot Wheels.",None.,subagent_chunk_03_cases_0201_0300.csv,Video games
+260,Film/TV/Humor,medium,"Husband-wife scripted shorts with refusals, apologies, couple scenarios.","Relationship theme overlaps with lifestyle, but skit framing dominates.",subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+261,Music,high,Spanish nursery rhymes and kids songs including Five Little Ducks and Three Little Pigs.,Educational app mentions are secondary.,subagent_chunk_03_cases_0201_0300.csv,Music
+262,Film/TV/Humor,low,"Titles are memes, funny tags, and reaction emojis.",Evidence is sparse but humor cues are present.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+263,Video games,high,"Animated skits centered on Donkey Kong, Shadow, Sonic, Eggman, Sonic Team.",Game-culture animation fits video games guidance.,subagent_chunk_03_cases_0201_0300.csv,Video games
+264,Vehicles/Motorsport,medium,Repeated car hood and car-entry gag videos centered on cars.,"Comedic format, but vehicle object dominates evidence.",subagent_chunk_03_cases_0201_0300.csv,Vehicles
+265,Music,high,"Arabic and Spanish DJ remixes, Afro House, dance remix channel.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+266,Music,high,"Bangla sad/folk songs, singer credits, best-of song collections.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+267,Film/TV/Humor,high,"Mini reviews of Avatar, Zootopia, Predator and other films.",None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+268,Video games,high,"Best/worst games, Marvel Cosmic Invasion gameplay, arcade runs.",None.,subagent_chunk_03_cases_0201_0300.csv,Video games
+269,Vehicles/Motorsport,high,"Car reviews/news for Mazda, BMW, Audi, Citroen, Dacia, VW.",None.,subagent_chunk_03_cases_0201_0300.csv,Vehicles
+270,Music,high,"Bryann T songs, music video, behind the scenes, artist collaborations with Jesus themes.","Christian theme present, but evidence is music releases.",subagent_chunk_03_cases_0201_0300.csv,Music
+271,News/Society/Politics,high,"Parliament, Bengal election, Modi, BJP, Mamata, breaking news hashtags.",None.,subagent_chunk_03_cases_0201_0300.csv,Politics/News
+272,Vehicles/Motorsport,high,"NIVA Grand Sport build, UAZ repair, car service and automotive parts.",None.,subagent_chunk_03_cases_0201_0300.csv,Vehicles
+273,Technology,high,"Premiere Pro, VFX tricks, editing plugins, iPhone video editing tools.","Education format, but technology/software subject dominates.",subagent_chunk_03_cases_0201_0300.csv,Technology
+274,Film/TV/Humor,high,Spanish-dubbed La Novia de Estambul drama episodes and romantic clips.,None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+275,Video games,high,Vampire Survivors spinoff and Plants vs Zombies 3 gameplay walkthroughs.,None.,subagent_chunk_03_cases_0201_0300.csv,Video games
+276,Music,high,"Songs, lyrics, composing, lyric video, debut EP.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+277,Video games,high,"Free Fire tutorials, emulator download, ranking strategy.",None.,subagent_chunk_03_cases_0201_0300.csv,Video games
+278,Film/TV/Humor,medium,"Indonesian funny/relatable shorts about kids, sudden wealth, guessing, characters.","Titles are brief, but comedic entertainment dominates.",subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+279,News/Society/Politics,medium,"Radio magazine covers music interview, film/series, relationships, health, personal advice.",Rock/music branding but recent evidence is broad talk-show content.,subagent_chunk_03_cases_0201_0300.csv,Society/General
+280,Music,high,Kids songs and nursery rhymes with lyrics and actions.,None.,subagent_chunk_03_cases_0201_0300.csv,Music
+281,Film/TV/Humor,high,Eena Meena Deeka and Vir the Robot Boy cartoon episodes.,None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+282,Food,high,"Air-fryer chicken, sancocho, pork seasoning plus recipe/home channel framing.",Some vlog/routine posts are secondary.,subagent_chunk_03_cases_0201_0300.csv,Food
+283,Education/Explainers,medium,"Fact-style shorts about China items, Tianyu Mountain, Japan toilets, fast photography.",Sensational format but knowledge/facts subject is clearest.,subagent_chunk_03_cases_0201_0300.csv,Education/Knowledge
+284,Technology,medium,"Redmi phone review, RAM unboxing, tech/product unboxings.",One protein unboxing and livestream make evidence thin.,subagent_chunk_03_cases_0201_0300.csv,Technology
+285,Music,high,"Official music videos, hip-hop concert, music producer and artist credits.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+286,Film/TV/Humor,high,"LGBTQIA web series episodes, final episode live, series presentation clips.",Some music show content is secondary.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+287,Music,high,"Brega/funk DJ tracks, remixes, artist lineups, repertoire hashtags.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+288,Music,high,"Candan Erçetin songs, lyrics, Spotify links, music clips.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+289,Education/Explainers,medium,"Top/list videos on Disney behind the scenes, stadiums, holdout homeowners, real places.","Entertainment tone, but explainer/list facts dominate.",subagent_chunk_03_cases_0201_0300.csv,Education/Knowledge
+290,Hobby/General interests,high,"RC trucks, tanks, trains, planes and scale models.",Vehicle subjects are RC hobby-focused.,subagent_chunk_03_cases_0201_0300.csv,Hobby/General interests
+291,Music,high,"Musical instruments, singing classes, music gurus, bhajan content.",Spiritual references are secondary to music training/performance.,subagent_chunk_03_cases_0201_0300.csv,Music
+292,Lifestyle/General,high,"Family swimming, baby/kids challenges, grocery, anniversary date, birthday.",None.,subagent_chunk_03_cases_0201_0300.csv,Lifestyle/General
+293,Film/TV/Humor,high,"Relatable shorts, workplace/family skits, imposter game gone wrong, creepy uncle.",None.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+294,Food,high,"Ching’s Secret food brand, Schezwan fried rice masala, Desi Chinese ads/recipes.",Music-video ads are promotional format for food brand.,subagent_chunk_03_cases_0201_0300.csv,Food
+295,Film/TV/Humor,medium,"Marathi relationship, family, cricket comedy and funny shorts.","Some social message/religious-political references appear, but skits dominate.",subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+296,Hobby/General interests,high,"Kinder Surprise and toy unboxing with Shrek, Power Rangers, Pokemon, Peppa Pig.",None.,subagent_chunk_03_cases_0201_0300.csv,Hobby/General interests
+297,Video games,high,"Official Brawl Stars updates, rewards, hypercharge, in-game event tasks.",None.,subagent_chunk_03_cases_0201_0300.csv,Video games
+298,Film/TV/Humor,high,"Thai movie trailers, teasers, OST and film release promos.",Music video is tied to film soundtrack.,subagent_chunk_03_cases_0201_0300.csv,Film/TV/Humor
+299,Music,high,"Milica Pavlovic live performances, songs, music label and booking details.",None.,subagent_chunk_03_cases_0201_0300.csv,Music
+300,Religion,high,"Church devotional and prophetic videos, pastor sermon, Christian church links.",None.,subagent_chunk_03_cases_0201_0300.csv,Religion
+301,Music,medium,Ambient/song titles with Spotify SoundCloud links and sample credits,Philosophical titles but music links dominate,subagent_chunk_04_cases_0301_0400.csv,Music
+302,Travel,medium,Rome Italy Milan Duomo street views and travel shorts,Some food and street musician clips mixed in,subagent_chunk_04_cases_0301_0400.csv,Travel
+303,News/Society/Politics,high,BBC London reports on dog attacks earthquakes apprenticeships and local public issues,News organization and story format are clear,subagent_chunk_04_cases_0301_0400.csv,Politics/News
+304,Video games,high,Witcher 3 deleted scenes Priscilla song and game music discussion,One piano cover but all centered on The Witcher game,subagent_chunk_04_cases_0301_0400.csv,Video games
+305,Music,high,Artist posts new songs album tracks official audio tour and merch,One booktok short is incidental,subagent_chunk_04_cases_0301_0400.csv,Music
+306,Film/TV/Humor,medium,Hindi rhymes movie explanation and funny shorts/comedy clips,Mixed kids music and comedy evidence,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+307,Entertainment/General,medium,Thai live streams viewer donations and variety live clips,Topic unclear beyond livestream entertainment,subagent_chunk_04_cases_0301_0400.csv,Entertainment/General
+308,Pets/Animals,high,Husky dog videos about egg hunt bath time puppy and dog life,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Pets/Animals
+309,Film/TV/Humor,high,Cartoon edits featuring Simpsons Teen Titans Rick and Morty Family Guy FNAF,Uses game characters but cartoon edits dominate,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+310,Film/TV/Humor,high,Indonesian prank and comic shorts with exaggerated scenarios,No specific non-humor topic,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+311,Lifestyle/General,high,Vlogmas Christmas studio inventory dog evening clothes swap and daily life vlogs,Some charity mention is incidental,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+312,Music,high,Auto-generated YouTube topic songs by Alex Ubago with composers producers and vocals,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Music
+313,Religion,medium,Prayer biblical questions and Christmas/family faith-themed titles,Several general child/family titles mixed in,subagent_chunk_04_cases_0301_0400.csv,Religion
+314,Technology,high,Insta360 X5 selfie stick camera and drone accessory ads,Music only appears as background songs,subagent_chunk_04_cases_0301_0400.csv,Technology
+315,Video games,medium,FIFA 19 Ultimate Team coin methods and FUT Champions rewards,First KFC challenge is off-topic mixed evidence,subagent_chunk_04_cases_0301_0400.csv,Video games
+316,Film/TV/Humor,high,Indonesian character comedy shorts and prank-like scenarios,No other topic recurs,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+317,Lifestyle/General,medium,Natural living village life family ties shopping cooking and chores,Food appears but channel is broader rural lifestyle,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+318,Film/TV/Humor,high,NTV reality show Bangla TV contestant and family reality show clips,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+319,News/Society/Politics,high,Ghana Talkshop political commentary on Mahama parliamentarians and military government,Satirical host but civic editorial focus dominates,subagent_chunk_04_cases_0301_0400.csv,Politics/News
+320,Music,high,Auto-generated BONES tracks distributed by EMPIRE from TeenWitch,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Music
+321,Food,medium,Butcher meat sucuk orders cattle for slaughter and food shipping,Also livestock/farm market content,subagent_chunk_04_cases_0301_0400.csv,Food
+322,News/Society/Politics,high,KOMPAS TV breaking news on train crash victims rescue and cabinet reshuffle,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Politics/News
+323,Video games,high,GTA 5 manhunt QSMP Poppy Playtime Roblox Free Fire gameplay,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Video games
+324,Video games,high,Shadowverse Worlds Beyond deck and card introductions,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Video games
+325,News/Society/Politics,high,Cryptocurrency Web3 RWA tokenomics whitelist and project promotion,Crypto business/finance focus is clear,subagent_chunk_04_cases_0301_0400.csv,Business
+326,Music,high,Thai molam samcha immortal songs and band/contact performance titles,One equipment pickup but music performance dominates,subagent_chunk_04_cases_0301_0400.csv,Music
+327,Food,high,Korean street food egg bread tteokbokki ramen with prices and locations,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Food
+328,News/Society/Politics,medium,Covai Post reports public health committee gifts crash and local event coverage,One TCP header artifact appears in evidence,subagent_chunk_04_cases_0301_0400.csv,Politics/News
+329,Lifestyle/General,medium,Dutch vlogs about book office and personal projects plus car review,Vehicle content present but broader personal vlog evidence,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+330,Video games,medium,Spanish shorts mention server base and recurring Abrahaham character scenarios,Likely gaming/roleplay but evidence is terse,subagent_chunk_04_cases_0301_0400.csv,Video games
+331,Health/Fitness,high,Pregnancy iron tablets baby risk anemia nutrition and prenatal advice,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Health/Fitness
+332,News/Society/Politics,high,Banking/credit card BonusFlaş campaigns shopping bonuses and brand ads,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Business
+333,Video games,high,Minecraft Vault Hunters features updates and community design,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Video games
+334,Fashion/Beauty,medium,Sneaker cleaning sneakerhead grails and shoe culture,Colon cancer updates are mixed in,subagent_chunk_04_cases_0301_0400.csv,Fashion/Beauty
+335,Sports,high,Galatasaray Fenerbahçe Süper Lig football and Okan Buruk clips,Political figure appears only in sports context,subagent_chunk_04_cases_0301_0400.csv,Sports
+336,Music,high,LL COOL J music videos songs VMAs recap streaming and merch,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Music
+337,Film/TV/Humor,medium,French cringe retrospective and comic Dr Guzz videos,Some Twitch/personality framing but humor dominates,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+338,Sports,medium,Cricket IPL Journey to Jersey clips with Varun interview and cricket discussion,One Meta shoot vlog is mixed in,subagent_chunk_04_cases_0301_0400.csv,Sports
+339,Film/TV/Humor,medium,Emotional viral shorts with staged thief injury and family drama scenarios,Music hashtags appear but not the main topic,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+340,News/Society/Politics,medium,Crypto Web3 AI token project and TikTok growth marketing content,Marketing-growth video mixed with crypto,subagent_chunk_04_cases_0301_0400.csv,Business
+341,Video games,medium,Sprunki Incredibox OC animation and game/mod references,Animation style but game-culture references dominate,subagent_chunk_04_cases_0301_0400.csv,Video games
+342,Hobby/General interests,high,Tabletop wargame miniature painting for Dystopian Wars and Konflikt 47,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Hobby/General interests
+343,Film/TV/Humor,high,Arabic dramatic scene clips about family conflicts and scripted situations,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+344,Film/TV/Humor,high,CBC artist interviews SNL Arabic and film festival entertainment clips,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+345,Lifestyle/General,medium,Personal Cambodia return vlog concert Hyrox MMA camp and transit commentary,Mixed travel sports and lifestyle evidence,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+346,Music,high,Cumbia Inka songs and music performance titles,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Music
+347,Education/Explainers,medium,Podcast/interview on mystery author JJ Benítez Moon secrets and narratives,Speculative topic but knowledge/interview format dominates,subagent_chunk_04_cases_0301_0400.csv,Education/Knowledge
+348,Pets/Animals,high,Dog and cat clips about furry companions and pet affection,AI-created but animal topic is clear,subagent_chunk_04_cases_0301_0400.csv,Pets/Animals
+349,Vehicles/Motorsport,high,GT3 RS Nürburgring/Ring Police car-focused office and driving content,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Vehicles
+350,Music,high,Italian rap press day type beat and music magazine channel evidence,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Music
+351,Hobby/General interests,high,Bonsai learning lifting bonsai material from ground to pot and bonsai guests,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Hobby/General interests
+352,Religion,medium,Spirituality religion God Islam Christianity and music-video morality discussion,Artist/music context mixed with faith commentary,subagent_chunk_04_cases_0301_0400.csv,Religion
+353,Health/Fitness,high,Therapy trauma borderline anxiety depression TEPT and mental health analysis,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Health/Fitness
+354,Education/Explainers,high,English lessons on a vs an and there is vs there are,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Education/Knowledge
+355,Sports,high,Megawati volleyball club Hyundai Hillstate final and Proliga coverage,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Sports
+356,Music,high,Children's lullabies and Swedish kids songs,Kids programming but songs are central,subagent_chunk_04_cases_0301_0400.csv,Music
+357,Lifestyle/General,high,Weekly vlog meeting boyfriend family self-care concert and relationship challenge,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+358,Music,high,Official music video Dreaming by Yusuf Eksioglu with streaming and artist links,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Music
+359,Film/TV/Humor,high,Comedy shorts about mom bad mood smallest bed picking up girls and boy vs mom,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+360,Video games,high,Fortnite skins gameplay map battle pass collaborations and news,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Video games
+361,Film/TV/Humor,high,Tamil cinema updates actor speeches and film-related celebrity clips,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+362,Fashion/Beauty,high,Korean fashion flea market clothing shoes glasses sunglasses and brands,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Fashion/Beauty
+363,Fashion/Beauty,high,Boutique saree arrivals online orders and clothing sales,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Fashion/Beauty
+364,News/Society/Politics,high,Defense Review Chinese naval ships Iran war planning weapons and military news,Politics/news present but military focus dominates,subagent_chunk_04_cases_0301_0400.csv,Military
+365,Hobby/General interests,high,Pokemon cards TCG pack openings and collector content,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Hobby/General interests
+366,Film/TV/Humor,high,Gujarati Jitu Mangu comedy videos and shorts,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+367,Video games,high,Korean horror game gameplay with Steam download links and game titles,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Video games
+368,News/Society/Politics,medium,Russian commentary on best/worst things in USA and internet safety/chatbot topic,Mixed personal opinion and social commentary,subagent_chunk_04_cases_0301_0400.csv,Society/General
+369,Vehicles/Motorsport,high,Diecast model car collection shorts featuring Lexus Mercedes Chevrolet Pagani BMW,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Vehicles
+370,Lifestyle/General,medium,Uzbek family prank wedding team car and household/social videos,Comedy elements but family life dominates,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+371,Lifestyle/General,high,Italian family daily life kids dinner dialect shopping and home moments,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+372,News/Society/Politics,low,Repeated real story hashtag with no usable specific topic,Very sparse evidence,subagent_chunk_04_cases_0301_0400.csv,Society/General
+373,Sports,high,Ronaldo Messi football soccer FIFA/FC Mobile tags and football edits,Game tags present but athlete/football focus dominates,subagent_chunk_04_cases_0301_0400.csv,Sports
+374,Entertainment/General,medium,Jasmine Masters live streams with Patti LaBelle singing clips and gay bar posts,Mixed music and personality livestream evidence,subagent_chunk_04_cases_0301_0400.csv,Entertainment/General
+375,Religion,high,Christian songs Palm Sunday Way of the Cross Mother Mary Jesus Hosanna,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Religion
+376,Video games,high,Pokemon GO Pokemon Moon Plague Inc and game-focused descriptions,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Video games
+377,Film/TV/Humor,medium,Turkish short skits about teacher doctor hospital and classroom scenarios,One game-related title but skits dominate,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+378,Entertainment/General,medium,KouKou Brothers lifestyle explosion variety clips and event/game promotion,Mixed variety content without one specific topic,subagent_chunk_04_cases_0301_0400.csv,Entertainment/General
+379,Religion,high,Hindu pravachan Bageshwar Dham Hanuman Sant Indradev devotional videos,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Religion
+380,Entertainment/General,low,Cinematic viral creative shorts with farming fruit airplane and mobile editing,No stable specific topic beyond viral shorts,subagent_chunk_04_cases_0301_0400.csv,Entertainment/General
+381,Lifestyle/General,high,Dating diaries docuseries glow-up and personal relationship journey,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+382,Education/Explainers,medium,Motivational psychology facts life-changing advice and human behaviour shorts,Self-help educational framing dominates,subagent_chunk_04_cases_0301_0400.csv,Education/Knowledge
+383,Music,high,Robyn artist posts new version vinyl reissue listening links and song titles,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Music
+384,Lifestyle/General,high,Marriage home routine hair cut night routine and personal vlogs,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+385,Video games,high,Clash Royale card updates hero bowler TV Royale and game facts,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Video games
+386,Video games,high,CarX Drift Racing developer streams updates and game social links,Vehicle theme but game title/company dominates,subagent_chunk_04_cases_0301_0400.csv,Video games
+387,News/Society/Politics,high,Hindi crime news reports on Kanpur horror case accident and murder stories,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Politics/News
+388,Film/TV/Humor,medium,Indonesian moral drama clips about family sacrifice boss and helping others,Copyright note suggests reposted scripted clips,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+389,Food,high,Recipes for marshmallow treats hot chocolate wagyu steak turkey and dinner,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Food
+390,Film/TV/Humor,high,Downton Abbey official clips episode scenes and TV compilations,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+391,Hobby/General interests,medium,DIY upcycling cleaning satisfying hacks and craft/life-hack content,Mixes curiosity clips with DIY branding,subagent_chunk_04_cases_0301_0400.csv,Hobby/General interests
+392,Film/TV/Humor,high,Hindi animated stories comedy cartoon and bedtime story content,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+393,Film/TV/Humor,high,Dragon Ball manga/anime review and Gohan/Goku content,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+394,Film/TV/Humor,high,Produced skits and sentimental scenes with staged reunion/rescue shorts,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+395,Lifestyle/General,medium,Marriage prank girlfriend comedy song shoot Goa and outfit/personal shorts,Mixed music/comedy/fashion but vlog couple life dominates,subagent_chunk_04_cases_0301_0400.csv,Lifestyle/General
+396,Music,medium,Frozen songs labeled Musica with film song uploads,Film source but song clips are the main content,subagent_chunk_04_cases_0301_0400.csv,Music
+397,Education/Explainers,high,English Heritage history site livestreams and Victorian Way historical cookery,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Education/Knowledge
+398,Film/TV/Humor,high,Malayalam movie scenes full movies actors and plot descriptions,No ambiguity,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+399,Film/TV/Humor,medium,Film movie anime hashtags and repost-style entertainment shorts,Several generic cleaning hashtags make topic partly noisy,subagent_chunk_04_cases_0301_0400.csv,Film/TV/Humor
+400,Entertainment/General,low,Mixed TikTok reposts comedy fishing snake music movie and gator clips,No single topic dominates,subagent_chunk_04_cases_0301_0400.csv,Entertainment/General
+401,Film/TV/Humor,high,Repeated #funny #comedy #drama family skit titles about Sari and Emak.,Comedy-drama shorts rather than daily family lifestyle.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+402,Film/TV/Humor,medium,"SSP TV titles mention roles in series, production houses, and live entertainment.","Some youth/orientation items, but series/TV evidence dominates.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+403,Food,low,Recent titles are almost entirely fruit and food emojis.,"No text beyond emojis, so topic is thin.",subagent_chunk_05_cases_0401_0500.csv,Food
+404,Film/TV/Humor,high,"Hermanos de Leche videos are jokes and commentary on parents, exes, interviews, and everyday situations.","Could be podcast/social commentary, but humor framing is central.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+405,Lifestyle/General,medium,"Personal-story titles cover confession, debt, exams, arrest, and family estrangement.",Gaming link appears only as secondary-channel promotion.,subagent_chunk_05_cases_0401_0500.csv,Lifestyle/General
+406,Entertainment/General,medium,"Viral fact/curiosity shorts span bike seats, dog tantrums, food trades, jewelry tricks, showers, babies, and cats.",Mixed topics with no stable subject beyond viral entertainment.,subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+407,Education/Explainers,high,"Chemistry/science demos include sodium lamp, sound via light, solar cell, dry ice, and elemental calcium.",None.,subagent_chunk_05_cases_0401_0500.csv,Education/Knowledge
+408,Pets/Animals,high,"ExpertoAnimal videos discuss dogs, cats, pet behavior, genes, and animal biomechanics.","Some humor, but animal care/education is primary.",subagent_chunk_05_cases_0401_0500.csv,Pets/Animals
+409,Music,high,Los Canelos de Durango uploads are song titles by the band.,None.,subagent_chunk_05_cases_0401_0500.csv,Music
+410,Music,high,Mayada El Hennawy channel posts Arabic singer/music clips with song emojis and artist branding.,None.,subagent_chunk_05_cases_0401_0500.csv,Music
+411,Entertainment/General,medium,"Mixed viral shorts include Jesus, cats, candy, baby, food, hangnail, and funny prank content.",Highly mixed; no single topical niche.,subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+412,News/Society/Politics,medium,"Titles include private school news, police, Hindu-Muslim unity, West Bengal, BJP, and Narendra Modi.","Some human-interest viral stories, but news/politics appears repeatedly.",subagent_chunk_05_cases_0401_0500.csv,Politics/News
+413,Entertainment/General,medium,Shorts repeat soft toothpaste crushing and funny/trending titles.,"Could be satisfying/ASMR, but no specific allowed topic fits better.",subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+414,Video games,high,"Animations feature Poppy Playtime, Steal a Brainrot, Skibidi, Player, and game challenge framing.","Animated format, but game characters/challenges dominate.",subagent_chunk_05_cases_0401_0500.csv,Video games
+415,Film/TV/Humor,high,Rotten Tomatoes Classic Trailers posts official movie trailers.,None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+416,News/Society/Politics,medium,"Contexto Histórico shorts cover influencer sentencing, cartel kidnapping, medical oddity, and public outrage incidents.","Could overlap news, but evidence is broader strange/social history explainers.",subagent_chunk_05_cases_0401_0500.csv,Society/General
+417,Hobby/General interests,high,"Embroidery sampler restoration, stitching challenges, and knitting/stitching show content.",None.,subagent_chunk_05_cases_0401_0500.csv,Hobby/General interests
+418,Video games,high,"Unboxings and reviews center on Crimson Desert, ROG Xbox Ally, Resident Evil, Fortnite, and gaming PCs.","Includes tech hardware, but gaming use is primary.",subagent_chunk_05_cases_0401_0500.csv,Video games
+419,Entertainment/General,medium,"Short scripted/satisfying scenarios about magical beads, erasers, bracelets, car cleaning, slippers, and rescue.","Some craft-like objects, but general viral shorts overall.",subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+420,Video games,high,"Official PUBG Mobile Malaysia posts gameplay, esports, beta updates, and PUBGM league content.",None.,subagent_chunk_05_cases_0401_0500.csv,Video games
+421,Film/TV/Humor,high,"NBCUniversal Anime/Music posts TV anime PVs, clips, character comments, and radio tied to anime series.","Channel name includes Music, but listed evidence is anime/TV.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+422,Video games,high,"Black Ops 7 sniper classes, camo, updates, and tournament gameplay.",None.,subagent_chunk_05_cases_0401_0500.csv,Video games
+423,Video games,high,"Minecraft, Poppy Playtime, mods, lava jumps, blocks, and game challenge titles.",None.,subagent_chunk_05_cases_0401_0500.csv,Video games
+424,Lifestyle/General,high,"Vlogs about family day in Tijuana, week with me, birthday, Christmas kids, and engagement party.",None.,subagent_chunk_05_cases_0401_0500.csv,Lifestyle/General
+425,Film/TV/Humor,medium,"Indonesian horror/mystic story titles about haunted ambulance, corpses, occult debt, and ghostly cafes.","Could be folklore storytelling, but horror entertainment framing is strongest.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+426,Education/Explainers,medium,"Explainers cover TV/movie references, historical dance epidemic, cemetery exploration, and Don Ramon tattoo meaning.",Mixed with travel/exploration and TV references.,subagent_chunk_05_cases_0401_0500.csv,Education/Knowledge
+427,Video games,high,"Asmongold highlights include World of Warcraft cinematics, WoW Classic reactions, and streamer/guild content.","Streamer highlight format, but gaming culture is central.",subagent_chunk_05_cases_0401_0500.csv,Video games
+428,Video games,high,"WePlay broadcasts BLAST Premier esports matches with Liquid, G2, NAVI, FaZe, and Vitality.","Esports treated as video games, not traditional sports.",subagent_chunk_05_cases_0401_0500.csv,Video games
+429,News/Society/Politics,medium,"Local service/business promotion: Ayurvedic clinic, low-cost business, farm tour, furniture shop, car AC service.","Mixed local-interest videos, but promotional business/service evidence dominates.",subagent_chunk_05_cases_0401_0500.csv,Business
+430,Music,high,"Bangla Islamic gojol/ghazal song uploads with singer, lyric, tune, and audio metadata.","Religious theme, but content is music performance.",subagent_chunk_05_cases_0401_0500.csv,Music
+431,Vehicles/Motorsport,high,Channel and titles focus on electric/funny bikes repeatedly.,Humor framing is secondary to bike content.,subagent_chunk_05_cases_0401_0500.csv,Vehicles
+432,Religion,high,"Church ministry videos include testimonies, spiritual authority teaching, worship service, preaching, and donations.",None.,subagent_chunk_05_cases_0401_0500.csv,Religion
+433,Entertainment/General,medium,Challenge and optical-choice shorts plus Messi/Yamal recognition prompts.,"Some soccer names, but not organized sports coverage.",subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+434,Music,high,"House/tech-house uploads, remixes, extended mixes, Spotify playlist, and Beatport links.",None.,subagent_chunk_05_cases_0401_0500.csv,Music
+435,Film/TV/Humor,high,Crayon Shin-chan/anime commentary and clips with anime/manga hashtags.,None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+436,Music,high,"La Nueva Luna cumbia songs, official audio/video, lyrics, live performance clips.",None.,subagent_chunk_05_cases_0401_0500.csv,Music
+437,Video games,medium,EAFC/FIFA/mobile football skills edits with game hashtags and player names.,"Soccer subject appears through game edits, so video games edges sports.",subagent_chunk_05_cases_0401_0500.csv,Video games
+438,Music,high,"Udit Narayan and Bollywood song collections, rare songs, singers, and movie song metadata.","Film source material, but uploads are songs.",subagent_chunk_05_cases_0401_0500.csv,Music
+439,Video games,high,"Spanish gaming news/commentary on Witcher 3, Succubus, Cyberpunk, PlayStation, and video game companies.",None.,subagent_chunk_05_cases_0401_0500.csv,Video games
+440,Entertainment/General,low,"Mixed viral/humor and surreal satisfying ASMR shorts about pranks, animals, beds, and staircases.",Evidence is scattered; no stable topic beyond viral entertainment.,subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+441,Film/TV/Humor,high,"Dance festival/social dance coverage: bachata, salsa, kizomba, Jack & Jill, bootcamp.","Music present, but dance performance/event coverage is primary.",subagent_chunk_05_cases_0401_0500.csv,Performing arts
+442,Lifestyle/General,medium,"Karime Kooler discusses dates, awkward questions, first kisses, celebrity crushes, and social relationships.","Talk-show entertainment, but lifestyle/relationship topics dominate.",subagent_chunk_05_cases_0401_0500.csv,Lifestyle/General
+443,Film/TV/Humor,high,Humor De Cuadra posts family comedy skits with #humor and #comedia.,None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+444,Film/TV/Humor,high,"Brazilian telenovela recaps/previews for Tres Gracas, Vale Tudo, Dona de Mim, and Globo shows.",None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+445,Film/TV/Humor,medium,"Recap-style titles about fictional leads, mermaid blood, divine powers, evil, and Kamen Rider.","One education-like line, but fantasy/TV recap evidence dominates.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+446,Video games,high,"Spanish gaming channel posts Gears of War, Fortnite Remix, Gears E-Day, and Fortnite live events.",None.,subagent_chunk_05_cases_0401_0500.csv,Video games
+447,Film/TV/Humor,high,"Reviews/reactions to Isla Tentaciones, Benidorm Fest, and reality/TV entertainment.","Some music reaction, but TV/reality commentary dominates.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+448,Sports,high,"Azulcrema TV is 100 percent Americanista with Club America football history, players, and women team matches.",None.,subagent_chunk_05_cases_0401_0500.csv,Sports
+449,Vehicles/Motorsport,high,Driving tips and car content about manual vs automatic and learning to drive.,None.,subagent_chunk_05_cases_0401_0500.csv,Vehicles
+450,Hobby/General interests,high,"Painting instruction for oil/acrylic, palettes, old master methods, and painter advice.","Could be education, but hobby art instruction is primary.",subagent_chunk_05_cases_0401_0500.csv,Hobby/General interests
+451,Fashion/Beauty,high,"AI-generated children fashion runway, catwalk, modeling, clothing styles, and fashion enthusiasts.",None.,subagent_chunk_05_cases_0401_0500.csv,Fashion/Beauty
+452,Education/Explainers,high,Japanese trivia/science/psychology/human body/animal facts shorts.,None.,subagent_chunk_05_cases_0401_0500.csv,Education/Knowledge
+453,Film/TV/Humor,high,"Official movie trailers for Free Guy, Despicable Me 2, The Raven, and other films.",None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+454,Entertainment/General,low,All titles repeat Best videos of the year you must watch with trending short tags.,No topical detail beyond generic viral video compilation.,subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+455,News/Society/Politics,high,"Myra Media posts political/news updates about Nara Lokesh, Chandrababu, Sachin event, and official updates.","Channel also says film updates, but evidence is political/news heavy.",subagent_chunk_05_cases_0401_0500.csv,Politics/News
+456,Health/Fitness,high,"Health & Glow posts blood pressure, weight loss, hair care, diet plan, and water therapy health tips.","Beauty hair-care overlaps, but health framing dominates.",subagent_chunk_05_cases_0401_0500.csv,Health/Fitness
+457,Film/TV/Humor,medium,Zoom TV channel posts kids news specials and Lego Ninjago episode previews.,Mixed children news and TV programming; TV content is most consistent.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+458,Film/TV/Humor,medium,Italian shorts include comedy/funny tags and lightly titled skits.,Sparse dated titles lower confidence.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+459,Film/TV/Humor,high,Janta Films posts fictional romantic short films with actors and film disclaimers.,None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+460,Film/TV/Humor,high,"Animated Marvel, Dragon Ball, Spider-Man, Invincible, parody, humor, meme, fanmade content.",None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+461,Religion,high,"Catholic Marian prayer, prophecies, Pope, church attack, Carlo Acutis, and devotional book links.",None.,subagent_chunk_05_cases_0401_0500.csv,Religion
+462,Entertainment/General,medium,Michael Jackson-themed dance/costume challenges plus variety stunt shorts.,"Music/dance references exist, but channel is broader variety entertainment.",subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+463,Religion,medium,"Evidence includes Krishna bhajan, Radhe Krishna song, Bageshwar Dham, devotional video, and religious craft.","Some lipsync, art, and gadget shorts make it mixed.",subagent_chunk_05_cases_0401_0500.csv,Religion
+464,News/Society/Politics,high,"Duterte/Sara impeachment, anti-money-laundering, Davao, and political slogans dominate.",None.,subagent_chunk_05_cases_0401_0500.csv,Politics/News
+465,Entertainment/General,medium,"Challenge/prank/adventure titles: coldest place survival, food order test, wake-up methods, sour lollipop prank, flip in an hour.","Could be lifestyle challenges, but general entertainment is stronger.",subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+466,Entertainment/General,medium,"Mixed shorts repost/feature tools, zombies, food, gadgets, and viral facts.",No stable topic beyond viral shorts.,subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+467,Hobby/General interests,high,"DIY, home repair, handyman, survival skills, plumbing, electrical wiring, woodworking, and carpentry hacks.","Education-style, but practical hobby/DIY is primary.",subagent_chunk_05_cases_0401_0500.csv,Hobby/General interests
+468,Music,high,"Guitar gear, pedals, guitarist influences, musician career, bass/guitar equipment, and original music links.","Technology gear appears, but music-making is primary.",subagent_chunk_05_cases_0401_0500.csv,Music
+469,Music,medium,All recent titles repeat a Hindi lyric-like phrase about love.,"Sparse evidence, but repeated song/lyric phrasing suggests music/lipsync.",subagent_chunk_05_cases_0401_0500.csv,Music
+470,Film/TV/Humor,high,"Animated parodies of IT Welcome to Derry, Pennywise podcast spoilers, trailers, and anthology shorts.","Podcast format appears, but TV/horror parody content dominates.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+471,Music,high,"Billboard channel posts artist interviews, music news, streamers, performances, and song/artist discussion.",None.,subagent_chunk_05_cases_0401_0500.csv,Music
+472,Education/Explainers,high,"Fact/explainer shorts about names, watch display times, AI history fact checks, maps, whales, owls, and hair whorls.",None.,subagent_chunk_05_cases_0401_0500.csv,Education/Knowledge
+473,Music,high,Electronic music releases/remixes with Beatport links and artist/label metadata.,None.,subagent_chunk_05_cases_0401_0500.csv,Music
+474,Health/Fitness,medium,Motivation shorts include back day and exercise/training variation language.,Some aesthetic/lifestyle posts; fitness evidence is present but thin.,subagent_chunk_05_cases_0401_0500.csv,Health/Fitness
+475,News/Society/Politics,high,"Tanzania TV news programs, headlines, newspapers, political accusations, and live public affairs segments.",Sports headline appears among newspaper items but not primary.,subagent_chunk_05_cases_0401_0500.csv,Politics/News
+476,Video games,high,"LEGO Fortnite/NINJAGO gameplay, items, builds, Battle Bus, and game update content.","LEGO brand present, but videos are Fortnite gameplay.",subagent_chunk_05_cases_0401_0500.csv,Video games
+477,Education/Explainers,high,"Space station, SpaceX/NASA launches, Starship tests, and space mission explainers.","Technology overlap, but educational space coverage is primary.",subagent_chunk_05_cases_0401_0500.csv,Education/Knowledge
+478,Film/TV/Humor,high,Yeralash film journal posts scripted children film sketches and acting course content.,Performing arts course is secondary.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+479,Music,high,"Children nursery rhymes and songs like Wheels on the Bus, vegetable song, and educational music for kids.","Educational kids content, but songs are the format/topic.",subagent_chunk_05_cases_0401_0500.csv,Music
+480,Film/TV/Humor,medium,Portuguese shorts are mostly laughter emojis and humorous captions like dont tell anyone and its true.,"Sparse evidence, but comedy cues dominate.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+481,Music,high,"Alyssa Baker cover songs, acoustic performances, lyric video, Spotify links, and song releases.",None.,subagent_chunk_05_cases_0401_0500.csv,Music
+482,Entertainment/General,medium,"Los Marquina challenge/olympics series, casting, behind-the-scenes, and family/group competition episodes.","Uses sports disciplines, but framed as creator challenge entertainment.",subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+483,Film/TV/Humor,high,"Spanish short skits about police, bandits, workers, invisible wall, and comic situations.",None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+484,Film/TV/Humor,high,Joey Salads posts prank/social-experiment videos and funny relationship/baby reaction content.,"Some parenting/safety topics, but prank entertainment dominates.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+485,Music,high,"Justin Stone uploads demos, freestyles, music videos, lyrics, and quitting music discussion.",None.,subagent_chunk_05_cases_0401_0500.csv,Music
+486,News/Society/Politics,medium,"Shorts feature Macron, Trump, politics hashtags, plus NFL/football celebrity items.",Mixed politics and sports; politics appears most repeated and explicit.,subagent_chunk_05_cases_0401_0500.csv,Politics/News
+487,News/Society/Politics,high,"Telangana/Andhra news coverage with KTR, Kavitha, KCR, Chandrababu, BRS leaders, and political war of words.","Some sports celebrity event items, but news politics dominates.",subagent_chunk_05_cases_0401_0500.csv,Politics/News
+488,Film/TV/Humor,medium,"Hindi emotional/motivational shorts with robbery, stolen scooter, goons, blast, and customer skit scenarios.","Motivation tags exist, but scripted dramatic shorts dominate.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+489,News/Society/Politics,high,"Indonesian cadet/military academy content: Akmil, AAU, AAL, TNI, taruna, parade/drumband.","Drumband appears, but military academy focus dominates.",subagent_chunk_05_cases_0401_0500.csv,Military
+490,Music,high,"Official King Crimson album visualizers, songs, extracts, and track listings.",None.,subagent_chunk_05_cases_0401_0500.csv,Music
+491,Lifestyle/General,medium,"Indian kids influencer/family/travel, kid dance, scooter, baby shampoo, and baby oil promotions.",Mixed children products and family influencer content.,subagent_chunk_05_cases_0401_0500.csv,Lifestyle/General
+492,Film/TV/Humor,high,Gujarati Rekha comedy videos with artist lists and #Comedy in every title.,None.,subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+493,Travel,medium,"Videos visit stores, caves, unusual places, tunnels, and local deals, often as sponsored explorations.","Some business/promo and vehicle parts content, but location exploration is broader.",subagent_chunk_05_cases_0401_0500.csv,Travel
+494,Film/TV/Humor,high,"Family comedy, humor, memes, funny dance, balloon challenge, and short skits.","One football training and animal item, but humor dominates.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+495,Hobby/General interests,medium,"Handmade MDF wall hangings, Radha/Krishna crafts, woolen blanket, handmade mala, mirror and shringar items.","Religious devotional objects, but craft making is central.",subagent_chunk_05_cases_0401_0500.csv,Hobby/General interests
+496,Religion,high,"Islamic student, Babri Masjid work, salam, peaceful azan, and mosque-construction titles.","One funny child video, but Islamic/mosque evidence dominates.",subagent_chunk_05_cases_0401_0500.csv,Religion
+497,Lifestyle/General,high,"Personal creator posts mukbang, hair/GRWM, school day, hate comments, baking, and intimate life story.","Food and beauty appear, but overall channel is lifestyle/vlog.",subagent_chunk_05_cases_0401_0500.csv,Lifestyle/General
+498,Food,high,"Indonesian cooking titles: somay recipe, capcay, dimsum, noodles/egg, chicken, ceker mercon.",None.,subagent_chunk_05_cases_0401_0500.csv,Food
+499,Film/TV/Humor,high,"TVAd TV posts Vietnamese VTV gameshows, TV drama previews, and broadcast program content.","Game shows can be entertainment, but TV programming is primary.",subagent_chunk_05_cases_0401_0500.csv,Film/TV/Humor
+500,Entertainment/General,high,"AMP challenge videos: coin stack, impossible dime, street basketball draft, grip strength, guess the country.","Some sports challenges, but group challenge entertainment dominates.",subagent_chunk_05_cases_0401_0500.csv,Entertainment/General
+501,Film/TV/Humor,medium,Sonic and Digital Circus fan comics; Hazbin and Elemental voice/comic shorts,Some gameplay appears but fan cartoon/comic dubbing dominates,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+502,Hobby/General interests,high,Cuboro marble run builds and demonstrations,Clear construction hobby content,subagent_chunk_06_cases_0501_0600.csv,Hobby/General interests
+503,Pets/Animals,high,Animal fact shorts about cats fish jungle cats and chicks,Some general viral facts but animal clips dominate,subagent_chunk_06_cases_0501_0600.csv,Pets/Animals
+504,Film/TV/Humor,medium,Dance performances and performer app content from Aiysha Saagar,Also includes lifestyle/modeling promo material,subagent_chunk_06_cases_0501_0600.csv,Performing arts
+505,Music,high,Official Punjabi songs lyric videos and music releases,Clear record label music channel,subagent_chunk_06_cases_0501_0600.csv,Music
+506,News/Society/Politics,medium,Podcast clips on entrepreneurship social media work and customer behavior,General podcast range but business themes recur,subagent_chunk_06_cases_0501_0600.csv,Business
+507,Vehicles/Motorsport,high,Jeep off-road rat rod wrecker and classic Chevy shop projects,Clear vehicle-centered channel,subagent_chunk_06_cases_0501_0600.csv,Vehicles
+508,Food,high,Doritos product ads for Twist flavor and snack promotion,Brand advertising but food product is central,subagent_chunk_06_cases_0501_0600.csv,Food
+509,Film/TV/Humor,high,Funny mother baby doctor and reaction shorts,Short scripted comedy format,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+510,Lifestyle/General,medium,Jukilop family influencer edits about Juanito Kim and family moments,Entertainment edits but family influencer life is central,subagent_chunk_06_cases_0501_0600.csv,Lifestyle/General
+511,Film/TV/Humor,medium,Short skits with zombies cats food and family situations,Could be lifestyle but staged funny shorts dominate,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+512,Lifestyle/General,medium,Personal videos comments fashion try-ons and storytime about life change,Mixed entertainment and lifestyle evidence,subagent_chunk_06_cases_0501_0600.csv,Lifestyle/General
+513,Music,high,Sonia Morales anniversary performances and streaming music links,Clear artist music channel,subagent_chunk_06_cases_0501_0600.csv,Music
+514,Music,high,Farid official lyric and music videos,Clear artist music channel,subagent_chunk_06_cases_0501_0600.csv,Music
+515,Education/Explainers,medium,YouTube copyright strike and terminated channel recovery tutorials,Creator-business overlap but instructional focus,subagent_chunk_06_cases_0501_0600.csv,Education/Knowledge
+516,Sports,high,Boxing fight highlights knockouts and bout details,Clear fight sports channel,subagent_chunk_06_cases_0501_0600.csv,Sports
+517,Film/TV/Humor,high,Chhota Bheem Tamil cartoon episodes and kids cartoon videos,Clear animation/cartoon channel,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+518,Film/TV/Humor,high,French comedy duo with humorous questions challenges and entertainment bits,Some gaming discussion but comedy variety dominates,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+519,Pets/Animals,high,Dog puppy duckling and pet viral clips,Clear pet and animal content,subagent_chunk_06_cases_0501_0600.csv,Pets/Animals
+520,Sports,high,La Liga Real Madrid Barcelona Atletico and UCL football edits,Clear soccer content,subagent_chunk_06_cases_0501_0600.csv,Sports
+521,Video games,high,NIKKE Wuthering Waves NTE Monster Hunter and game livestream content,Clear gaming channel,subagent_chunk_06_cases_0501_0600.csv,Video games
+522,Entertainment/General,medium,Challenge videos card collecting body transformation and 24-hour concepts,Mixed topics without one topical domain,subagent_chunk_06_cases_0501_0600.csv,Entertainment/General
+523,Fashion/Beauty,high,L'Oreal skincare cream sunscreen and beauty product promotions,Clear beauty brand channel,subagent_chunk_06_cases_0501_0600.csv,Fashion/Beauty
+524,Health/Fitness,high,Bonesetting chiropractic frozen shoulder and back pain therapy videos,Clear therapy/health content,subagent_chunk_06_cases_0501_0600.csv,Health/Fitness
+525,Pets/Animals,high,Snake rescue python cobra and wildlife handling videos,Clear animal rescue content,subagent_chunk_06_cases_0501_0600.csv,Pets/Animals
+526,Health/Fitness,high,Doctor interviews on gastroenterology pregnancy dermatology ENT diabetes and first aid,Clear medical health channel,subagent_chunk_06_cases_0501_0600.csv,Health/Fitness
+527,Film/TV/Humor,high,Hindi full movies teasers and film parts from Rajlaxmi Movies,Clear movie channel,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+528,Education/Explainers,medium,Book publisher presentations new releases and author talks,Books and spirituality products but knowledge/literary focus,subagent_chunk_06_cases_0501_0600.csv,Education/Knowledge
+529,Video games,high,Smash Bros and Roblox gameplay shorts,Clear gaming content,subagent_chunk_06_cases_0501_0600.csv,Video games
+530,Film/TV/Humor,high,Fictional CGI cinematic shorts with animals family drama and action,Clear animated story entertainment,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+531,Film/TV/Humor,high,Hindi moral stories and cartoon kahani videos,Clear cartoon story channel,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+532,Music,high,Children's songs about colors counting trains and nature,Music format is central,subagent_chunk_06_cases_0501_0600.csv,Music
+533,Entertainment/General,low,Experimental short videos with music and odd clip titles,Ambiguous between music and internet entertainment,subagent_chunk_06_cases_0501_0600.csv,Entertainment/General
+534,Fashion/Beauty,medium,Fashion Nova SHEIN accessories and beauty-adjacent trend shorts,Some general influencer trends,subagent_chunk_06_cases_0501_0600.csv,Fashion/Beauty
+535,Lifestyle/General,high,Family vlog about kids birthdays cheer competition driving and surgery,Clear family lifestyle content,subagent_chunk_06_cases_0501_0600.csv,Lifestyle/General
+536,News/Society/Politics,medium,Vim Liquid and ProClean product advertisement spots,Brand advertising with no better product-domain label,subagent_chunk_06_cases_0501_0600.csv,Business
+537,Film/TV/Humor,medium,AI-generated film trailers series concepts and movie scenes,AI angle present but film content dominates,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+538,Lifestyle/General,high,Travel daily life relationship and study-abroad vlogs,Clear personal lifestyle vlog,subagent_chunk_06_cases_0501_0600.csv,Lifestyle/General
+539,Music,high,Cavaleiros do Forro vocal performance and music clips,Clear band/music content,subagent_chunk_06_cases_0501_0600.csv,Music
+540,Music,high,Fernandinho worship songs live sets and acoustic performances,Religious theme but songs dominate,subagent_chunk_06_cases_0501_0600.csv,Music
+541,Music,high,Vietnamese bolero song compilations and music playlists,Clear music channel,subagent_chunk_06_cases_0501_0600.csv,Music
+542,Music,medium,Wedding geet Bhojpuri songs and music-tagged shorts,Some funny viral clips mixed in,subagent_chunk_06_cases_0501_0600.csv,Music
+543,News/Society/Politics,medium,Morocco Algeria Maduro and current-affairs commentary,Football reactions mixed with politics/news,subagent_chunk_06_cases_0501_0600.csv,Politics/News
+544,Music,high,Burak Yeter tracks mixes and official audio releases,Clear music artist channel,subagent_chunk_06_cases_0501_0600.csv,Music
+545,Film/TV/Humor,high,Fictional horror stories creepypastas and scary shorts,Clear scripted horror entertainment,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+546,Video games,high,Garry's Mod nextbot chase gameplay shorts,Clear gaming content,subagent_chunk_06_cases_0501_0600.csv,Video games
+547,Education/Explainers,high,English lessons online classes and academy course promotions,Clear education channel,subagent_chunk_06_cases_0501_0600.csv,Education/Knowledge
+548,Music,high,Ethiopian music official videos and music shorts,Clear music channel,subagent_chunk_06_cases_0501_0600.csv,Music
+549,Sports,high,Roman Reigns WWE wrestling clips and Royal Rumble moments,Wrestling treated as sports per guidance,subagent_chunk_06_cases_0501_0600.csv,Sports
+550,Technology,high,Mobile repair soldering connector and charging port tutorials,Clear electronics repair content,subagent_chunk_06_cases_0501_0600.csv,Technology
+551,Film/TV/Humor,high,Russian cartoon fairy-tale shorts,Clear animation/cartoon content,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+552,Film/TV/Humor,medium,Radio Carolina humor segments jokes and entertainment talk,Radio format but humor is explicit,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+553,Fashion/Beauty,medium,Sunscreen lip balm perfume and shopping product shorts,Mixed consumer products but beauty appears central,subagent_chunk_06_cases_0501_0600.csv,Fashion/Beauty
+554,Lifestyle/General,high,Bengali minivlogs about home family cooking rituals and husband,Clear daily life minivlog content,subagent_chunk_06_cases_0501_0600.csv,Lifestyle/General
+555,Film/TV/Humor,high,Funny family prank and reaction shorts,Clear comedy short format,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+556,Sports,high,IPL cricket news controversies match moments and player stories,Clear sports news content,subagent_chunk_06_cases_0501_0600.csv,Sports
+557,Video games,high,Pokemon shiny recolors and Pokemon discussion,Clear gaming franchise content,subagent_chunk_06_cases_0501_0600.csv,Video games
+558,Film/TV/Humor,high,Turkish comedy/skit shorts with staged situations,Clear short humor content,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+559,Religion,medium,Dzikir sholawat maulid and religious live streams,Some random phone videos mixed in,subagent_chunk_06_cases_0501_0600.csv,Religion
+560,Hobby/General interests,high,Tool accessories drills sockets wiring and wood chopping demos,Clear tools/DIY interest content,subagent_chunk_06_cases_0501_0600.csv,Hobby/General interests
+561,Music,high,Regional Mexican band official videos lyric videos and romantic song clips,Clear band/music content,subagent_chunk_06_cases_0501_0600.csv,Music
+562,Film/TV/Humor,high,Simpsons clips parody scenes and episode compilations,Clear TV/cartoon content,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+563,Vehicles/Motorsport,high,Mustang Supra Bugatti Hayabusa Ferrari and Camaro vehicle clips,Clear vehicle content,subagent_chunk_06_cases_0501_0600.csv,Vehicles
+564,Film/TV/Humor,medium,Narrated funny viral scenarios with babies cats and pranks,Animal clips appear but humor narration dominates,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+565,Music,high,Don Q EP official audio visualizers freestyles and rap releases,Clear music artist channel,subagent_chunk_06_cases_0501_0600.csv,Music
+566,Pets/Animals,high,Veterinary dog and cat care castration fever dental and deworming videos,Pet health but animals are central,subagent_chunk_06_cases_0501_0600.csv,Pets/Animals
+567,News/Society/Politics,high,Trump Congress firearms AI and political podcast/news commentary,Clear politics/news channel,subagent_chunk_06_cases_0501_0600.csv,Politics/News
+568,Hobby/General interests,medium,Wild boar hunting action and outdoor hunt videos,Hunting could be sport but outdoor hobby is stronger,subagent_chunk_06_cases_0501_0600.csv,Hobby/General interests
+569,Video games,medium,Horror game playthroughs plus ghost debunking and Goosebumps reviews,Mixed horror entertainment but games recur,subagent_chunk_06_cases_0501_0600.csv,Video games
+570,Video games,high,Super Mario World kaizo and speedrun gameplay shorts,Clear gaming content,subagent_chunk_06_cases_0501_0600.csv,Video games
+571,Education/Explainers,high,IAS academy exam prep current affairs banking SSC and TNPSC lessons,Clear education channel,subagent_chunk_06_cases_0501_0600.csv,Education/Knowledge
+572,Film/TV/Humor,high,Full Hindi movies Bollywood comedy thriller and action films,Clear movie channel,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+573,Music,high,Dubstep house drum and bass jungle and trance DJ mixes,Clear music mix channel,subagent_chunk_06_cases_0501_0600.csv,Music
+574,Sports,high,NBA baseball and sports studio analysis from sports network,Clear sports channel,subagent_chunk_06_cases_0501_0600.csv,Sports
+575,Film/TV/Humor,high,Russian jokes anecdotes and humor shorts,Clear humor content,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+576,News/Society/Politics,high,Geopolitics diplomacy Ukraine war maps and current affairs,Clear politics/geopolitics content,subagent_chunk_06_cases_0501_0600.csv,Politics/News
+577,Fashion/Beauty,high,Creative makeup beauty products cosplay and jewelry shorts,Clear beauty/fashion content,subagent_chunk_06_cases_0501_0600.csv,Fashion/Beauty
+578,Music,high,Romanian rap freestyles official videos albums and CD shop,Clear music artist channel,subagent_chunk_06_cases_0501_0600.csv,Music
+579,Film/TV/Humor,high,Chavo Simpsons Disney Zootopia South Park and lost media commentary,Clear TV/movie/cartoon entertainment,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+580,Sports,high,Golf clips with Nelly Korda Scottie Scheffler Rory and clubs,Clear golf sports content,subagent_chunk_06_cases_0501_0600.csv,Sports
+581,Religion,high,Christian news testimony martyrdom churches and faith stories,Politics/news present but Christian framing dominates,subagent_chunk_06_cases_0501_0600.csv,Religion
+582,Music,high,Christian songs hymns and worship music,Music format dominates religious theme,subagent_chunk_06_cases_0501_0600.csv,Music
+583,Music,high,Bhojpuri song videos singers lyrics and new song releases,Clear music channel,subagent_chunk_06_cases_0501_0600.csv,Music
+584,Entertainment/General,medium,Viral emotional and funny commentary clips with fair-use descriptions,Not clearly one specific topical domain,subagent_chunk_06_cases_0501_0600.csv,Entertainment/General
+585,Film/TV/Humor,high,3D animated stories with Spiderman Squid Game and monsters,Clear animation/story content,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+586,Music,high,Moroccan Chaabi artist performances and song clips,Clear music content,subagent_chunk_06_cases_0501_0600.csv,Music
+587,Film/TV/Humor,medium,French funny skit/reaction shorts about accents friends and challenges,Some lifestyle but humor dominates,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+588,Hobby/General interests,high,Fishing rigs lures knots bait and catfish methods,Clear fishing hobby content,subagent_chunk_06_cases_0501_0600.csv,Hobby/General interests
+589,Travel,high,Vlogs traveling to a tribe and living in an ancient castle,Clear travel vlog evidence,subagent_chunk_06_cases_0501_0600.csv,Travel
+590,Video games,high,Modern Warfare and Black Ops trickshot gameplay videos,Clear gaming content,subagent_chunk_06_cases_0501_0600.csv,Video games
+591,Lifestyle/General,high,Personal pregnancy family and daily-life shorts,Clear lifestyle influencer content,subagent_chunk_06_cases_0501_0600.csv,Lifestyle/General
+592,Video games,high,Android mobile games Total Football and game recommendation videos,Clear gaming channel,subagent_chunk_06_cases_0501_0600.csv,Video games
+593,Film/TV/Humor,high,Fictional funny shorts and scripted moral/drama clips,Clear short scripted entertainment,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+594,Hobby/General interests,medium,DIY craft clay RC car and creative project shorts,Some comedy framing but craft tags dominate,subagent_chunk_06_cases_0501_0600.csv,Hobby/General interests
+595,Film/TV/Humor,high,Drama street comedy horror ghost and social drama episodes,Clear scripted drama channel,subagent_chunk_06_cases_0501_0600.csv,Film/TV/Humor
+596,Food,high,Cooking tips recipes garlic onions chili burns turkey stock and kitchen advice,Clear food/cooking content,subagent_chunk_06_cases_0501_0600.csv,Food
+597,Music,medium,Mabel artist clips festival performance song snippets and studio content,NFL video is outlier,subagent_chunk_06_cases_0501_0600.csv,Music
+598,Video games,high,Minecraft mod build battles pranks and roleplay,Clear Minecraft gaming content,subagent_chunk_06_cases_0501_0600.csv,Video games
+599,Lifestyle/General,high,Japanese family/sister vlogs Disney surprise drinks birthdays and daily moments,Clear family lifestyle channel,subagent_chunk_06_cases_0501_0600.csv,Lifestyle/General
+600,Video games,high,BGMI esports finals aftermovie player interviews and mobile challenge coverage,Clear esports/gaming content,subagent_chunk_06_cases_0501_0600.csv,Video games
+601,Film/TV/Humor,high,Repeated #mizah humor shorts and everyday joke premises.,Humor is explicit in hashtags.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+602,Film/TV/Humor,high,Telugu creepy pasta and two sentence horror story episodes.,Fiction horror story channel.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+603,Hobby/General interests,high,"Survival skills, bushcraft, camping and outdoor ideas.",Outdoor survival hobby rather than organized sport.,subagent_chunk_07_cases_0601_0700.csv,Hobby/General interests
+604,Food,high,"Foodvlog episodes with recipes, cooking and kitchenware.","Some lifestyle/home content, but food is central.",subagent_chunk_07_cases_0601_0700.csv,Food
+605,Entertainment/General,medium,"Viral shorts about challenges, magic, toys and odd situations.","Evidence is broad viral entertainment, not one clear topic.",subagent_chunk_07_cases_0601_0700.csv,Entertainment/General
+606,News/Society/Politics,high,"Commentary on politicians, immigration, local council conflict and public issues.","Opinion format, but political/news topic dominates.",subagent_chunk_07_cases_0601_0700.csv,Politics/News
+607,News/Society/Politics,medium,School reunion and Guruvandana teacher-honoring program videos.,"Education setting, but content is community event coverage.",subagent_chunk_07_cases_0601_0700.csv,Society/General
+608,Film/TV/Humor,medium,"Spider-Man, Hulk, Captain America and TikTok dance/fight scene shorts.",Mixed superhero/viral entertainment; not vehicle-centered despite Bugatti title.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+609,Religion,high,Buddhist dhamma talks and temple support descriptions.,Religious teaching is explicit.,subagent_chunk_07_cases_0601_0700.csv,Religion
+610,Fashion/Beauty,medium,"Costume, carnival and Halloween wearable product videos.","Retail/product angle, but main objects are costumes.",subagent_chunk_07_cases_0601_0700.csv,Fashion/Beauty
+611,Lifestyle/General,high,"Daily routine, home tour, twins, pajamas and family vlog topics.",Food and home decor appear inside lifestyle vlogs.,subagent_chunk_07_cases_0601_0700.csv,Lifestyle/General
+612,Music,high,"Setia Band, Charly songs and acoustic music clips.",Music content is explicit.,subagent_chunk_07_cases_0601_0700.csv,Music
+613,Film/TV/Humor,high,Comedy shorts about family relationships and pranks.,Hashtags and premises are comedy-centered.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+614,Music,high,Official music video and song credits for Mitar Miric.,Music release evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+615,News/Society/Politics,high,"Harian Kompas news selections, Trump assassination attempt and Hajj logistics.",News publisher evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Politics/News
+616,Education/Explainers,high,"Facts about Iraq, geography, animals and world topics.","Adventure clips appear, but facts/knowledge dominates.",subagent_chunk_07_cases_0601_0700.csv,Education/Knowledge
+617,Hobby/General interests,high,"DIY mini stoves, oil burner, metal/wood bed and making projects.",Hands-on fabrication hobby content.,subagent_chunk_07_cases_0601_0700.csv,Hobby/General interests
+618,Sports,high,"Goalkeeper blocks, reactions and goalkeeper mentality challenges.",Soccer goalkeeping is explicit.,subagent_chunk_07_cases_0601_0700.csv,Sports
+619,Video games,high,"Quarantine Zone gameplay, full game and livestream titles.",Game title and gaming descriptions are direct.,subagent_chunk_07_cases_0601_0700.csv,Video games
+620,Hobby/General interests,high,"Paper craft templates, DIY gifts and Moducknet schemes.",Crafting is the central activity.,subagent_chunk_07_cases_0601_0700.csv,Hobby/General interests
+621,Hobby/General interests,medium,"Life tricks, recipes, toy wrapping, bracelets and household hacks.","Viral reaction format is possible, but evidence is tips/hacks.",subagent_chunk_07_cases_0601_0700.csv,Hobby/General interests
+622,Video games,high,"Tomodachi Life, Pokemon Champions and Windrose gameplay videos.",Game names dominate recent evidence.,subagent_chunk_07_cases_0601_0700.csv,Video games
+623,Hobby/General interests,high,"Fishing for catfish, wader and river fish.","Fishing hobby, not organized sport.",subagent_chunk_07_cases_0601_0700.csv,Hobby/General interests
+624,Food,high,"Telugu cooking videos with manchurian, biryani, omelet and pakoda.",Food topic is explicit.,subagent_chunk_07_cases_0601_0700.csv,Food
+625,Video games,high,BeamNG Drive Monster Jam gameplay and crashes.,Vehicle theme is within video game gameplay.,subagent_chunk_07_cases_0601_0700.csv,Video games
+626,Video games,high,"Destiny 2 news, weapons, armor, Xur and Trials of Osiris.",Game-specific channel.,subagent_chunk_07_cases_0601_0700.csv,Video games
+627,Entertainment/General,low,"Mixed sholawat, cake decoration and traditional game videos.","Evidence spans religion, food and games without a stable main topic.",subagent_chunk_07_cases_0601_0700.csv,Entertainment/General
+628,Pets/Animals,high,"Cat meowing sounds, dog dances, puppy and chick sound videos.",Animal content dominates.,subagent_chunk_07_cases_0601_0700.csv,Pets/Animals
+629,Music,high,"ANTH songs, new music, love songs and rap shorts.",Music releases are central.,subagent_chunk_07_cases_0601_0700.csv,Music
+630,Film/TV/Humor,medium,"Reaction videos to unusual memes, food creators and viral content.","Some gaming appears, but reaction/humor entertainment is broader.",subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+631,Film/TV/Humor,medium,"Funny shorts using chocolates, biscuits and candy.",Food items appear as comedy props.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+632,Video games,high,"Best Android games, game links and gameplay descriptions.",Game recommendations are explicit.,subagent_chunk_07_cases_0601_0700.csv,Video games
+633,Film/TV/Humor,medium,ARB TV variety/talk show clips and television programming.,General TV channel with entertainment talk shows.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+634,Vehicles/Motorsport,high,Driving school lessons on traffic signs and driver rules.,Vehicle/driving instruction is central.,subagent_chunk_07_cases_0601_0700.csv,Vehicles
+635,Film/TV/Humor,high,Funny Bengali shorts centered on Mistu and family jokes.,Comedy hashtags and titles dominate.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+636,Film/TV/Humor,high,Family Guy clip titles and episode references.,TV cartoon clips are direct evidence.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+637,Film/TV/Humor,high,"Funny rankings, pranks, road rage and street interview shorts.",Humor/prank format is explicit.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+638,Film/TV/Humor,high,Try Not to Laugh challenge shorts.,Comedy reaction challenge evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+639,Travel,high,"Expeditions through Dagestan, Donbas and Arctic routes.",Vehicle use supports travel expedition content.,subagent_chunk_07_cases_0601_0700.csv,Travel
+640,Pets/Animals,low,"Recent titles are mostly cat clips, with some dance battle footage.",Mixed channel evidence; dance descriptions conflict with cat-heavy recent titles.,subagent_chunk_07_cases_0601_0700.csv,Pets/Animals
+641,Lifestyle/General,high,"Pregnancy announcement, family vlogs, father-son days and travel food vlog.",Family/daily life dominates.,subagent_chunk_07_cases_0601_0700.csv,Lifestyle/General
+642,Pets/Animals,high,"Cat moments, cat food, dog clothes and pet gift shorts.",Pet content is explicit.,subagent_chunk_07_cases_0601_0700.csv,Pets/Animals
+643,Health/Fitness,high,"Exercises, massage and health advice for gallbladder, kidneys and intestines.",Health and body practice dominate.,subagent_chunk_07_cases_0601_0700.csv,Health/Fitness
+644,Health/Fitness,high,"Yoga, pregnancy yoga, postures and online yoga classes.",Yoga/fitness topic is direct.,subagent_chunk_07_cases_0601_0700.csv,Health/Fitness
+645,Video games,high,GTA 5 Franklin mod gameplay with superheroes and bikes.,GTA 5 content is explicit.,subagent_chunk_07_cases_0601_0700.csv,Video games
+646,Film/TV/Humor,high,Analysis of Super Mario Bros movie details and errors.,"Movie analysis, not gameplay.",subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+647,Music,high,Kumar Sanu and Bollywood song uploads with singer credits.,Song compilation channel.,subagent_chunk_07_cases_0601_0700.csv,Music
+648,Sports,medium,Marathon and Spartan race videos dominate recent evidence.,Some travel/tech vlog titles also appear.,subagent_chunk_07_cases_0601_0700.csv,Sports
+649,Sports,high,Maradona and Ronaldinho football skills clips.,Football is explicit.,subagent_chunk_07_cases_0601_0700.csv,Sports
+650,Vehicles/Motorsport,high,"Trucks, dumpers, Lamborghini, cranes and police chase vehicle shorts.",Vehicle-centered evidence is consistent.,subagent_chunk_07_cases_0601_0700.csv,Vehicles
+651,Music,high,"Remixes, tracks, stream/download links and music submissions.",Music channel evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+652,Lifestyle/General,medium,"Family memories, village/festival videos and family event vlogs.","One gaming challenge appears, but family/life content dominates.",subagent_chunk_07_cases_0601_0700.csv,Lifestyle/General
+653,Lifestyle/General,medium,"Personal podcast essays on creativity, anxiety, dating and relationships.","Includes a short film, but personal/lifestyle podcast is broader.",subagent_chunk_07_cases_0601_0700.csv,Lifestyle/General
+654,Film/TV/Humor,high,KBS Gagconcert and comedy show clips.,Comedy TV content is explicit.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+655,Food,high,"Cooking challenges, pesto, fast food testing and recipes.",Food topic dominates.,subagent_chunk_07_cases_0601_0700.csv,Food
+656,Music,high,"New Assamese songs with singers, lyrics and audio credits.",Music release evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+657,News/Society/Politics,high,"Nagpur police, local news and public affairs interviews.",News/current affairs channel.,subagent_chunk_07_cases_0601_0700.csv,Politics/News
+658,Video games,high,Minecraft and Sprunki animations with game-centered titles.,Game culture animation is explicitly gaming-centered.,subagent_chunk_07_cases_0601_0700.csv,Video games
+659,Entertainment/General,low,Short casual Indonesian prompts and viral-style clips.,Evidence is too generic for a more specific topic.,subagent_chunk_07_cases_0601_0700.csv,Entertainment/General
+660,Film/TV/Humor,high,"Chintu comedy, funny memes and scripted skit descriptions.",Comedy is explicit.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+661,Food,medium,"Wild duck, pheasant, pork belly and recipe videos.","Hunting is present, but recipes/cooking are prominent.",subagent_chunk_07_cases_0601_0700.csv,Food
+662,Music,high,Marathi devotional Khandoba/Yedamay song compilations.,"Religious subject, but the content is songs.",subagent_chunk_07_cases_0601_0700.csv,Music
+663,Hobby/General interests,high,"DIY home repair, nail design, earrings and smart life hacks.",Craft/hack topic dominates.,subagent_chunk_07_cases_0601_0700.csv,Hobby/General interests
+664,Film/TV/Humor,high,Bhojpuri comedy shorts and family joke skits.,Comedy hashtags and premises dominate.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+665,Film/TV/Humor,high,Animated Chaves and Adventure Time humor shorts.,Animation/humor evidence is explicit.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+666,Music,high,"Crystal Waters house music, remixes, radio show and DJ mixes.",Music topic is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+667,Film/TV/Humor,medium,Official TV Aichi channel with local TV programs and show segments.,Broad broadcaster content includes tech and local features.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+668,Film/TV/Humor,medium,Short humorous Portuguese clips with joke-style titles.,Evidence is brief but consistently comedic.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+669,Technology,high,"Water pump, jet engine, Tesla turbine and generator experiments.",Engineering technology is central.,subagent_chunk_07_cases_0601_0700.csv,Technology
+670,Music,high,Karaoke videos with scrolling lyrics for songs.,Music/karaoke evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+671,Music,high,TrapSoul and R&B playlist mixes with tracklists.,Music playlist channel.,subagent_chunk_07_cases_0601_0700.csv,Music
+672,Technology,high,"Earbuds, smart glasses and e-ink tech product reviews.",Gadget review evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Technology
+673,Food,high,"Recipes for suero, tuna patties, picadillo and red rice.",Cooking instruction dominates.,subagent_chunk_07_cases_0601_0700.csv,Food
+674,Travel,high,Laos market visits and on-tour videos across towns.,Food appears as part of travel market coverage.,subagent_chunk_07_cases_0601_0700.csv,Travel
+675,Entertainment/General,medium,"Celebrity paparazzi, ramp walk and actor/personality shorts.","Entertainment celebrity coverage, not a single film/TV work.",subagent_chunk_07_cases_0601_0700.csv,Entertainment/General
+676,Film/TV/Humor,high,Chinese drama episodes from The Legend of HaoLan.,TV drama episodes are direct evidence.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+677,Video games,high,"PUBG Mobile episodes, shorts and ranking gameplay.",Game title dominates.,subagent_chunk_07_cases_0601_0700.csv,Video games
+678,Film/TV/Humor,high,Children’s cartoon/animation episodes and shorts.,Animated kids entertainment is central.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+679,Film/TV/Humor,high,Movie upload and telenovela episode parts.,Film/TV clips are direct evidence.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+680,Fashion/Beauty,high,Meesho/Flipkart dress and ethnic set fashion unboxing shorts.,Fashion shopping/unboxing dominates.,subagent_chunk_07_cases_0601_0700.csv,Fashion/Beauty
+681,News/Society/Politics,high,"El Salvador news on Bukele, police operations and crime cases.",News/current events evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Politics/News
+682,Video games,high,"PUBG Mobile event, skins, characters and gameplay topics.",Game title and gaming context dominate.,subagent_chunk_07_cases_0601_0700.csv,Video games
+683,Music,high,"BLV official audio, visualizers, remixes and track links.",Music release evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+684,Fashion/Beauty,high,Nail art tutorials and nail design shorts.,Beauty/nails topic is explicit.,subagent_chunk_07_cases_0601_0700.csv,Fashion/Beauty
+685,Film/TV/Humor,high,Bollywood movie illogical scene/fact videos.,Movie-centered facts dominate despite one life-hack video.,subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+686,Education/Explainers,high,Geography/history facts and what-if country scenarios.,Educational fact content is explicit.,subagent_chunk_07_cases_0601_0700.csv,Education/Knowledge
+687,Music,high,Lucky Dube song uploads and live music titles.,Music content is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+688,Lifestyle/General,low,"Resort, outfit choices, blogger song promo and casual personal clips.",Mixed lifestyle/music/fashion evidence.,subagent_chunk_07_cases_0601_0700.csv,Lifestyle/General
+689,Entertainment/General,high,Satisfying ASMR kinetic sand and slime videos.,"Sensory entertainment, not a narrower topic.",subagent_chunk_07_cases_0601_0700.csv,Entertainment/General
+690,Music,high,"Concert, song, singer and lyrics-related titles.",Music performance evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+691,Film/TV/Humor,medium,"Bubble, balloon, magic mess and sibling-style short entertainment titles.","Sparse evidence, but scripted kid/family entertainment is likely.",subagent_chunk_07_cases_0601_0700.csv,Film/TV/Humor
+692,Music,high,"Cicero song titles, tour dates and music release clues.",Artist/music evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+693,Food,high,Waffle-maker food experiments and recipe/food hack titles.,Food/cooking experiments dominate.,subagent_chunk_07_cases_0601_0700.csv,Food
+694,Video games,high,"GTA5 shorts with Sonic, Goku and game tags.",Game-centered animation/content is explicit.,subagent_chunk_07_cases_0601_0700.csv,Video games
+695,Music,high,WILLOW official visualizers and album track links.,Music release evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Music
+696,Technology,high,"CES robot vacuum, smart appliance and gadget reviews.",Tech product review channel.,subagent_chunk_07_cases_0601_0700.csv,Technology
+697,Hobby/General interests,high,"Stained glass project, fantasy crafts, pilgrimage book and RPG review.",Creative hobby/fantasy projects dominate.,subagent_chunk_07_cases_0601_0700.csv,Hobby/General interests
+698,News/Society/Politics,high,"Breaking news on Strait of Hormuz, White House and Hezbollah.",News channel evidence is direct.,subagent_chunk_07_cases_0601_0700.csv,Politics/News
+699,Entertainment/General,medium,"Choice prompts about wizard, potions, challenges and jobs with background music.","Not clearly gameplay, music, or humor-specific.",subagent_chunk_07_cases_0601_0700.csv,Entertainment/General
+700,Health/Fitness,high,"Muscle analysis, supplements, performance optimization and energy drinks.",Fitness/health performance content dominates.,subagent_chunk_07_cases_0601_0700.csv,Health/Fitness
+701,Lifestyle/General,medium,Personal shorts with products prayer and holiday poems,Mixed evidence across lifestyle products and poems,subagent_chunk_08_cases_0701_0800.csv,Lifestyle/General
+702,Sports,high,TNT basketball highlights and player interviews,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Sports
+703,News/Society/Politics,high,Daily Ittefaq political and local news reports,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Politics/News
+704,Fashion/Beauty,high,Hair color haircut and treatment shorts,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Fashion/Beauty
+705,Video games,high,PS5 games PS Plus and PlayStation news,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Video games
+706,Music,high,Song uploads by named singers and music descriptions,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+707,Film/TV/Humor,medium,Funny short scenarios and transformed clips,Could be broad viral entertainment,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+708,Film/TV/Humor,high,Japanese quiz variety eating challenges and jokes,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+709,Film/TV/Humor,medium,Superhero and Wednesday character evolution clips,Some Steal a Brainrot gaming signals,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+710,Film/TV/Humor,high,Kids funny comedy shorts and ghost gags,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+711,Film/TV/Humor,medium,Animated anime cartoon and meme shorts,Some game character references,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+712,Lifestyle/General,low,Cosplay costume and casual personal shorts,Sparse mixed evidence,subagent_chunk_08_cases_0701_0800.csv,Lifestyle/General
+713,Film/TV/Humor,medium,Cartoon comedy and pop culture gag titles,Some titles are cryptic,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+714,Food,medium,Eden Cheese holiday brand campaign videos,Food brand ads more than recipes,subagent_chunk_08_cases_0701_0800.csv,Food
+715,Food,high,Air fryer recipes cakes salmon and waffles,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Food
+716,Music,high,Cover songs songwriting and singer content,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+717,Vehicles/Motorsport,high,Classic cars muscle cars restorations and burnouts,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Vehicles
+718,News/Society/Politics,high,Mutual fund strategy market volatility and NFO videos,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Business
+719,Video games,medium,Payday style heist game references and character gags,Titles are sparse,subagent_chunk_08_cases_0701_0800.csv,Video games
+720,Music,high,Official topic tracks and album songs,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+721,Lifestyle/General,medium,Personal rural home goats cooking and village life videos,Some comedy elements,subagent_chunk_08_cases_0701_0800.csv,Lifestyle/General
+722,Music,high,Official audio live songs and album content,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+723,Religion,high,Islamic sheikh lectures imams Allah and paradise,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Religion
+724,Food,medium,ZapEat repeats would you eat this food prompt,Very little title detail,subagent_chunk_08_cases_0701_0800.csv,Food
+725,Video games,high,Kingdom Hearts timeline episodes and game montage,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Video games
+726,Video games,high,Minecraft and Roblox series compilations,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Video games
+727,Sports,medium,IPL predictions and 1xBet sports betting promos,Betting promotion dominates,subagent_chunk_08_cases_0701_0800.csv,Sports
+728,Health/Fitness,medium,Weight loss reality show transformations and trainers,TV format creates some ambiguity,subagent_chunk_08_cases_0701_0800.csv,Health/Fitness
+729,Entertainment/General,medium,Creator events fan gifts merch and stunt shorts,Mixed lifestyle and entertainment,subagent_chunk_08_cases_0701_0800.csv,Entertainment/General
+730,Music,high,Kids songs nursery rhymes and singalong videos,Educational elements are secondary,subagent_chunk_08_cases_0701_0800.csv,Music
+731,Travel,medium,Travel couple visits Serra Negra and road channel,Some home construction content,subagent_chunk_08_cases_0701_0800.csv,Travel
+732,Entertainment/General,medium,Mixed viral challenges odd news and shorts,Broad variety without one topic,subagent_chunk_08_cases_0701_0800.csv,Entertainment/General
+733,Film/TV/Humor,high,Japanese comedy variety prank and laugh clips,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+734,News/Society/Politics,high,Lebanon Iraq Israel Iran and regional politics news,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Politics/News
+735,Technology,high,LINE app moments calendar and feature videos,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Technology
+736,Music,high,Grupo Kvrass live songs and vallenato performances,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+737,Film/TV/Humor,high,Dance tutorials hook steps and dance covers,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Performing arts
+738,Vehicles/Motorsport,high,Truck inspection Volvo repairs and night hauling,Some travel vlog framing,subagent_chunk_08_cases_0701_0800.csv,Vehicles
+739,Music,high,Live songs instrumentals and llanero performances,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+740,Hobby/General interests,high,Crochet patterns scarves hats and tutorials,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Hobby/General interests
+741,Film/TV/Humor,medium,Funny tier lists school rules and social commentary,Could be broad entertainment,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+742,News/Society/Politics,high,HDFC Life insurance savings investing and leadership videos,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Business
+743,Hobby/General interests,high,Beyblade unboxings reviews battles and tournaments,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Hobby/General interests
+744,Music,high,Single official Haryanvi song video,Only one record but label is clear,subagent_chunk_08_cases_0701_0800.csv,Music
+745,Music,high,Official topic tracks by Crush,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+746,Food,medium,Restaurant food sale and McDonalds shorts,Some unrelated local promo videos,subagent_chunk_08_cases_0701_0800.csv,Food
+747,Entertainment/General,medium,TikTok Facebook YouTube and creator challenge videos,Mixed viral creator topics,subagent_chunk_08_cases_0701_0800.csv,Entertainment/General
+748,Food,high,Recipe shorts for mugcake burgers pizza and appetizers,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Food
+749,Music,high,Live music performances by bands and singers,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+750,Film/TV/Humor,high,Dance and festival baile shorts,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Performing arts
+751,Film/TV/Humor,high,Film trailer and Telugu pre release event speeches,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+752,Hobby/General interests,high,Glassblowing ornaments pumpkins and process videos,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Hobby/General interests
+753,Film/TV/Humor,high,Bengali scripted story parts and drama titles,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+754,Education/Explainers,high,Explainer videos on politics science and history,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Education/Knowledge
+755,News/Society/Politics,medium,Business boarding house savings and finance advice,Mixed with family and religious themes,subagent_chunk_08_cases_0701_0800.csv,Business
+756,Film/TV/Humor,medium,Funny shorts and comedy sketches with some school content,Mixed education snippets,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+757,Hobby/General interests,high,DIY metal casting wind generator and workshop experiments,Some science education overlap,subagent_chunk_08_cases_0701_0800.csv,Hobby/General interests
+758,Video games,high,99 Nights in the Forest gameplay tips and tests,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Video games
+759,Sports,high,Cricket players IPL Ashes and match moments,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Sports
+760,Music,high,Chris Brown live performances and songs,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+761,Hobby/General interests,high,Clay art and craft projects of devotional figures,Religious subjects but craft is central,subagent_chunk_08_cases_0701_0800.csv,Hobby/General interests
+762,Video games,high,Pokemon games teams secrets and discussion,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Video games
+763,Technology,high,AI tools website creation video editing and audio separation,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Technology
+764,Food,high,Mango popsicle bread pizza biriyani and lime juice,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Food
+765,Lifestyle/General,high,Family update beauty lookbook and personal shorts,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Lifestyle/General
+766,Food,high,Cooking dishes inspired by films and cartoons,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Food
+767,Film/TV/Humor,high,AI funny absurd story shorts and character gags,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+768,Video games,high,GTA Pokemon Dragon Quest and PlayStation gaming videos,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Video games
+769,Film/TV/Humor,high,Scripted rich poor school and family drama stories,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+770,Film/TV/Humor,high,Scripted series episodes teasers and drama arcs,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+771,Film/TV/Humor,high,Teletubbies episodes and kids TV programs,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+772,Lifestyle/General,high,Couple daily life shopping food and Disney outings,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Lifestyle/General
+773,Film/TV/Humor,high,Afrodance choreography and dance class videos,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Performing arts
+774,Music,high,Official artist lyrics live performance and song clips,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+775,Education/Explainers,medium,English and Javanese language learning comedy,Humor is also prominent,subagent_chunk_08_cases_0701_0800.csv,Education/Knowledge
+776,Food,high,Baking cooking recipes and dessert shorts,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Food
+777,News/Society/Politics,low,Channel name is news but titles are only dates,Evidence is very sparse,subagent_chunk_08_cases_0701_0800.csv,Politics/News
+778,Hobby/General interests,high,Toy robot Gundam and Transformers unboxings,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Hobby/General interests
+779,Video games,high,Official Elite Dangerous game updates and tutorials,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Video games
+780,Music,high,Music label teasers live performances and longplay,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+781,Hobby/General interests,medium,Fishing boating and water incident commentary,Some boat vehicle overlap,subagent_chunk_08_cases_0701_0800.csv,Hobby/General interests
+782,Music,high,Eddy Herrera concerts venues and tour clips,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+783,Film/TV/Humor,high,Princess Batman and Joker scripted kids entertainment,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+784,Education/Explainers,high,Science and nature explainers on physics and space,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Education/Knowledge
+785,Entertainment/General,medium,AI edits pranks YouTuber commentary and one music clip,Mixed topics,subagent_chunk_08_cases_0701_0800.csv,Entertainment/General
+786,Film/TV/Humor,medium,Dance acting and wedding performance shorts,Mixed with personal posts,subagent_chunk_08_cases_0701_0800.csv,Performing arts
+787,Music,high,Official Jorge Vercillo songs clips and tour documentary,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+788,Lifestyle/General,medium,Student life fandom goods and photocard packing,Could be hobby fandom content,subagent_chunk_08_cases_0701_0800.csv,Lifestyle/General
+789,Film/TV/Humor,high,Magic tricks reveals and challenge performances,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Performing arts
+790,Film/TV/Humor,high,UpDating staged dating show clips,Relationships are in show format,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+791,Hobby/General interests,high,Woodworking concrete garden and shop DIY projects,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Hobby/General interests
+792,News/Society/Politics,high,TVT news politics labor STF Trump and public issues,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Politics/News
+793,Film/TV/Humor,high,Film and TV set behind the scenes and show promos,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+794,Film/TV/Humor,high,QosLike television reality romance show clips,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Film/TV/Humor
+795,Music,high,Ethiopian songs albums singers and band credits,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Music
+796,News/Society/Politics,high,Pension Bienestar payments health rights and Sheinbaum news,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Politics/News
+797,Education/Explainers,high,Teacher development reading listening and speaking lessons,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Education/Knowledge
+798,Video games,high,Gameplay episodes horror games and gaming hashtags,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Video games
+799,Technology,high,Mechanical keyboard reviews builds and hardware tests,No major ambiguity,subagent_chunk_08_cases_0701_0800.csv,Technology
+800,Education/Explainers,high,Chemistry element experiments and science demonstrations,Meme tone but science is central,subagent_chunk_08_cases_0701_0800.csv,Education/Knowledge
+801,Lifestyle/General,high,Personal Korean Vietnam vlog titles about visitors staff dates cafe work,Travel and business links appear but personal vlog focus dominates,subagent_chunk_09_cases_0801_0900.csv,Lifestyle/General
+802,Music,high,DJ sets and live trap reggaeton dembow mixes dominate recent titles,Barber branding appears but recent evidence is mostly music,subagent_chunk_09_cases_0801_0900.csv,Music
+803,News/Society/Politics,medium,Thai TV public affairs items on hospital donations royal medical projects and officials,Some community culture and medical topics included,subagent_chunk_09_cases_0801_0900.csv,Politics/News
+804,Video games,high,Rust raid cam base and clan titles throughout,,subagent_chunk_09_cases_0801_0900.csv,Video games
+805,Travel,high,Travel documentary titles on Argentina Patagonia Kurils Uzbekistan Afghanistan and Brazil,Some geopolitical framing appears,subagent_chunk_09_cases_0801_0900.csv,Travel
+806,News/Society/Politics,low,Breaking news style titles on Maduro Trump floods tsunami and odd events,Channel name suggests singer songwriter and evidence is mixed,subagent_chunk_09_cases_0801_0900.csv,Politics/News
+807,Fashion/Beauty,medium,Sneaker releases and Foot Locker product shorts about Jordan Vans Converse Kobe,Retail product marketing rather than beauty content,subagent_chunk_09_cases_0801_0900.csv,Fashion/Beauty
+808,Vehicles/Motorsport,high,Car reviews drag races and model comparisons for Corvette Audi BMW Cadillac and Honda,,subagent_chunk_09_cases_0801_0900.csv,Vehicles
+809,Video games,high,Gaming branded channel with find quests horror rooms and ocean ruler gameplay titles,,subagent_chunk_09_cases_0801_0900.csv,Video games
+810,Music,high,Singer concert lyric and tour related James Arthur titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+811,Education/Explainers,medium,Mystery creature nature fact and engineering explainer titles,Horror and legend entertainment framing appears,subagent_chunk_09_cases_0801_0900.csv,Education/Knowledge
+812,Music,high,Live song performances and singers from Shoke Studio dominate,,subagent_chunk_09_cases_0801_0900.csv,Music
+813,Technology,high,Smartphone gadget and gaming handheld review titles,,subagent_chunk_09_cases_0801_0900.csv,Technology
+814,Music,high,Nursery rhyme kids song and family song titles dominate,Kids animation format but songs dominate,subagent_chunk_09_cases_0801_0900.csv,Music
+815,Music,high,Orchestra live sessions cumbia pachanga and music tributes,,subagent_chunk_09_cases_0801_0900.csv,Music
+816,Pets/Animals,high,Capybara animal and pet funny shorts dominate,Uses humor hashtags,subagent_chunk_09_cases_0801_0900.csv,Pets/Animals
+817,Film/TV/Humor,high,Repeated Junya and Sagawa funny meme comedy shorts,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+818,Vehicles/Motorsport,high,Pagani roadster design raduno and automotive partner videos,,subagent_chunk_09_cases_0801_0900.csv,Vehicles
+819,Entertainment/General,medium,Viral baby dance and cute baby hashtag shorts,Sparse hashtag titles make topic broad,subagent_chunk_09_cases_0801_0900.csv,Entertainment/General
+820,Music,high,Country artist podcast concerts and music business titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+821,Film/TV/Humor,high,Filmibeat celebrity TV film and actor interview coverage,One general news title appears,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+822,Film/TV/Humor,high,Relatable relationship school and desi household comedy skits,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+823,Entertainment/General,medium,Ranking style viral baby animal singing car and sports clips,Mixed viral topics with no single vertical,subagent_chunk_09_cases_0801_0900.csv,Entertainment/General
+824,Music,high,Portuguese kids songs nursery music and educational cartoon songs,Educational cartoon framing but songs dominate,subagent_chunk_09_cases_0801_0900.csv,Music
+825,Music,high,Artist Topic channel with instrumental sped up and track titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+826,Film/TV/Humor,high,Thai horror short film and movie titles from The Ghost Studio,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+827,News/Society/Politics,high,Dedi Mulyadi police illegal mining and public action titles,,subagent_chunk_09_cases_0801_0900.csv,Politics/News
+828,Film/TV/Humor,medium,TV drama previews comedy clips and program teasers from MBS,Broad broadcaster with mixed entertainment shows,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+829,Hobby/General interests,high,MediBang digital drawing tool and illustration how-to titles,Software tutorial framing but art practice dominates,subagent_chunk_09_cases_0801_0900.csv,Hobby/General interests
+830,Lifestyle/General,high,Best friend relationship and friendship shorts,,subagent_chunk_09_cases_0801_0900.csv,Lifestyle/General
+831,Music,high,Spanish JunyTony children's songs and nursery rhyme titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+832,Music,high,Guitar lesson and acoustic song tutorial titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+833,Music,medium,Nadine Lustre singing performance and fan event clips,Celebrity fan clips include photoshoot and fashion,subagent_chunk_09_cases_0801_0900.csv,Music
+834,Lifestyle/General,medium,Family IRL live vlogs challenges farm and home activities,Challenge and skit elements appear,subagent_chunk_09_cases_0801_0900.csv,Lifestyle/General
+835,Health/Fitness,high,IVF specialist doctor titles about newborns bleeding pregnancy and baby care,,subagent_chunk_09_cases_0801_0900.csv,Health/Fitness
+836,Religion,high,Quran recitation titles,,subagent_chunk_09_cases_0801_0900.csv,Religion
+837,Hobby/General interests,medium,Farm implements rotavators seeders and agriculture machinery titles,Tractor machinery overlaps vehicles,subagent_chunk_09_cases_0801_0900.csv,Hobby/General interests
+838,Hobby/General interests,high,Permaculture irrigation biodigester bamboo and rural site course titles,Instructional course framing appears,subagent_chunk_09_cases_0801_0900.csv,Hobby/General interests
+839,Travel,medium,Thailand trip farewell gratitude and heartwarming travel moments,Some human interest lifestyle clips appear,subagent_chunk_09_cases_0801_0900.csv,Travel
+840,Music,high,Official Arabic song and music video releases by Mashael,,subagent_chunk_09_cases_0801_0900.csv,Music
+841,Video games,high,Video game curiosities betas secrets and controversial game titles,,subagent_chunk_09_cases_0801_0900.csv,Video games
+842,Film/TV/Humor,medium,Karen instant karma and funny police compilation titles,Also broad viral social clips,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+843,Video games,high,Battle Cats Roblox and other gameplay challenge titles,,subagent_chunk_09_cases_0801_0900.csv,Video games
+844,Music,high,4MINUTE and Hyuna music videos teasers and album audio,,subagent_chunk_09_cases_0801_0900.csv,Music
+845,News/Society/Politics,high,Korean newspaper live political commentary and corruption allegation titles,,subagent_chunk_09_cases_0801_0900.csv,Politics/News
+846,Vehicles/Motorsport,medium,Racecar and car lap record comparisons with F1 and Porsche titles,Could overlap racing sport or simulation gaming,subagent_chunk_09_cases_0801_0900.csv,Vehicles
+847,Film/TV/Humor,medium,Dramatic wedding ex sneaking out and reveal story titles,Presented like personal drama so lifestyle overlap exists,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+848,Film/TV/Humor,high,Ram Charan film glimpses RRR intros and cinema event speeches,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+849,Film/TV/Humor,medium,Dance lip-sync expression and love-status shorts,Personal creator lifestyle framing also appears,subagent_chunk_09_cases_0801_0900.csv,Performing arts
+850,News/Society/Politics,high,Local police crime business sports and community news titles from FOX5,,subagent_chunk_09_cases_0801_0900.csv,Politics/News
+851,Entertainment/General,medium,Portuguese trend couple and laugh challenge shorts,Humor is present but titles are broad trends,subagent_chunk_09_cases_0801_0900.csv,Entertainment/General
+852,Fashion/Beauty,medium,Product shorts on mangalsutra saree face lift decor and hacks,Mixed shopping and home decor products,subagent_chunk_09_cases_0801_0900.csv,Fashion/Beauty
+853,Music,high,BTS and K-pop performance fan shorts dominate,,subagent_chunk_09_cases_0801_0900.csv,Music
+854,Food,high,Recipe chef dessert burger and stuffed pepper shorts,,subagent_chunk_09_cases_0801_0900.csv,Food
+855,Fashion/Beauty,medium,Tattoo models artists and tattoo shop tour titles,Tattoo art overlaps hobby culture,subagent_chunk_09_cases_0801_0900.csv,Fashion/Beauty
+856,Music,high,Band tour bluegrass folk metal covers and live music titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+857,Video games,high,Roblox Squid Game Sprunki obby and story gameplay titles,,subagent_chunk_09_cases_0801_0900.csv,Video games
+858,Uncategorized,low,Miscellaneous personal name clips soccer product and music event titles,No coherent channel topic from titles,subagent_chunk_09_cases_0801_0900.csv,Uncategorized
+859,Lifestyle/General,medium,Family vacation cruise shopping detox interview and recipe vlog titles,Recent titles include substantial travel content,subagent_chunk_09_cases_0801_0900.csv,Lifestyle/General
+860,Film/TV/Humor,high,Sibling and family short comedy situations,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+861,Religion,medium,Repeated Jesus protection faith edit titles plus viral shorts,Later titles are generic viral edits,subagent_chunk_09_cases_0801_0900.csv,Religion
+862,Music,high,Lifehouse live acoustic lyric video and tour titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+863,Film/TV/Humor,high,Humor and frutinovela comedy shorts,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+864,Music,high,La Konga cuarteto cumbia vocals live and official video titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+865,Film/TV/Humor,high,Movie public reviews Bigg Boss and actor entertainment shorts,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+866,Vehicles/Motorsport,high,Audi Subaru Mercedes BMW and sedan car titles from racing team,,subagent_chunk_09_cases_0801_0900.csv,Vehicles
+867,Film/TV/Humor,high,Movie trailers free films and film recommendation shorts,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+868,Music,high,Mallu Magalhaes song videos tour documentary and VEVO stream,,subagent_chunk_09_cases_0801_0900.csv,Music
+869,Music,high,La Beriso lyric video song titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+870,Music,high,Smokey Robinson Topic song track titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+871,Film/TV/Humor,high,Teacher high school funny and comedy shorts,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+872,Video games,high,Roblox Sammy story and school shorts throughout,,subagent_chunk_09_cases_0801_0900.csv,Video games
+873,Film/TV/Humor,high,Hindi funny comedy shorts about shopkeeper pranks,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+874,Entertainment/General,medium,Food drink and balloon challenge shorts,Several food items but challenge format dominates,subagent_chunk_09_cases_0801_0900.csv,Entertainment/General
+875,Video games,medium,Football game team building TOTS Bayern Messi and Ronaldo challenge titles,Sports theme overlaps with soccer itself,subagent_chunk_09_cases_0801_0900.csv,Video games
+876,Entertainment/General,medium,Translated viral shorts about people animals farms fish and surprises,Animal clips appear but viral variety dominates,subagent_chunk_09_cases_0801_0900.csv,Entertainment/General
+877,Food,high,Outdoor cooking food breakfast and meat recipe titles,,subagent_chunk_09_cases_0801_0900.csv,Food
+878,Video games,high,FNAF and Subnautica gameplay titles,,subagent_chunk_09_cases_0801_0900.csv,Video games
+879,Music,high,Slash music video album making and tracklist titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+880,News/Society/Politics,low,Mixed commentary on ETF breastfeeding Trump CRO ChatGPT travel and restaurants,Very broad personal commentary with no single vertical,subagent_chunk_09_cases_0801_0900.csv,Society/General
+881,Film/TV/Humor,high,Zee Kannada TV serial webisodes scenes and episodes,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+882,Music,high,Lil Uzi Vert official music video audio and song process titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+883,Food,high,Chef Lazerson recipe breakfast starch and cooking titles,,subagent_chunk_09_cases_0801_0900.csv,Food
+884,Film/TV/Humor,high,Hindi action comedy horror and drama movie upload titles,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+885,Lifestyle/General,high,Family Sweden daily life school pickup and personal vlog titles,,subagent_chunk_09_cases_0801_0900.csv,Lifestyle/General
+886,Film/TV/Humor,high,Anime couple Kanna and sad clip edit titles,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+887,Film/TV/Humor,medium,Dance love status and personal performance shorts,Personal lifestyle creator framing also appears,subagent_chunk_09_cases_0801_0900.csv,Performing arts
+888,Music,high,Kesha official lyric audio and music video releases,,subagent_chunk_09_cases_0801_0900.csv,Music
+889,Film/TV/Humor,high,Frozen Tinkerbell Epic and animation character edits,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+890,Film/TV/Humor,medium,Family child funny shorts with mom dad and Hridyansh,Family vlog overlap exists,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+891,Hobby/General interests,high,Log cabin wooden house build timelapse repeated across titles,,subagent_chunk_09_cases_0801_0900.csv,Hobby/General interests
+892,Video games,high,Fallout 4 episodes and gaming series titles,,subagent_chunk_09_cases_0801_0900.csv,Video games
+893,Film/TV/Humor,high,Tamil crime thriller and crime story drama titles,,subagent_chunk_09_cases_0801_0900.csv,Film/TV/Humor
+894,Video games,medium,Gaming named channel with hack trick challenge and Tausir shorts,Titles are sparse beyond gaming identity,subagent_chunk_09_cases_0801_0900.csv,Video games
+895,Video games,high,Casual game titles such as Pet Salon Snail Bob Baby Panda and truck game,,subagent_chunk_09_cases_0801_0900.csv,Video games
+896,Sports,medium,WWE live SmackDown CM Punk and wrestling beginner titles,Mixed with RPG and Stranger Things commentary,subagent_chunk_09_cases_0801_0900.csv,Sports
+897,Video games,medium,MoistCr1TiKaL clips on Red Dead Xbox Assassin's Creed and NBA,Also includes sports and general reaction clips,subagent_chunk_09_cases_0801_0900.csv,Video games
+898,Technology,high,Smartphone smartwatch and gadget review titles,,subagent_chunk_09_cases_0801_0900.csv,Technology
+899,Film/TV/Humor,high,Dance competition improv GRWM routines and dance team titles,,subagent_chunk_09_cases_0801_0900.csv,Performing arts
+900,Music,high,Kurdish music album official audio soundtrack and video titles,,subagent_chunk_09_cases_0801_0900.csv,Music
+901,Film/TV/Humor,high,Tamil full movie uploads across action romance horror comedy,,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+902,Entertainment/General,high,ASMR ear cleaning whisper and mukbang videos,ASMR could border wellness,subagent_chunk_10_cases_0901_1000.csv,Entertainment/General
+903,Hobby/General interests,high,Bracelet making tutorials with thread and beads,,subagent_chunk_10_cases_0901_1000.csv,Hobby/General interests
+904,Religion,high,Satsang class descriptions and spiritual Tamil talks,Some titles are philosophical,subagent_chunk_10_cases_0901_1000.csv,Religion
+905,Film/TV/Humor,high,Repeated Vietnamese funny film comedy uploads,,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+906,Film/TV/Humor,high,Flash and Arrow superhero TV clip shorts,,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+907,Sports,medium,Soccer star penalty race and obstacle challenges,Simulator format adds some uncertainty,subagent_chunk_10_cases_0901_1000.csv,Sports
+908,Video games,high,Indian Bike Driving 3D cheat code videos dominate,A few personal shorts mixed in,subagent_chunk_10_cases_0901_1000.csv,Video games
+909,Film/TV/Humor,medium,Indonesian short story or skit titles with recurring characters,Descriptions contain unrelated devotional hashtags,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+910,Video games,high,Sonic Speed Simulator Roblox and Mario game themed videos,Some character animation elements,subagent_chunk_10_cases_0901_1000.csv,Video games
+911,Pets/Animals,high,Bird species questions rare bird sightings and ornithology,Educational framing but animal topic dominates,subagent_chunk_10_cases_0901_1000.csv,Pets/Animals
+912,Sports,medium,Goalkeeper channel with football challenges and training,Recent posts are ads and general challenges,subagent_chunk_10_cases_0901_1000.csv,Sports
+913,Technology,high,Reviews of gaming keyboards mice headsets monitors and setups,Gaming adjacent but hardware is central,subagent_chunk_10_cases_0901_1000.csv,Technology
+914,Pets/Animals,high,Elephant rescue injury treatment and wildlife behavior videos,,subagent_chunk_10_cases_0901_1000.csv,Pets/Animals
+915,Music,high,Thai luk thung and mor lam song compilations dominate,One SEA Games show clip mixed in,subagent_chunk_10_cases_0901_1000.csv,Music
+916,Vehicles/Motorsport,high,Hyundai steering noise relay compression and coil testing,,subagent_chunk_10_cases_0901_1000.csv,Vehicles
+917,Religion,high,Quran recitation memorization tajweed and tafsir videos,,subagent_chunk_10_cases_0901_1000.csv,Religion
+918,Music,high,Forro pagodao and live sound system music uploads,Speaker testing appears music related,subagent_chunk_10_cases_0901_1000.csv,Music
+919,Video games,high,Roblox Dress to Impress quest and item tutorials,,subagent_chunk_10_cases_0901_1000.csv,Video games
+920,Hobby/General interests,high,LEGO builds mechanisms and building challenges,,subagent_chunk_10_cases_0901_1000.csv,Hobby/General interests
+921,Music,high,Latin artist song and music video uploads,,subagent_chunk_10_cases_0901_1000.csv,Music
+922,Health/Fitness,medium,ASMR videos aimed at sleep and relaxation,Could also be general entertainment,subagent_chunk_10_cases_0901_1000.csv,Health/Fitness
+923,Film/TV/Humor,medium,Comic vlog radio blog and Mr Bean themed entertainment,Variety vlog format,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+924,News/Society/Politics,medium,Viral human interest shorts about workers children and public figures,Kang Dedi references could imply public affairs,subagent_chunk_10_cases_0901_1000.csv,Society/General
+925,Film/TV/Humor,medium,Single comeback short tagged comedy funny and laughing,Only one video,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+926,Sports,high,Football Champions League club season recap and final shorts,,subagent_chunk_10_cases_0901_1000.csv,Sports
+927,Technology,high,Power Automate Power BI Excel and VBA tutorials,Instructional software focus,subagent_chunk_10_cases_0901_1000.csv,Technology
+928,Health/Fitness,high,Hospital medical advice patient stories and treatment topics,,subagent_chunk_10_cases_0901_1000.csv,Health/Fitness
+929,Music,high,Music countdown live specials artist interviews and band features,,subagent_chunk_10_cases_0901_1000.csv,Music
+930,Sports,high,Brazilian football transfer news and match live analysis,,subagent_chunk_10_cases_0901_1000.csv,Sports
+931,Music,high,Gospel clips worship songs and music videos dominate,Religious sermon also present,subagent_chunk_10_cases_0901_1000.csv,Music
+932,Film/TV/Humor,high,Talking Tom prank cartoon and funny shorts,One gaming live video mixed in,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+933,Health/Fitness,high,Midwife channel on infertility pregnancy and child eating issues,Parenting angle also present,subagent_chunk_10_cases_0901_1000.csv,Health/Fitness
+934,Technology,low,Single ergonomic gaming chair product review,Sparse one-video evidence,subagent_chunk_10_cases_0901_1000.csv,Technology
+935,Music,high,Arabic childrens songs and nursery rhyme compilations,,subagent_chunk_10_cases_0901_1000.csv,Music
+936,Religion,high,Daily Bible verses scripture and Tamil Christian content,Some videos are songs,subagent_chunk_10_cases_0901_1000.csv,Religion
+937,Video games,high,Bubble shooter Android gameplay repeated across videos,,subagent_chunk_10_cases_0901_1000.csv,Video games
+938,News/Society/Politics,medium,Hindi motivational and moral relationship life advice shorts,Some God and karma references,subagent_chunk_10_cases_0901_1000.csv,Society/General
+939,Religion,high,Mahadev Bajrangbali Ganesh and Hindu devotional shorts,Some horror tags mixed in,subagent_chunk_10_cases_0901_1000.csv,Religion
+940,Film/TV/Humor,high,Hindi comedy skits about friends students teachers and family,,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+941,Food,high,Russian snack fish sausage cucumber and cooking shorts,,subagent_chunk_10_cases_0901_1000.csv,Food
+942,Health/Fitness,medium,ASMR relaxation sleep massage and spa pampering videos,Entertainment ASMR genre overlap,subagent_chunk_10_cases_0901_1000.csv,Health/Fitness
+943,Food,high,Fish market and fish cutting skills videos,Animal subject is food market context,subagent_chunk_10_cases_0901_1000.csv,Food
+944,Fashion/Beauty,high,Piercing and body modification demonstration videos,,subagent_chunk_10_cases_0901_1000.csv,Fashion/Beauty
+945,Uncategorized,low,Mixed old personal dance song movie forum and health story posts,Evidence is incoherent across topics,subagent_chunk_10_cases_0901_1000.csv,Uncategorized
+946,Food,high,Bangla recipes for sauces chicken eggplant and meat dishes,,subagent_chunk_10_cases_0901_1000.csv,Food
+947,Lifestyle/General,medium,Creator life YouTube play buttons Sidemen behind scenes and training,Some sports fitness challenge videos,subagent_chunk_10_cases_0901_1000.csv,Lifestyle/General
+948,Vehicles/Motorsport,medium,Air show aircraft and police dash cam pursuit videos,Military and emergency content overlap,subagent_chunk_10_cases_0901_1000.csv,Vehicles
+949,Music,high,Russian artist official audio clips and music videos,,subagent_chunk_10_cases_0901_1000.csv,Music
+950,Music,high,MONO song teaser countdown and music performance clips,,subagent_chunk_10_cases_0901_1000.csv,Music
+951,Health/Fitness,high,Ayurveda strength health energy and wellness promos,,subagent_chunk_10_cases_0901_1000.csv,Health/Fitness
+952,Film/TV/Humor,medium,Acting season awards and POV performance style videos,Some travel and vlog content mixed in,subagent_chunk_10_cases_0901_1000.csv,Performing arts
+953,Pets/Animals,high,Lion cheetah tiger and komodo wildlife fact stories,,subagent_chunk_10_cases_0901_1000.csv,Pets/Animals
+954,Sports,high,NBA playoff highlights and Lakers Rockets analysis,,subagent_chunk_10_cases_0901_1000.csv,Sports
+955,Hobby/General interests,medium,Needoh squishy toy hunting unboxing and haul videos,Some beauty and family haul content,subagent_chunk_10_cases_0901_1000.csv,Hobby/General interests
+956,News/Society/Politics,high,ANI live briefings politics press conferences and public affairs,,subagent_chunk_10_cases_0901_1000.csv,Politics/News
+957,Sports,high,Parkour playground run climb and slide POV videos,,subagent_chunk_10_cases_0901_1000.csv,Sports
+958,Hobby/General interests,high,DIY candle craft miniature tools and woodworking shorts,,subagent_chunk_10_cases_0901_1000.csv,Hobby/General interests
+959,Lifestyle/General,medium,Family channel shorts and personal home challenge videos,Some staged entertainment elements,subagent_chunk_10_cases_0901_1000.csv,Lifestyle/General
+960,Film/TV/Humor,high,Mediacorp TV episodes drama series and comedy skits,Some documentary and news episodes mixed in,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+961,Hobby/General interests,high,Claw machine arcade plush and mystery toy hauls,Game character toys but not gameplay,subagent_chunk_10_cases_0901_1000.csv,Hobby/General interests
+962,Film/TV/Humor,high,Kaddu Paddu desi comedy animation videos,One login tutorial outlier,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+963,Entertainment/General,medium,Mixed studio content with music videos vlog commercial tech and recipe,No single topic dominates,subagent_chunk_10_cases_0901_1000.csv,Entertainment/General
+964,Religion,medium,Quran Islam clerics fatwa and interfaith discussion videos,Politics and education themes overlap,subagent_chunk_10_cases_0901_1000.csv,Religion
+965,Music,medium,Song uploads and singing related clips dominate older mixed posts,Dubsmash clips mixed in,subagent_chunk_10_cases_0901_1000.csv,Music
+966,Health/Fitness,high,Diabetes diet blood sugar complications and fatigue advice,,subagent_chunk_10_cases_0901_1000.csv,Health/Fitness
+967,Vehicles/Motorsport,high,Car lockout tire dent headlight and detailing hacks,,subagent_chunk_10_cases_0901_1000.csv,Vehicles
+968,Music,high,Official music videos album release parties club lineups and event recaps,,subagent_chunk_10_cases_0901_1000.csv,Music
+969,Film/TV/Humor,high,K-pop dance cover performances and dance challenges,Music topic is secondary to dance,subagent_chunk_10_cases_0901_1000.csv,Performing arts
+970,Lifestyle/General,high,Family challenge vlog videos about home food fair and toys,,subagent_chunk_10_cases_0901_1000.csv,Lifestyle/General
+971,Technology,high,GPU benchmark gameplay tests EVGA hardware and installation,Gameplay used for tech benchmarking,subagent_chunk_10_cases_0901_1000.csv,Technology
+972,Music,high,Shaggydog band tour event and performance recap videos,,subagent_chunk_10_cases_0901_1000.csv,Music
+973,Film/TV/Humor,high,Amy Poehler comedy talk show clips and celebrity guest episode,Podcast format but comedy is central,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+974,Music,medium,Beatbox challenge shorts appear repeatedly,Sigma viral content creates ambiguity,subagent_chunk_10_cases_0901_1000.csv,Music
+975,Food,high,Cocktail drink recipes and alcohol reviews,,subagent_chunk_10_cases_0901_1000.csv,Food
+976,News/Society/Politics,high,Telugu public talk on Janasena TDP YCP and Pawan Kalyan,Some celebrity public reaction mixed in,subagent_chunk_10_cases_0901_1000.csv,Politics/News
+977,Music,high,Sony Music South lyric videos songs and music shorts,,subagent_chunk_10_cases_0901_1000.csv,Music
+978,Pets/Animals,high,Insect predator fights ants spiders and praying mantis wildlife,,subagent_chunk_10_cases_0901_1000.csv,Pets/Animals
+979,Music,high,Freestyle rap battle reactions interviews and rankings,,subagent_chunk_10_cases_0901_1000.csv,Music
+980,Health/Fitness,high,Sciatica back pain hip muscles and spine pain guidance,,subagent_chunk_10_cases_0901_1000.csv,Health/Fitness
+981,Film/TV/Humor,high,Dance videos dance reactions and dance series dominate,One makeup tutorial mixed in,subagent_chunk_10_cases_0901_1000.csv,Performing arts
+982,Health/Fitness,medium,Gym fitness humor with calorie leg day and workout themes,Comedy format is prominent,subagent_chunk_10_cases_0901_1000.csv,Health/Fitness
+983,Film/TV/Humor,high,Hello Jadoo animated TV episode uploads,,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+984,Food,medium,Tata Salt food product promotional videos,Corporate ad channel,subagent_chunk_10_cases_0901_1000.csv,Food
+985,Entertainment/General,high,Viral product tests hacks and challenge style experiments,,subagent_chunk_10_cases_0901_1000.csv,Entertainment/General
+986,Entertainment/General,medium,Mixed Pinmook shorts on arcade racing pool go-kart and playful scenarios,Sparse topical detail,subagent_chunk_10_cases_0901_1000.csv,Entertainment/General
+987,Vehicles/Motorsport,high,Car builds turbo installs repairs and auction vehicle projects,,subagent_chunk_10_cases_0901_1000.csv,Vehicles
+988,Music,high,Chechen song titles and music livestream,,subagent_chunk_10_cases_0901_1000.csv,Music
+989,Music,high,Cheb Tayeb songs official clip and music shorts,,subagent_chunk_10_cases_0901_1000.csv,Music
+990,Entertainment/General,low,Sparse viral shorts around named people and baton girls,Too little topical detail,subagent_chunk_10_cases_0901_1000.csv,Entertainment/General
+991,Music,high,Nursery rhymes and childrens songs dominate,Some learning colors and shapes,subagent_chunk_10_cases_0901_1000.csv,Music
+992,Entertainment/General,medium,Mixed viral shorts with wedding dance cars and reactions,No stable specific topic,subagent_chunk_10_cases_0901_1000.csv,Entertainment/General
+993,Education/Explainers,high,IELTS essay graph letter and writing classes,,subagent_chunk_10_cases_0901_1000.csv,Education/Knowledge
+994,Film/TV/Humor,high,Gujarati comedy videos and skits,,subagent_chunk_10_cases_0901_1000.csv,Film/TV/Humor
+995,Music,high,Singer performance clips live shows and DVD songs,,subagent_chunk_10_cases_0901_1000.csv,Music
+996,Video games,high,StarCraft livestreams gameplay and strategy scenarios,,subagent_chunk_10_cases_0901_1000.csv,Video games
+997,Religion,high,Arabic sheikh talks end times and religious discussion videos,,subagent_chunk_10_cases_0901_1000.csv,Religion
+998,Hobby/General interests,high,Rubiks Cube solving tutorials challenges and practice streams,,subagent_chunk_10_cases_0901_1000.csv,Hobby/General interests
+999,Video games,high,Shape shifting game shorts dominate recent videos,One baby and dog short mixed in,subagent_chunk_10_cases_0901_1000.csv,Video games
+1000,News/Society/Politics,medium,Shotgun slug ammunition and anti-drone round testing,Civilian hobby testing but weaponry dominates,subagent_chunk_10_cases_0901_1000.csv,Military

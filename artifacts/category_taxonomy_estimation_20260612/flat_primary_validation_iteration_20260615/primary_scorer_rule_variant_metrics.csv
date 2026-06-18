@@ -1,0 +1,10 @@
+rule_variant,n_channels,flat_accuracy,n_correct,n_reference_film_video_game_collision,film_video_game_collision_accuracy
+v1_music_vehicle_priority,599,0.6394,383,11,0.63636
+v3_motorsport_to_vehicles,599,0.6394,383,11,0.63636
+v4_wrestling_to_film_tv,599,0.6394,383,11,0.63636
+v6_military_to_politics_news,599,0.6394,383,11,0.63636
+v0_prior_draft,599,0.63773,382,11,0.63636
+v2_film_over_video_game,599,0.63773,382,11,0.54545
+v5_performing_arts_to_film_tv,599,0.63773,382,11,0.63636
+v8_food_before_film_tv,599,0.63773,382,11,0.63636
+v7_business_to_politics_news,599,0.63606,381,11,0.63636

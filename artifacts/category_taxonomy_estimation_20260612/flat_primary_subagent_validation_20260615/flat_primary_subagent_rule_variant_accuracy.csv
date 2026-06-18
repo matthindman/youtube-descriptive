@@ -1,0 +1,14 @@
+rule_variant,n_cases,n_correct,accuracy,delta_vs_current_pp
+v10_split_broad_video_game_culture,1000,690,0.69,0.20000000000000018
+v11_motorsport_vehicle_performing_film,1000,690,0.69,0.20000000000000018
+v12_news_society_politics_explainers,1000,688,0.688,0.0
+v9_film_after_concrete_topics,1000,685,0.685,-0.29999999999998916
+v2_film_over_video_game,1000,679,0.679,-0.8999999999999897
+v8_food_before_film_tv,1000,677,0.677,-1.0999999999999899
+v1_music_vehicle_priority,1000,676,0.676,-1.19999999999999
+v3_motorsport_to_vehicles,1000,676,0.676,-1.19999999999999
+v6_military_to_politics_news,1000,676,0.676,-1.19999999999999
+v7_business_to_politics_news,1000,676,0.676,-1.19999999999999
+v4_wrestling_to_film_tv,1000,674,0.674,-1.3999999999999901
+v5_performing_arts_to_film_tv,1000,672,0.672,-1.5999999999999903
+v0_prior_draft,1000,671,0.671,-1.6999999999999904

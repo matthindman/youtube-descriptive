@@ -33,6 +33,7 @@ dbutils.library.restartPython()
 import json
 import os
 import re
+import sys
 import time
 import unicodedata
 from datetime import datetime
@@ -102,6 +103,7 @@ _create_text_widget("panel_batch_jobs_table", "yt_lid_v3_llm_panel_batch_jobs")
 _create_text_widget("panel_raw_results_table", "yt_lid_v3_llm_panel_raw_results")
 _create_text_widget("panel_verdicts_table", "yt_lid_v3_llm_panel_verdicts")
 _create_text_widget("panel_model_agreement_table", "yt_lid_v3_llm_panel_model_agreement")
+_create_text_widget("panel_run_progress_table", "yt_lid_v3_llm_panel_run_progress")
 
 # --- Routing controls ---
 _create_text_widget("routing_mode", "residual_panel")  # residual_panel | random_validation
@@ -199,6 +201,7 @@ PANEL_BATCH_JOBS_TABLE = _get_widget("panel_batch_jobs_table", "yt_lid_v3_llm_pa
 PANEL_RAW_RESULTS_TABLE = _get_widget("panel_raw_results_table", "yt_lid_v3_llm_panel_raw_results")
 PANEL_VERDICTS_TABLE = _get_widget("panel_verdicts_table", "yt_lid_v3_llm_panel_verdicts")
 PANEL_MODEL_AGREEMENT_TABLE = _get_widget("panel_model_agreement_table", "yt_lid_v3_llm_panel_model_agreement")
+PANEL_RUN_PROGRESS_TABLE = _get_widget("panel_run_progress_table", "yt_lid_v3_llm_panel_run_progress")
 
 ROUTING_MODE = _get_widget("routing_mode", "residual_panel").strip().lower()
 RANDOM_VALIDATION_SCOPE = _get_widget("random_validation_scope", "all").strip().lower()
@@ -320,6 +323,7 @@ panel_raw_results_full = fqtn(PANEL_RAW_RESULTS_TABLE)
 panel_verdicts_full = fqtn(PANEL_VERDICTS_TABLE)
 panel_model_agreement_full = fqtn(PANEL_MODEL_AGREEMENT_TABLE)
 panel_batch_files_full = fqtn(PANEL_REQUESTS_TABLE + "_batch_files")
+panel_progress_full = fqtn(PANEL_RUN_PROGRESS_TABLE)
 
 # D4: idempotent, run-scoped writes — re-running the same run_id overwrites only its own partition,
 # never the whole table, so prior runs are preserved.
@@ -349,6 +353,79 @@ def _sql_string(value: str) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
+_PANEL_PROGRESS_STATE = {"stage": "initializing", "status": "starting"}
+if not hasattr(sys, "_yt_lid_panel_original_excepthook"):
+    sys._yt_lid_panel_original_excepthook = sys.excepthook
+
+
+def _progress_value(value: object) -> Optional[str]:
+    if value is None:
+        return None
+    return str(value)[:4000]
+
+
+def record_panel_progress(stage: str, status: str = "ok", metrics: Optional[Dict[str, object]] = None) -> None:
+    _PANEL_PROGRESS_STATE["stage"] = stage
+    _PANEL_PROGRESS_STATE["status"] = status
+    rows = [
+        (
+            RUN_ID,
+            SOURCE_RUN_ID,
+            INFERENCE_HASH_BUCKETS,
+            stage,
+            status,
+            str(k),
+            _progress_value(v),
+        )
+        for k, v in (metrics or {"event": "1"}).items()
+    ]
+    progress_df = (
+        spark.createDataFrame(
+            rows,
+            "run_id string, source_run_id string, inference_hash_buckets int, "
+            "stage string, status string, metric string, value string",
+        )
+        .withColumn("event_timestamp", F.current_timestamp())
+    )
+    try:
+        (
+            progress_df.write
+            .format("delta")
+            .mode("append")
+            .option("mergeSchema", "true")
+            .saveAsTable(panel_progress_full)
+        )
+        print(f"Panel progress: {stage} [{status}] -> {panel_progress_full}")
+    except Exception as exc:  # noqa: BLE001 - progress logging must not be able to kill the run
+        print(f"WARNING: failed to record panel progress stage={stage!r} status={status!r}: {exc}")
+
+
+def _record_uncaught_panel_failure(exc_type, exc_value, exc_traceback) -> None:
+    if getattr(sys, "_yt_lid_panel_recording_uncaught_failure", False):
+        sys._yt_lid_panel_original_excepthook(exc_type, exc_value, exc_traceback)
+        return
+    sys._yt_lid_panel_recording_uncaught_failure = True
+    try:
+        record_panel_progress(
+            "notebook_failed",
+            status="error",
+            metrics={
+                "last_progress_stage": _PANEL_PROGRESS_STATE.get("stage"),
+                "last_progress_status": _PANEL_PROGRESS_STATE.get("status"),
+                "exception_type": getattr(exc_type, "__name__", str(exc_type)),
+                "exception_message": str(exc_value),
+            },
+        )
+    except Exception as progress_exc:  # noqa: BLE001 - never mask the original notebook failure
+        print(f"WARNING: failed to persist panel uncaught-failure progress marker: {progress_exc}")
+    finally:
+        sys._yt_lid_panel_recording_uncaught_failure = False
+        sys._yt_lid_panel_original_excepthook(exc_type, exc_value, exc_traceback)
+
+
+sys.excepthook = _record_uncaught_panel_failure
+
+
 def write_run_scoped(df, table_full, extra_partitions=None):
     if "run_id" not in df.columns:
         df = df.withColumn("run_id", F.lit(RUN_ID))
@@ -359,6 +436,10 @@ def write_run_scoped(df, table_full, extra_partitions=None):
             .mode("overwrite")
             .partitionBy(*parts)
             .saveAsTable(table_full)
+        )
+        record_panel_progress(
+            "delta_write_committed",
+            metrics={"table": table_full, "replace_where": "<new_table>", "partition_cols": ",".join(parts)},
         )
         return
 
@@ -405,6 +486,25 @@ def write_run_scoped(df, table_full, extra_partitions=None):
         .partitionBy(*parts)
         .saveAsTable(table_full)
     )
+    record_panel_progress(
+        "delta_write_committed",
+        metrics={"table": table_full, "replace_where": f"run_id = {RUN_ID}", "partition_cols": ",".join(parts)},
+    )
+
+
+record_panel_progress(
+    "configured",
+    metrics={
+        "comparison_table": comparison_full,
+        "segments_input_table": segments_input_full,
+        "source_run_id": SOURCE_RUN_ID,
+        "run_id": RUN_ID,
+        "routing_mode": ROUTING_MODE,
+        "panel_requests_table": panel_requests_full,
+        "panel_raw_results_table": panel_raw_results_full,
+        "panel_verdicts_table": panel_verdicts_full,
+    },
+)
 
 # Arabic macrolanguage + dialects collapsed to one family for the "exclude taxonomy artifact" filter.
 ARABIC_FAMILY_ISO = {"ara", "arb", "ary", "arz", "arq", "apc", "ars", "ajp", "aeb", "acm", "acq", "aec", "afb", "ayl", "ayn"}
@@ -1610,6 +1710,17 @@ else:
                 n_bytes += len(line.encode("utf-8")) + 1
         batch_file_records.append((RUN_ID, provider, model, chunk_id, local_path, n, n_bytes, datetime.utcnow().isoformat()))
         print(f"Wrote {n:,} requests: {local_path} ({n_bytes:,} bytes)")
+        record_panel_progress(
+            "batch_jsonl_chunk_written",
+            metrics={
+                "provider": provider,
+                "model": model,
+                "chunk_id": chunk_id,
+                "local_jsonl_path": local_path,
+                "n_requests": n,
+                "n_bytes": n_bytes,
+            },
+        )
 
     # D4: persist a batch-file registry (run-scoped, idempotent) so submission/import are auditable.
     if batch_file_records:
@@ -1841,10 +1952,20 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
         f"DeepSeek direct {model}: {len(pending_lines):,}/{total:,} pending requests "
         f"with {DEEPSEEK_MAX_WORKERS} workers; preserved_success={len(existing_success_lines):,}"
     )
-    with open(result_path, "w", encoding="utf-8") as dst:
-        for line in existing_success_lines:
-            dst.write(line)
-        dst.flush()
+    record_panel_progress(
+        "deepseek_direct_started",
+        metrics={
+            "model": model,
+            "chunk_file": path,
+            "result_path": result_path,
+            "total_requests": total,
+            "pending_requests": len(pending_lines),
+            "preserved_success": len(existing_success_lines),
+        },
+    )
+    if not pending_lines:
+        print(f"DeepSeek direct {model}: all {total:,} requests already have successful results.")
+    with open(result_path, "a", encoding="utf-8", buffering=1) as dst:
         with ThreadPoolExecutor(max_workers=DEEPSEEK_MAX_WORKERS) as pool:
             futures = [pool.submit(_call_line, line) for line in pending_lines]
             for i, fut in enumerate(as_completed(futures), start=1):
@@ -1858,26 +1979,45 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
                     dst.flush()
                     print(f"DeepSeek direct {model}: {i:,}/{len(pending_lines):,} pending done; ok={n_ok:,}; error={n_error:,}")
 
-    total_rows = 0
-    total_errors = 0
+    success_ids = set()
+    seen_ids = set()
+    malformed_rows = 0
     with open(result_path, "r", encoding="utf-8") as final:
         for line in final:
             if not line.strip():
                 continue
-            total_rows += 1
             try:
                 obj = json.loads(line)
+                custom_id = obj.get("custom_id")
+                if custom_id:
+                    seen_ids.add(custom_id)
                 status_code = int(obj.get("response", {}).get("status_code", 500))
-                if obj.get("error") or not (200 <= status_code < 300):
-                    total_errors += 1
+                if custom_id and not obj.get("error") and 200 <= status_code < 300:
+                    success_ids.add(custom_id)
             except Exception:
-                total_errors += 1
+                malformed_rows += 1
 
-    status = "completed" if total_errors == 0 and total_rows == total else "partial_or_errors"
+    n_success = len(success_ids)
+    n_missing_success = max(0, total - n_success)
+    status = "completed" if n_success == total else "partial_or_errors"
+    record_panel_progress(
+        "deepseek_direct_completed",
+        status=status,
+        metrics={
+            "model": model,
+            "chunk_file": path,
+            "result_path": result_path,
+            "total_requests": total,
+            "successful_request_ids": n_success,
+            "missing_successful_request_ids": n_missing_success,
+            "seen_request_ids": len(seen_ids),
+            "malformed_result_rows": malformed_rows,
+        },
+    )
     return {
         "provider_file_id": result_path,
         "provider_batch_id": f"deepseek-direct:{RUN_ID}:{safe_model_dir(model)}:{os.path.basename(path)}",
-        "provider_status": f"{status}; ok={total_rows - total_errors}; error={total_errors}",
+        "provider_status": f"{status}; ok={n_success}; error={n_missing_success}; malformed_rows={malformed_rows}",
     }
 
 

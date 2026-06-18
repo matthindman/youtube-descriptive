@@ -1,0 +1,19 @@
+{
+  "run_name": "youtube_topic_treemap_v2b_traffic_20260617",
+  "tasks": [
+    {
+      "task_key": "export_treemap_traffic_v2b",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 3600,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/export_treemap_traffic_v2b_20260617",
+        "base_parameters": {
+          "projection_table": "dev_sean.matt.yt_channel_topic_projection_v2_20260617",
+          "channel_table": "prod_tads.youtube_too.yt_sl_channels",
+          "stats_table": "dev_sean.default.yt_channel_stats",
+          "output_path": "dbfs:/FileStore/youtube_topic_treemap_top_ocean_20260617_v2b/traffic_4wk.parquet"
+        }
+      }
+    }
+  ]
+}

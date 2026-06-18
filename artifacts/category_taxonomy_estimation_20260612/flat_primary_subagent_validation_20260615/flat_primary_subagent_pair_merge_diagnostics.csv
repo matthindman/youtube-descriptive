@@ -1,0 +1,154 @@
+label_a,label_b,merged_accuracy,gain_pp
+Film/TV/Humor,Lifestyle/General,0.715,2.7000000000000024
+Film/TV/Humor,Music,0.715,2.7000000000000024
+Entertainment/General,Lifestyle/General,0.707,1.9000000000000017
+Entertainment/General,Film/TV/Humor,0.704,1.6000000000000014
+Fashion/Beauty,Lifestyle/General,0.7,1.200000000000001
+Entertainment/General,Music,0.699,1.100000000000001
+Film/TV/Humor,Video games,0.699,1.100000000000001
+Food,Lifestyle/General,0.698,1.0000000000000009
+Film/TV/Humor,News/Society/Politics,0.697,0.9000000000000008
+Education/Explainers,News/Society/Politics,0.695,0.7000000000000006
+Entertainment/General,Hobby/General interests,0.695,0.7000000000000006
+Film/TV/Humor,Hobby/General interests,0.695,0.7000000000000006
+Music,Religion,0.695,0.7000000000000006
+Fashion/Beauty,Hobby/General interests,0.694,0.6000000000000005
+Hobby/General interests,Lifestyle/General,0.694,0.6000000000000005
+Education/Explainers,Hobby/General interests,0.693,0.5000000000000004
+Film/TV/Humor,Pets/Animals,0.693,0.5000000000000004
+Lifestyle/General,Music,0.693,0.5000000000000004
+Education/Explainers,Vehicles/Motorsport,0.692,0.40000000000000036
+Entertainment/General,Food,0.692,0.40000000000000036
+Entertainment/General,News/Society/Politics,0.692,0.40000000000000036
+Film/TV/Humor,Food,0.692,0.40000000000000036
+Health/Fitness,Lifestyle/General,0.692,0.40000000000000036
+Education/Explainers,Film/TV/Humor,0.691,0.30000000000000027
+Education/Explainers,Lifestyle/General,0.691,0.30000000000000027
+Entertainment/General,Pets/Animals,0.691,0.30000000000000027
+Entertainment/General,Technology,0.691,0.30000000000000027
+Entertainment/General,Video games,0.691,0.30000000000000027
+Health/Fitness,News/Society/Politics,0.691,0.30000000000000027
+Hobby/General interests,Technology,0.691,0.30000000000000027
+Hobby/General interests,Travel,0.691,0.30000000000000027
+Hobby/General interests,Vehicles/Motorsport,0.691,0.30000000000000027
+Lifestyle/General,News/Society/Politics,0.691,0.30000000000000027
+Lifestyle/General,Travel,0.691,0.30000000000000027
+Music,News/Society/Politics,0.691,0.30000000000000027
+Sports,Video games,0.691,0.30000000000000027
+Education/Explainers,Food,0.69,0.20000000000000018
+Education/Explainers,Religion,0.69,0.20000000000000018
+Entertainment/General,Health/Fitness,0.69,0.20000000000000018
+Fashion/Beauty,Film/TV/Humor,0.69,0.20000000000000018
+Fashion/Beauty,Health/Fitness,0.69,0.20000000000000018
+Food,Travel,0.69,0.20000000000000018
+Health/Fitness,Sports,0.69,0.20000000000000018
+Hobby/General interests,Music,0.69,0.20000000000000018
+Hobby/General interests,Pets/Animals,0.69,0.20000000000000018
+News/Society/Politics,Religion,0.69,0.20000000000000018
+News/Society/Politics,Video games,0.69,0.20000000000000018
+Technology,Vehicles/Motorsport,0.69,0.20000000000000018
+Education/Explainers,Entertainment/General,0.689,0.10000000000000009
+Education/Explainers,Health/Fitness,0.689,0.10000000000000009
+Education/Explainers,Music,0.689,0.10000000000000009
+Education/Explainers,Technology,0.689,0.10000000000000009
+Entertainment/General,Religion,0.689,0.10000000000000009
+Fashion/Beauty,Music,0.689,0.10000000000000009
+Film/TV/Humor,Health/Fitness,0.689,0.10000000000000009
+Film/TV/Humor,Religion,0.689,0.10000000000000009
+Film/TV/Humor,Sports,0.689,0.10000000000000009
+Film/TV/Humor,Technology,0.689,0.10000000000000009
+Film/TV/Humor,Uncategorized,0.689,0.10000000000000009
+Food,Music,0.689,0.10000000000000009
+Food,Video games,0.689,0.10000000000000009
+Health/Fitness,Pets/Animals,0.689,0.10000000000000009
+Hobby/General interests,News/Society/Politics,0.689,0.10000000000000009
+Hobby/General interests,Video games,0.689,0.10000000000000009
+Lifestyle/General,Pets/Animals,0.689,0.10000000000000009
+Lifestyle/General,Religion,0.689,0.10000000000000009
+Lifestyle/General,Technology,0.689,0.10000000000000009
+Lifestyle/General,Uncategorized,0.689,0.10000000000000009
+Lifestyle/General,Vehicles/Motorsport,0.689,0.10000000000000009
+Music,Sports,0.689,0.10000000000000009
+Music,Video games,0.689,0.10000000000000009
+News/Society/Politics,Pets/Animals,0.689,0.10000000000000009
+News/Society/Politics,Sports,0.689,0.10000000000000009
+News/Society/Politics,Technology,0.689,0.10000000000000009
+News/Society/Politics,Vehicles/Motorsport,0.689,0.10000000000000009
+Pets/Animals,Technology,0.689,0.10000000000000009
+Sports,Travel,0.689,0.10000000000000009
+Technology,Video games,0.689,0.10000000000000009
+Travel,Vehicles/Motorsport,0.689,0.10000000000000009
+Vehicles/Motorsport,Video games,0.689,0.10000000000000009
+Education/Explainers,Fashion/Beauty,0.688,0.0
+Education/Explainers,Pets/Animals,0.688,0.0
+Education/Explainers,Sports,0.688,0.0
+Education/Explainers,Travel,0.688,0.0
+Education/Explainers,Uncategorized,0.688,0.0
+Education/Explainers,Video games,0.688,0.0
+Entertainment/General,Fashion/Beauty,0.688,0.0
+Entertainment/General,Sports,0.688,0.0
+Entertainment/General,Travel,0.688,0.0
+Entertainment/General,Uncategorized,0.688,0.0
+Entertainment/General,Vehicles/Motorsport,0.688,0.0
+Fashion/Beauty,Food,0.688,0.0
+Fashion/Beauty,News/Society/Politics,0.688,0.0
+Fashion/Beauty,Pets/Animals,0.688,0.0
+Fashion/Beauty,Religion,0.688,0.0
+Fashion/Beauty,Sports,0.688,0.0
+Fashion/Beauty,Technology,0.688,0.0
+Fashion/Beauty,Travel,0.688,0.0
+Fashion/Beauty,Uncategorized,0.688,0.0
+Fashion/Beauty,Vehicles/Motorsport,0.688,0.0
+Fashion/Beauty,Video games,0.688,0.0
+Film/TV/Humor,Travel,0.688,0.0
+Film/TV/Humor,Vehicles/Motorsport,0.688,0.0
+Food,Health/Fitness,0.688,0.0
+Food,Hobby/General interests,0.688,0.0
+Food,News/Society/Politics,0.688,0.0
+Food,Pets/Animals,0.688,0.0
+Food,Religion,0.688,0.0
+Food,Sports,0.688,0.0
+Food,Technology,0.688,0.0
+Food,Uncategorized,0.688,0.0
+Food,Vehicles/Motorsport,0.688,0.0
+Health/Fitness,Hobby/General interests,0.688,0.0
+Health/Fitness,Music,0.688,0.0
+Health/Fitness,Religion,0.688,0.0
+Health/Fitness,Technology,0.688,0.0
+Health/Fitness,Travel,0.688,0.0
+Health/Fitness,Uncategorized,0.688,0.0
+Health/Fitness,Vehicles/Motorsport,0.688,0.0
+Health/Fitness,Video games,0.688,0.0
+Hobby/General interests,Religion,0.688,0.0
+Hobby/General interests,Sports,0.688,0.0
+Hobby/General interests,Uncategorized,0.688,0.0
+Lifestyle/General,Sports,0.688,0.0
+Lifestyle/General,Video games,0.688,0.0
+Music,Pets/Animals,0.688,0.0
+Music,Technology,0.688,0.0
+Music,Travel,0.688,0.0
+Music,Uncategorized,0.688,0.0
+Music,Vehicles/Motorsport,0.688,0.0
+News/Society/Politics,Travel,0.688,0.0
+News/Society/Politics,Uncategorized,0.688,0.0
+Pets/Animals,Religion,0.688,0.0
+Pets/Animals,Sports,0.688,0.0
+Pets/Animals,Travel,0.688,0.0
+Pets/Animals,Uncategorized,0.688,0.0
+Pets/Animals,Vehicles/Motorsport,0.688,0.0
+Pets/Animals,Video games,0.688,0.0
+Religion,Sports,0.688,0.0
+Religion,Technology,0.688,0.0
+Religion,Travel,0.688,0.0
+Religion,Uncategorized,0.688,0.0
+Religion,Vehicles/Motorsport,0.688,0.0
+Religion,Video games,0.688,0.0
+Sports,Technology,0.688,0.0
+Sports,Uncategorized,0.688,0.0
+Sports,Vehicles/Motorsport,0.688,0.0
+Technology,Travel,0.688,0.0
+Technology,Uncategorized,0.688,0.0
+Travel,Uncategorized,0.688,0.0
+Travel,Video games,0.688,0.0
+Uncategorized,Vehicles/Motorsport,0.688,0.0
+Uncategorized,Video games,0.688,0.0

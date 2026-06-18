@@ -1,0 +1,101 @@
+case_id,subagent_primary_label,confidence,evidence_summary,ambiguity_notes
+1,Sports,high,Bodybuilding armwrestling and strength athlete news.,Could overlap fitness but competition focus dominates.
+2,Video games,high,PUBG streams and gaming creator videos.,Some general reaction humor but gaming is central.
+3,Entertainment/General,medium,ViralHog posts mixed viral clips and incidents.,Many animal clips but channel is broader viral UGC.
+4,Music,high,Official music videos remixes and acoustic songs.,
+5,Film/TV/Humor,high,Spider-Noir The Boys DC and Marvel show coverage.,
+6,Religion,medium,Church social media website and design advice.,Marketing format but church context is central.
+7,Film/TV/Humor,medium,Short comedic family skits and funny scenarios.,Evidence is short-form skit based.
+8,Music,high,KR$NA official music videos and visualisers.,
+9,Film/TV/Humor,high,Comedic school and YouTuber skits plus film trailer.,
+10,Food,high,Cooking hacks steak stir-fry desserts and meals.,
+11,Fashion/Beauty,high,Hair colour and hair aloe beauty product ads.,
+12,Lifestyle/General,medium,Family visits daily events seafood outing and personal updates.,Mixed vlog evidence.
+13,Sports,high,Cricket challenges batting bowling and sixes.,
+14,Entertainment/General,medium,Celebrity drama scandal and reaction-style stories.,Some crime/social topics but entertainment framing dominates.
+15,Politics/News,medium,Clean energy utility board and conservation policy panels.,Environmental nonprofit content overlaps society.
+16,Music,high,Wedding performances singers and live musical events.,
+17,Film/TV/Humor,high,Animated comedy shorts and prank animations.,
+18,Video games,high,PUBG and PUBG Mobile shorts.,
+19,Film/TV/Humor,medium,Children toy car stories and cartoon-like videos.,Vehicle toys not real vehicle topic.
+20,Film/TV/Humor,high,Illustrated recreations of comedy and meme skits.,
+21,Technology,high,Smartphone specs prices designs and feature leaks.,
+22,Film/TV/Humor,high,Gumball and Smiling Friends TV clips and promos.,
+23,Technology,high,Arduino Raspberry Pi robotics PCB and electronics kits.,
+24,Film/TV/Humor,medium,Chinese animated story shorts with recurring characters.,
+25,Politics/News,high,War preparation Europe military exercises and current affairs.,Military themes but framed as public affairs commentary.
+26,Music,high,Denise Rosenthal songs lyric videos and artist posts.,
+27,Politics/News,high,Novara current affairs politics Israel Trump and Labour.,
+28,Fashion/Beauty,high,Beauty cream beard and hair growth product reviews.,
+29,Film/TV/Humor,high,Comedy shorts and funny desi skits.,
+30,Entertainment/General,medium,Staged kindness and surprise money videos.,Social-help theme but entertainment format dominates.
+31,Society/General,medium,Gen Z interviews about stress school future and social risks.,Some education/school content but social survey focus.
+32,Lifestyle/General,low,Sparse personal Australia/Hungarian vlog updates.,Limited recent evidence.
+33,Film/TV/Humor,high,Prank videos including wasabi hiding and phone pranks.,
+34,Film/TV/Humor,medium,TV actor couple edits and drama-themed shorts.,
+35,Hobby/General interests,high,Notebook front page decoration calligraphy and art ideas.,
+36,Health/Fitness,medium,Narcissist abuse healing manipulation and emotional wellness advice.,Relationship content overlaps society.
+37,Music,high,Relaxing Mozart classical piano and Christmas music.,
+38,Vehicles,medium,Mountain bikes e-bikes restorations and bike-path tests.,Cycling can overlap sports.
+39,Hobby/General interests,medium,DIY projects tricks crafts illusions and hacks.,Mixed creative-hack content.
+40,Film/TV/Humor,high,Reaction videos to funny clips and comedy moments.,
+41,Sports,high,UEFA Euro football match live streams.,
+42,Entertainment/General,medium,Mixed short skits with food pool candy and jokes.,Some food items but not primarily cooking.
+43,Film/TV/Humor,medium,Short friendship and tough-guy skit videos.,
+44,Sports,high,Streetball basketball challenges and matches.,
+45,Entertainment/General,medium,Satisfying shocking and viral reaction clips.,Sparse topical detail.
+46,Film/TV/Humor,high,Enrico Brignano comedy clips trailers and stage material.,Could be performing arts but comedy is central.
+47,Video games,high,Free Fire gameplay shorts and clutch videos.,
+48,Business,high,Crypto NFTs memecoins Bitcoin trading and investing.,
+49,Entertainment/General,medium,Random meme shorts across cats cars tech and fails.,No single topical focus.
+50,Technology,high,Phone tablet mini PC and gadget reviews.,
+51,Politics/News,high,Class struggle reformism capitalism and social dispute commentary.,
+52,Sports,high,MMA BJJ technique drills workouts and armbars.,
+53,Film/TV/Humor,medium,Dramatic short-film style clips and repeated audio warnings.,
+54,Food,medium,Kitchen masala vathal podi and food product shorts.,Some non-food product posts.
+55,Religion,high,Quran surah memorization lessons.,
+56,Education/Knowledge,medium,Children learning with farm toys tractors and trucks.,Toy-entertainment format but learning framing.
+57,Education/Knowledge,medium,Children learning with farm toys tractors and trucks.,Toy-entertainment format but learning framing.
+58,Video games,high,Battlefield 1 gameplay sniping and tank moments.,
+59,Film/TV/Humor,high,Animated cartoon family and character stories.,
+60,Music,high,Live band songs cumbias rancheras and music tutorials.,
+61,Film/TV/Humor,high,Spanish humor shorts with trolling and punchlines.,
+62,Lifestyle/General,high,Night routine room tour makeup gifts haul and skincare.,
+63,Technology,high,Gadgets inventions smart drill and Amazon tech finds.,
+64,Film/TV/Humor,high,Relatable comedy skits and funny short videos.,
+65,Politics/News,high,Official Maharashtra police employment AI and state event videos.,
+66,Music,high,Bollywood song videos and full music tracks.,
+67,Lifestyle/General,medium,Personal vlogs shopping food travel and relationship moments.,Travel appears often but creator lifestyle is broader.
+68,Film/TV/Humor,high,DC Marvel Batman Supergirl and movie news.,
+69,Sports,high,ASEAN football highlights live matches and goals.,
+70,Sports,high,Football training rules recovery and drills.,
+71,Hobby/General interests,medium,Claw machines arcade games kuji and Pokemon card machines.,Arcade content overlaps games/travel.
+72,Sports,high,MMA fights UFC shorts and fight podcasts.,
+73,Hobby/General interests,low,Repeated log cabin build titles with mixed odd clips.,Evidence is noisy and inconsistent.
+74,Performing arts,high,K-pop public dance covers and performance clips.,Music adjacent but dance performance is central.
+75,Music,high,Band concerts official songs and music posts.,
+76,Entertainment/General,low,Random trampoline baby dance and hashtag shorts.,Evidence is sparse and repetitive.
+77,Film/TV/Humor,medium,Movie uploads trailers and film-related videos.,Some unrelated old game/tutorial evidence.
+78,Entertainment/General,medium,Scripted kindness and moral-story shorts.,Could be society but staged entertainment dominates.
+79,Video games,low,GameBooster channel with Ball run evidence.,Very sparse evidence.
+80,Video games,high,Friday Night Funkin mods cutscenes and walkthroughs.,
+81,Education/Knowledge,high,SSC GD preparation and history lesson videos.,
+82,Music,high,Sample packs drum kits drill loops and production resources.,
+83,Music,high,Official music videos lyric videos and cover versions.,
+84,Entertainment/General,medium,Mixed viral shorts across hacks people animals and places.,No stable topical focus.
+85,Film/TV/Humor,high,Spider-Man Superman Deadpool superhero story shorts.,
+86,Technology,medium,HTC VIVERSE VR mobile worlds and virtual creation tools.,Some game content but tech brand focus.
+87,Video games,high,Roblox gameplay horror and challenge videos.,
+88,Entertainment/General,medium,Mixed viral moments with animals travel repairs and alarms.,No single topical focus.
+89,Film/TV/Humor,medium,Siren Head evolution horror-character shorts.,Repetitive sparse evidence.
+90,Video games,high,League of Legends champion gameplay and reactions.,
+91,Film/TV/Humor,high,Animation comedy and Gartic Phone animator videos.,
+92,Film/TV/Humor,high,Spider-Man cartoon and Scary Teacher style stories.,
+93,Music,medium,Kids singing group posts and performance snippets.,Lifestyle snippets also present.
+94,Food,high,Mukbang ASMR snacks watermelon noodles and cooking.,
+95,Hobby/General interests,high,Painting tutorials glass art pottery and acrylic markers.,
+96,Music,high,Anıl Piyancı lyric videos and song collaborations.,
+97,Lifestyle/General,high,Family birthdays holidays beach and daily vlog content.,
+98,Video games,high,Guardian Tales guides walkthroughs units and dungeon clears.,
+99,Hobby/General interests,medium,Crop fertilizer programs for hazelnut olive banana avocado.,Agriculture education/business overlap.
+100,Education/Knowledge,medium,General curiosity explainers about science animals and hacks.,Mixed viral entertainment tone.

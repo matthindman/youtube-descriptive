@@ -4,6 +4,19 @@ This file is the concise agent-facing index for the Databricks YouTube resources
 - The inventory was generated from metadata-only Unity Catalog calls. It intentionally omits row counts and value ranges.
 - Do not run `count(*)`, broad `select *`, `distinct`, or unbounded scans just to understand structure. Start with metadata, narrow filters, and `LIMIT`.
 - Treat descriptions as navigation hints. Verify semantics against code/docs before making publication-critical claims.
+
+## Databricks CLI, Auth, And Compute
+- Use profile `matt.hindman@researchaccelerator.org` on host `https://adb-1335559103600339.19.azuredatabricks.net`.
+- Run CLI commands with plaintext auth storage and the explicit profile:
+  `env DATABRICKS_AUTH_STORAGE=plaintext databricks -p matt.hindman@researchaccelerator.org ...`
+- Do not use the default profile or `hindman.gmail.com@auth.researchaccelerator.org`; that older profile can fail with stale refresh tokens.
+- If auth is broken, refresh it with:
+  `env DATABRICKS_AUTH_STORAGE=plaintext databricks auth login --profile matt.hindman@researchaccelerator.org --host https://adb-1335559103600339.19.azuredatabricks.net --timeout 10m`
+- Use existing all-purpose cluster `matt-research-gencompute` / `0601-203643-bkxsqffg` for notebook jobs. Do not create or restart a different cluster unless explicitly asked.
+- Use SQL warehouse `86100da4e1fe8713` for lightweight SQL probes.
+- Main output namespace is `dev_sean.matt`; source YouTube TOO tables are in `prod_tads.youtube_too`.
+- Shared LLM secret scope is `youtube-llm-keys`; keys are `openai-api-key`, `anthropic-api-key`, `gemini-api-key`, and `deepseek-api-key`.
+
 ## Fast Entry Points
 - `canonical_channel_metadata`: `prod_tads.youtube_too.yt_sl_channels`
 - `canonical_video_metadata`: `prod_tads.youtube_too.yt_sl_videos`

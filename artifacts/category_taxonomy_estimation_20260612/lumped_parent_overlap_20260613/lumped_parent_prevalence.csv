@@ -1,0 +1,7 @@
+row_rank,label_a,role_a,n_a_channels,prevalence_a,denominator_channels
+1,Lifestyle_(sociology),direct_parent,95264,0.4819491662619394,197664
+2,Entertainment,direct_parent,68261,0.3453385543143921,197664
+3,Music_combined,lumped_music,44371,0.2244768900760887,197664
+4,Video_game_combined,lumped_video_game,24507,0.1239831228751821,197664
+5,Sport,direct_parent,7377,0.0373209082078678,197664
+6,Vehicle,direct_parent_like,6008,0.0303950137607252,197664

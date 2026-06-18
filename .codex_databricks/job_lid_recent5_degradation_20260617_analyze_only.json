@@ -1,0 +1,25 @@
+{
+  "run_name": "lid_recent5_degradation_20260617_analyze_only",
+  "tasks": [
+    {
+      "task_key": "analyze_recent5_degradation",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_too_20260609/recent5_degradation_analyze_20260617",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "baseline_run_id": "too_full_20260609",
+          "deepseek_run_id": "too_full_20260609_recent5_degradation_deepseek_20260617",
+          "output_prefix": "yt_lid_v3_recent5_degradation_20260617",
+          "analysis_table": "yt_lid_v3_recent5_degradation_20260617_channel_analysis",
+          "disagreement_table": "yt_lid_v3_recent5_degradation_20260617_disagreement_channels",
+          "deepseek_verdicts_table": "yt_lid_v3_recent5_degradation_20260617_llm_verdicts",
+          "deepseek_raw_results_table": "yt_lid_v3_recent5_degradation_20260617_llm_raw_results",
+          "dbfs_output_dir": "/dbfs/FileStore/youtube_lid_recent5_degradation_20260617"
+        }
+      }
+    }
+  ]
+}

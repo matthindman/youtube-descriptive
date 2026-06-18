@@ -2,6 +2,11 @@
 
 _Generated from lightweight Unity Catalog REST metadata on 2026-05-28 22:08 UTC using Databricks profile `hindman.gmail.com@auth.researchaccelerator.org`._
 
+> Current operational profile: use
+> `env DATABRICKS_AUTH_STORAGE=plaintext databricks -p matt.hindman@researchaccelerator.org ...`
+> against host `https://adb-1335559103600339.19.azuredatabricks.net`. The generated-profile line above is
+> historical provenance for this inventory, not the profile to use for new CLI work.
+
 > This inventory intentionally uses metadata-only calls. It does not run `count(*)`, `select`, `distinct`, date-range scans, `DESCRIBE DETAIL`, or any other table data reads.
 
 Agent-facing companion files:
