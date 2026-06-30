@@ -1,10 +1,10 @@
 {
-  "run_name": "deepseek-flash-full-fallback-smoke-5k-20260630",
+  "run_name": "deepseek-flash-full-fallback-stream-smoke-100-20260630",
   "tasks": [
     {
-      "task_key": "deepseek_flash_full_fallback_smoke_5k",
+      "task_key": "deepseek_flash_full_fallback_stream_smoke_100",
       "existing_cluster_id": "0601-203643-bkxsqffg",
-      "timeout_seconds": 21600,
+      "timeout_seconds": 3600,
       "notebook_task": {
         "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_channel_crawl_full_20260623/run_deepseek_flash_full_fallback_20260630",
         "base_parameters": {
@@ -13,10 +13,12 @@
           "source_run_id": "channel_crawl_full_20260623",
           "inference_hash_buckets": "4096",
           "base_prefix": "yt_lid_v3_channel_crawl_full_20260623",
-          "base_run_id": "channel_crawl_full_20260623_deepseek_flash_full_fallback_20260630",
-          "base_output_prefix": "yt_lid_v3_channel_crawl_full_20260623_deepseek_flash_full_fallback_20260630",
+          "base_run_id": "channel_crawl_full_20260623_deepseek_flash_full_fallback_stream_smoke_100_20260630",
+          "base_output_prefix": "yt_lid_v3_channel_crawl_full_20260623_deepseek_flash_full_fallback_stream_smoke_100_20260630",
           "phase": "smoke_5k",
-          "max_routed_channels": "5000",
+          "run_id": "channel_crawl_full_20260623_deepseek_flash_full_fallback_stream_smoke_100_20260630",
+          "output_prefix": "yt_lid_v3_channel_crawl_full_20260623_deepseek_flash_full_fallback_stream_smoke_100_20260630",
+          "max_routed_channels": "100",
           "prompt_version": "llm_fallback_final_guardrails_post_review_20260630",
           "llm_notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_channel_crawl_full_20260623/03_language_llm_panel_databricks_post_review_20260630",
           "route_disagreement": "true",

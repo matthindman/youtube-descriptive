@@ -29,7 +29,9 @@
           "import_results": "true",
           "deepseek_max_workers": "16",
           "deepseek_request_timeout_seconds": "60",
-          "deepseek_max_retries": "1"
+          "deepseek_max_retries": "1",
+          "deepseek_direct_streaming": "true",
+          "deepseek_delete_request_jsonl_after_submit": "true"
         }
       }
     }

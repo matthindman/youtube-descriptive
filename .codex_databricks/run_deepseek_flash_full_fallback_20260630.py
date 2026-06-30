@@ -56,6 +56,8 @@ IMPORT_RESULTS = _widget("import_results", "true").strip().lower() == "true"
 DEEPSEEK_MAX_WORKERS = _widget("deepseek_max_workers", "16")
 DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _widget("deepseek_request_timeout_seconds", "60")
 DEEPSEEK_MAX_RETRIES = _widget("deepseek_max_retries", "1")
+DEEPSEEK_DIRECT_STREAMING = _widget("deepseek_direct_streaming", "true")
+DEEPSEEK_DELETE_REQUEST_JSONL_AFTER_SUBMIT = _widget("deepseek_delete_request_jsonl_after_submit", "true")
 
 DEFAULT_PHASE_LIMITS = {
     "preflight_only": 0,
@@ -349,6 +351,8 @@ llm_args: Dict[str, str] = {
     "deepseek_max_workers": DEEPSEEK_MAX_WORKERS,
     "deepseek_request_timeout_seconds": DEEPSEEK_REQUEST_TIMEOUT_SECONDS,
     "deepseek_max_retries": DEEPSEEK_MAX_RETRIES,
+    "deepseek_direct_streaming": DEEPSEEK_DIRECT_STREAMING,
+    "deepseek_delete_request_jsonl_after_submit": DEEPSEEK_DELETE_REQUEST_JSONL_AFTER_SUBMIT,
     "submit_batches": str(SUBMIT_BATCHES).lower(),
     "submit_provider_filter": "deepseek",
     "submit_model_filter": "deepseek-v4-flash",
