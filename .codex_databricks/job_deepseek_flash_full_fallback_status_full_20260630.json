@@ -1,0 +1,20 @@
+{
+  "run_name": "deepseek-flash-full-fallback-status-full-20260630",
+  "tasks": [
+    {
+      "task_key": "status_full",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_channel_crawl_full_20260623/check_deepseek_flash_full_fallback_status_20260630",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "base_run_id": "channel_crawl_full_20260623_deepseek_flash_full_fallback_20260630",
+          "base_output_prefix": "yt_lid_v3_channel_crawl_full_20260623_deepseek_flash_full_fallback_20260630",
+          "phase": "full"
+        }
+      }
+    }
+  ]
+}
