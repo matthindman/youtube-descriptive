@@ -218,6 +218,41 @@ OpenAI, Anthropic, and Gemini use their provider batch APIs. DeepSeek uses the O
 `https://api.deepseek.com/chat/completions` path directly and writes parser-compatible result JSONL under
 `results_input_dir`.
 
+For production final adjudication, route both LID disagreements and LID-unclassified channels to the LLM
+fallback. Set `route_unclassified=true` and point `channels_table` at the final notebook-01 channel output,
+not just `channel_model_comparison`: zero-valid channels may have no model-aggregation row and therefore may
+be absent from the comparison table. When staged raw source tables are available, also set
+`source_channels_table` and `source_videos_table`; these are used only for routed channels with no
+`segments_input` rows, so DeepSeek still sees channel names/descriptions and recent video titles/descriptions.
+
+The LLM prompt is intentionally less abstention-biased than the fastText validity gate. It still downweights
+generic boilerplate, names, brands, URLs, and generic hashtags, but preserves repeated weak cues such as
+non-generic hashtags, localized month/date strings, short repeated titles, and short script-specific snippets.
+The current prompt version (`llm_fallback_final_guardrails_post_review_20260630`) labels short visible snippets as
+`fasttext-ineligible-visible-text` rather than `lid-invalid`, adds structured summaries for short sentence
+cues, coherent description prose, repeated patterns, CTA/channel boilerplate, romanized South Asian cues,
+Arabic-script Urdu/Punjabi markers, and topic/language-name/region mentions. Each prompt also includes an
+`EVIDENCE PRIORITY SUMMARY` that orders evidence quality before field weights: substantive non-boilerplate
+description prose about the actual content/message, coherent title phrases, repeated non-generic phrases,
+localized date/month cues, non-generic hashtags, channel name, then generic English/SEO/CTA/channel-about
+boilerplate. The prompt explicitly forbids browsing or inferring from channel IDs, makes script choice follow
+the highest-tier decisive evidence in both directions, treats language/region/translation labels as topic
+metadata rather than primary evidence, prevents generic English about/contact/category text from overriding
+repeated coherent native-script phrase evidence, rescues repeated short real English phrases as low-confidence
+`eng_Latn`, and uses `confidence=null` for `insufficient_text`. It should reserve `insufficient_text` for
+cases where language evidence is truly minimal, such as names-only, handles-only, topic-only, or
+religious-icon-only metadata.
+Imported raw model
+results include both exact provider outputs and calibrated fields. When `apply_llm_calibration=true`, the
+panel vote uses conservative `calibrated_*` fields: high-precision script-absent cases can be corrected to
+romanized `_Latn`; compatible `*_Latn` predictions can be corrected to the dominant visible non-Latin script
+when that script is more than half of cleaned script-bearing prompt text; Hindi-belt regional codes
+(`bgc`, `bho`, `hne`, `mwr`, `raj`, `sck`) can be corrected to `hin_Deva`/`hin_Latn` unless the
+running text contains genuine lect-specific lexical or phrase markers; and topic-only script-absent
+cases can be changed to `insufficient_text`. Other lower-precision Arabic/Urdu, South Asian,
+topic-only, and incompatible script-minority signals remain `review_*` flags rather than automatic
+relabels.
+
 The panel notebook writes `yt_lid_v3_llm_panel_run_progress` with run-scoped Delta commit markers and
 best-effort `notebook_failed` markers. DeepSeek direct results append to existing result JSONL rather than
 truncating it, and reruns skip request IDs that already have successful responses; import deduplication keeps

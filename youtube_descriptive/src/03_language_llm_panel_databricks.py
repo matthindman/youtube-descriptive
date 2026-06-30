@@ -7,6 +7,8 @@
 # MAGIC
 # MAGIC **What it does:** by default, routes the small subset of channels where the two fastText models
 # MAGIC *disagree* (plus a tiny blind *audit* sample of the agreement bucket) to a multi-model LLM panel.
+# MAGIC Set `route_unclassified=true` when the LLM should act as the final fallback for channels that LID
+# MAGIC left unclassified; on full-crawl runs this can be hundreds of thousands of channels, so it is explicit.
 # MAGIC For API/secrets validation, set `routing_mode=random_validation` to classify a reproducible random
 # MAGIC sample from the notebook 01 comparison table. Set `random_validation_scope=lid_iso_disagreement` to
 # MAGIC draw that sample only from cases where OpenLID and GlotLID disagree after ISO normalization.
@@ -37,7 +39,7 @@ import sys
 import time
 import unicodedata
 from datetime import datetime
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from pyspark.sql import functions as F
 from pyspark.sql import Window
@@ -91,8 +93,11 @@ _create_text_widget("catalog", "dev_sean")
 _create_text_widget("schema", "matt")
 _create_text_widget("comparison_table", "yt_lid_v3_channel_model_comparison")
 _create_text_widget("segments_input_table", "yt_lid_v3_segments_input")
+_create_text_widget("channels_table", "yt_lid_v3_channels")
 _create_text_widget("channel_text_features_table", "yt_lid_v3_channel_text_features")
 _create_text_widget("hindi_indic_audit_table", "yt_lid_v3_hindi_indic_audit_candidates")
+_create_text_widget("source_channels_table", "")  # optional raw fallback for routed channels missing segments
+_create_text_widget("source_videos_table", "")  # optional raw fallback for routed channels missing segments
 _create_text_widget("run_id", "default")
 _create_text_widget("source_run_id", "")  # blank = use run_id; set for retry/output-only runs
 _create_text_widget("inference_hash_buckets", "4096")
@@ -118,6 +123,9 @@ _create_text_widget("route_disagreement", "true")
 _create_text_widget("route_unresolved_tail", "true")
 # Targeted shared-bias route (D3): exact English consensus WITH contradicting Indic evidence.
 _create_text_widget("route_shared_bias_english_indic", "true")
+# Final-arbiter route: channels left unclassified by the LID pass. This can be large on full-crawl runs,
+# so keep it explicit; set true when DeepSeek/LLM is intended to be the final fallback.
+_create_text_widget("route_unclassified", "false")
 # Blind audit sample (E3): a small uniform-random slice of the AGREEMENT bucket, to measure accuracy/bias.
 _create_text_widget("route_agreement_audit", "true")
 _create_text_widget("agreement_audit_fraction", "0.005")
@@ -133,6 +141,9 @@ _create_text_widget("max_segment_chars", "350")
 _create_text_widget("prompt_max_chars", "6000")
 _create_text_widget("strip_prompt_boilerplate", "true")
 _create_text_widget("dedupe_prompt_segments", "true")
+_create_text_widget("prompt_best_guess_mode", "true")
+_create_text_widget("prompt_version", "llm_fallback_final_guardrails_post_review_20260630")
+_create_text_widget("apply_llm_calibration", "true")
 
 # Models: mix frontier/mid/small providers by default for validation agreement matrices.
 DEFAULT_MODELS_JSON = json.dumps([
@@ -190,8 +201,11 @@ CATALOG = _get_widget("catalog", "dev_sean")
 SCHEMA = _get_widget("schema", "matt")
 COMPARISON_TABLE = _get_widget("comparison_table", "yt_lid_v3_channel_model_comparison")
 SEGMENTS_INPUT_TABLE = _get_widget("segments_input_table", "yt_lid_v3_segments_input")
+CHANNELS_TABLE = _get_widget("channels_table", "yt_lid_v3_channels")
 CHANNEL_TEXT_FEATURES_TABLE = _get_widget("channel_text_features_table", "yt_lid_v3_channel_text_features")
 HINDI_INDIC_AUDIT_TABLE = _get_widget("hindi_indic_audit_table", "yt_lid_v3_hindi_indic_audit_candidates")
+SOURCE_CHANNELS_TABLE = _get_widget("source_channels_table", "").strip()
+SOURCE_VIDEOS_TABLE = _get_widget("source_videos_table", "").strip()
 RUN_ID = _get_widget("run_id", "default").strip() or "default"
 SOURCE_RUN_ID = _get_widget("source_run_id", "").strip() or RUN_ID
 INFERENCE_HASH_BUCKETS = _get_int_widget("inference_hash_buckets", 4096)
@@ -210,6 +224,7 @@ RANDOM_VALIDATION_SEED = _get_widget("random_validation_seed", "20260610").strip
 ROUTE_DISAGREEMENT = _get_bool_widget("route_disagreement", True)
 ROUTE_UNRESOLVED_TAIL = _get_bool_widget("route_unresolved_tail", True)
 ROUTE_SHARED_BIAS = _get_bool_widget("route_shared_bias_english_indic", True)
+ROUTE_UNCLASSIFIED = _get_bool_widget("route_unclassified", False)
 ROUTE_AGREEMENT_AUDIT = _get_bool_widget("route_agreement_audit", True)
 AGREEMENT_AUDIT_FRACTION = _get_float_widget("agreement_audit_fraction", 0.005)
 AGREEMENT_AUDIT_SEED = _get_widget("agreement_audit_seed", "20260526")
@@ -222,6 +237,9 @@ MAX_SEGMENT_CHARS = _get_int_widget("max_segment_chars", 350)
 PROMPT_MAX_CHARS = _get_int_widget("prompt_max_chars", 6000)
 STRIP_PROMPT_BOILERPLATE = _get_bool_widget("strip_prompt_boilerplate", True)
 DEDUPE_PROMPT_SEGMENTS = _get_bool_widget("dedupe_prompt_segments", True)
+PROMPT_BEST_GUESS_MODE = _get_bool_widget("prompt_best_guess_mode", True)
+PROMPT_VERSION = _get_widget("prompt_version", "llm_fallback_final_guardrails_post_review_20260630").strip()
+APPLY_LLM_CALIBRATION = _get_bool_widget("apply_llm_calibration", True)
 
 MODELS = json.loads(_get_widget("models_json", DEFAULT_MODELS_JSON))
 MAX_OUTPUT_TOKENS = _get_int_widget("max_output_tokens", 2000)
@@ -291,8 +309,25 @@ GEMINI_SECRET_KEY = _normalize_secret_key("gemini", _get_widget("gemini_secret_k
 DEEPSEEK_SECRET_KEY = _normalize_secret_key("deepseek", _get_widget("deepseek_secret_key", DEFAULT_SECRET_KEYS["deepseek"]))
 
 
+def _quote_table_part(part: str) -> str:
+    cleaned = str(part or "").strip().strip("`")
+    return "`" + cleaned.replace("`", "``") + "`"
+
+
 def fqtn(table: str) -> str:
-    return f"`{CATALOG}`.`{SCHEMA}`.`{table}`"
+    value = str(table or "").strip()
+    if not value:
+        raise ValueError("Table name cannot be blank.")
+    if "`.`" in value and value.startswith("`") and value.endswith("`"):
+        return value
+    parts = [p for p in value.split(".") if p]
+    if len(parts) == 3:
+        return ".".join(_quote_table_part(p) for p in parts)
+    if len(parts) == 2:
+        return ".".join([_quote_table_part(CATALOG)] + [_quote_table_part(p) for p in parts])
+    if len(parts) == 1:
+        return ".".join(_quote_table_part(p) for p in [CATALOG, SCHEMA, parts[0]])
+    raise ValueError(f"Unsupported table identifier: {table!r}")
 
 
 def safe_model_dir(model: str) -> str:
@@ -315,8 +350,11 @@ def local_fs_path(path: str) -> str:
 
 comparison_full = fqtn(COMPARISON_TABLE)
 segments_input_full = fqtn(SEGMENTS_INPUT_TABLE)
+channels_full = fqtn(CHANNELS_TABLE)
 channel_text_features_full = fqtn(CHANNEL_TEXT_FEATURES_TABLE)
 hindi_indic_audit_full = fqtn(HINDI_INDIC_AUDIT_TABLE)
+source_channels_full = fqtn(SOURCE_CHANNELS_TABLE) if SOURCE_CHANNELS_TABLE else None
+source_videos_full = fqtn(SOURCE_VIDEOS_TABLE) if SOURCE_VIDEOS_TABLE else None
 panel_requests_full = fqtn(PANEL_REQUESTS_TABLE)
 panel_batch_jobs_full = fqtn(PANEL_BATCH_JOBS_TABLE)
 panel_raw_results_full = fqtn(PANEL_RAW_RESULTS_TABLE)
@@ -497,9 +535,15 @@ record_panel_progress(
     metrics={
         "comparison_table": comparison_full,
         "segments_input_table": segments_input_full,
+        "channels_table": channels_full,
+        "source_channels_table": source_channels_full,
+        "source_videos_table": source_videos_full,
         "source_run_id": SOURCE_RUN_ID,
         "run_id": RUN_ID,
         "routing_mode": ROUTING_MODE,
+        "route_unclassified": ROUTE_UNCLASSIFIED,
+        "prompt_version": PROMPT_VERSION,
+        "apply_llm_calibration": APPLY_LLM_CALIBRATION,
         "panel_requests_table": panel_requests_full,
         "panel_raw_results_table": panel_raw_results_full,
         "panel_verdicts_table": panel_verdicts_full,
@@ -621,6 +665,7 @@ SCRIPT_FAMILY_CANONICAL = {
     "hangul": "Hang",
     "hebr": "Hebr",
     "hebrew": "Hebr",
+    "japanese": "Jpan",
     "jpan": "Jpan",
     "kana": "Jpan",
     "kannada": "Knda",
@@ -756,7 +801,13 @@ if PANEL_MAJORITY_VOTE_BASIS not in {"normalized_base_iso", "raw_base_iso"}:
 print("Source comparison table:", comparison_full, "| source_run_id:", SOURCE_RUN_ID, "| output run_id:", RUN_ID)
 print("Panel models:", ", ".join(f"{m['provider']}:{m['model']}[{m.get('tier', 'unspecified')}]" for m in MODELS))
 print("Panel majority vote basis:", PANEL_MAJORITY_VOTE_BASIS)
-print("Prompt cleanup: strip_boilerplate=", STRIP_PROMPT_BOILERPLATE, "| dedupe_segments=", DEDUPE_PROMPT_SEGMENTS)
+print(
+    "Prompt cleanup: strip_boilerplate=", STRIP_PROMPT_BOILERPLATE,
+    "| dedupe_segments=", DEDUPE_PROMPT_SEGMENTS,
+    "| best_guess_mode=", PROMPT_BEST_GUESS_MODE,
+    "| prompt_version=", PROMPT_VERSION,
+    "| apply_llm_calibration=", APPLY_LLM_CALIBRATION,
+)
 print(
     "DeepSeek direct controls:",
     f"thinking_type={DEEPSEEK_THINKING_TYPE or 'omitted'}",
@@ -770,7 +821,8 @@ if ROUTING_MODE == "random_validation":
     print(f"Random validation sample: n={RANDOM_VALIDATION_SAMPLE_SIZE:,}, seed={RANDOM_VALIDATION_SEED}, scope={RANDOM_VALIDATION_SCOPE}")
 else:
     print("Routes -> disagreement:", ROUTE_DISAGREEMENT, "| unresolved_tail:", ROUTE_UNRESOLVED_TAIL,
-          "| shared_bias_english_indic:", ROUTE_SHARED_BIAS, "| agreement_audit:", ROUTE_AGREEMENT_AUDIT,
+          "| shared_bias_english_indic:", ROUTE_SHARED_BIAS, "| unclassified:", ROUTE_UNCLASSIFIED,
+          "| agreement_audit:", ROUTE_AGREEMENT_AUDIT,
           f"({AGREEMENT_AUDIT_FRACTION:.4f})")
 
 # COMMAND ----------
@@ -781,28 +833,43 @@ else:
 # MAGIC in the user prompt rather than fetching live (batch APIs cannot browse).
 
 # COMMAND ----------
-SYSTEM_PROMPT = """You are an independent, evidence-driven language classifier for YouTube channels. You are one member of a panel that adjudicates cases where a two-model machine pipeline (OpenLID-v3 + GlotLID) disagrees. Judge ONLY from the channel metadata supplied below; do not assume what the channel "probably" is, and do not consider any other model's guess.
+SYSTEM_PROMPT = """EXECUTION CONTEXT: You cannot browse, search, or retrieve pages. Classify only from metadata supplied in this prompt. If no channel-level metadata text is supplied, return status="insufficient_text" with null language fields and confidence=null; never infer from the channel ID. The only valid statuses are classified and insufficient_text.
+
+ROLE: You are an independent, evidence-driven language classifier for YouTube channels. You are one member of a panel that adjudicates cases where a two-model machine pipeline (OpenLID-v3 + GlotLID) disagrees. Judge ONLY from the channel metadata supplied below; do not assume what the channel "probably" is, and do not consider any other model's guess.
 
 OBJECTIVE: determine the dominant WRITTEN-METADATA language — the language of the channel name, description, and video titles/descriptions provided. This is NOT the spoken language and NOT the creator's nationality. A channel filmed in Hindi can have English-written metadata; classify the WRITING.
 
-LABEL FORMAT: a "<ISO 639-3>_<ISO 15924 script>" tag, e.g. eng_Latn, spa_Latn, hin_Deva, ara_Arab, cmn_Hani, tha_Thai, kor_Hang. Always include the script. If a non-Latin language is written in Latin letters (romanization), label it with _Latn and set is_romanized=true (e.g. romanized Hindi = hin_Latn). Use ISO codes only; never output English names such as hindi_Deva, korean_Hangul, or punjabi_Latn.
+DECISION ORDER:
+1. The label script is the script of the highest-tier decisive evidence. This works both ways: coherent Devanagari/Cyrillic/etc. prose uses the native script label (e.g. hin_Deva, uzb_Cyrl), while romanized text with no decisive native script stays _Latn with is_romanized=true. Numeric field weights are tie-breakers only and never override the tier hierarchy. Generic English channel/about text, contact/support text, upload/category descriptions, and media scaffolding do not outrank repeated non-generic native-script title phrases or native-script description phrases.
+2. Apply the minimum-evidence gate before guessing. Running prose in a language can support a low-confidence label; repeated or field-level short real English phrases can support eng_Latn with low confidence. Only names, handles, dates, single words, generic hashtags, topic/language names, or CTA/SEO boilerplate means insufficient_text.
+3. Hindi-belt regional codes (bho, bgc, hne, sck, raj, mwr) require real lect-specific phrase markers; region/genre/artist names or hashtags are not enough, so default to hin_Deva/hin_Latn or the actual phrase language.
+4. A language name or region tag such as "Tamil", "Bhojpuri", "Urdu translation", or "Telugu songs" is topic routing metadata, never a primary label by itself; use only as secondary/low-confidence support when another supplied cue agrees.
 
-WEIGH the evidence by field, highest first: video_title (2.0), video_description (1.0), channel_description (1.0), channel_name (0.25). A field is decisive only with enough clean letters (>=40 Latin / >=12 non-Latin), but repeated short titles can still be strong evidence. Treat generic provider metadata, release metadata, production credits, URLs, social links, query/tag lists, repeated near-duplicate template descriptions, title translations, proper-name credit blocks, episode/review/fancam/game/cartoon shell labels, and English scaffolding like "Official Video", "Full Natok", "Clip Officiel", "Presenting the new drama", "Cast", or "Produced by" as weak evidence. Count repeated boilerplate/template descriptions once, not once per video.
+LABEL FORMAT: use the pipeline's internal "<ISO 639-3>_<ISO 15924>" format, e.g. eng_Latn, spa_Latn, hin_Deva, ara_Arab, cmn_Hani, tha_Thai, kor_Hang. This is not standard BCP-47: always use the three-letter code and underscore. primary_language_label is the full label (hin_Deva), primary_language_iso639_3 is the code only (hin), and primary_language_script is the script only (Deva). Always include the script for classified rows. If a non-Latin language is written in Latin letters (romanization), label it with _Latn and set is_romanized=true (e.g. romanized Hindi = hin_Latn). Use ISO codes only; never output English names such as hindi_Deva, korean_Hangul, or punjabi_Latn. For insufficient_text, set language fields and confidence to null.
 
-USE SUMMARIES CAREFULLY: FIELD SUMMARY, SEGMENT SCRIPT SUMMARY, TEXT SCRIPT SUMMARY, LANGUAGE HINTS, and weak hashtag cue summaries describe the supplied prompt after cleanup. Use them to notice mixed-script or romanized evidence, but do not classify from a single hint, hashtag, location, artist name, or channel name without supporting natural-language title/description text.
+WEIGH evidence quality before field weights. Use this priority order: (1) substantive non-boilerplate description prose about the channel's actual content/message, (2) coherent title phrases, (3) repeated non-generic phrases, (4) localized date/month cues, (5) non-generic hashtags, (6) channel name, (7) generic English/SEO/CTA/channel-about boilerplate. Lower tiers do not override higher tiers. The label's script is set by the highest-tier decisive evidence; numeric field weights never promote romanized titles over coherent native-script description prose. If high-quality tiers strongly conflict, choose the dominant written metadata language and preserve the other as secondary/mixed. Use field weights only as tie-breakers among comparable-quality evidence: video_title (2.0), video_description (1.0), channel_description (1.0), channel_name (0.25). A single field is decisive only with enough clean letters (>=40 Latin / >=12 non-Latin), but short grammatical sentences, repeated short titles, repeated localized date/month strings, repeated non-generic hashtags, repeated short English noun/verb phrases, and repeated short non-Latin snippets can collectively support a low- or medium-confidence channel-language guess. Treat generic provider metadata, release metadata, production credits, URLs, social links, query/tag lists, repeated near-duplicate template descriptions, title translations, proper-name credit blocks, episode/review/fancam/game/cartoon shell labels, and English scaffolding like "Official Video", "Full Natok", "Clip Officiel", "Presenting the new drama", "Cast", or "Produced by" as weak evidence. Count repeated boilerplate/template descriptions once, not once per video. A substantive channel or video description with sentence-like prose about the actual content/message should outweigh noisy repeated hashtags, dates, language-name tags, and SEO lists. A grammatical description is not Tier 1 if it is only welcome/support/contact/business, upload schedule, channel-purpose/category, or CTA text; treat that as lower-tier boilerplate.
+
+USE SUMMARIES CAREFULLY: EVIDENCE PRIORITY SUMMARY, FIELD SUMMARY, SEGMENT SCRIPT SUMMARY, TEXT SCRIPT SUMMARY, SHORT SENTENCE/PHRASE CUES, COHERENT DESCRIPTION PROSE, CTA/CHANNEL BOILERPLATE, ROMANIZED SOUTH ASIAN CUES, ARABIC-SCRIPT URDU/PUNJABI CUES, TOPIC/LANGUAGE-NAME MENTIONS, LANGUAGE HINTS, NON-GENERIC HASHTAGS, LOCALIZED DATE/MONTH CUES, and REPEATED PATTERNS describe the supplied metadata after cleanup. Use them to notice mixed-script, romanized, hashtag-locked, date-only, or repeated short-title evidence. Do not classify from a single hint, hashtag, location, artist name, or channel name, but if multiple weak cues point to the same language or mutually intelligible family, make the best low-confidence guess rather than treating the channel as textless.
 
 GUARD against known failure modes:
 - LATIN-NAME TRAP: do not let an English/Latin channel NAME override video titles that are mostly non-Latin. If titles are mostly Thai/Korean/Arabic/etc., that is the language even when the brand name is Latin.
-- ROMANIZED NON-LATIN: detect romanized Hindi/Urdu/Punjabi/Pashto/Arabic/Bengali/Tamil/Telugu/Malayalam/Bhojpuri/Haryanvi/Bundeli; label the underlying language with _Latn, is_romanized=true; do not default to English when the title phrases are clearly non-English. Hindi/Hinglish cues include "ke", "ki", "ka", "me/mei/main", "hai", "hoga/hogi", "hone", "ne", "se", "par", "ye/yeh", "kya", "kyu/kyun", "kaise/kase", "apka/aapka", "dil", and "sabko"; these are not Bengali. Urdu-in-Latin cues include "ki/ka/main", "duniya", "subse/sabse", "pyari", "awaz", "kase/kaise", "hoi/hui", "tabdil", "dua", "wazifa", "ishq", "naat", and explicit "Urdu translation", especially with Pakistan/Islamic context; do not call such text Arabic unless there is Arabic script or grammatical Arabic. Punjabi cues include "da/di/de", "sanu", "sade", "noo/nu", "ni", "ae/aiy", "wich", "mola", "ishq/ishqa", "maawan", "tayari", "wazifa", "wird"; Pakistani naat/manqabat titles with Lahore/Pakistan/Shahmukhi/Western Punjabi context are usually pnb_Latn, not Urdu or English. Pashto cues include repeated grammar/phrases such as "da ... jwand", "sta", "zama", "sara", "kho", "peghor", or explicit Pashto/Pakhto; do not relabel Pashto-like Pakistani vines as English just because the script is Latin. Use pan_Guru/pan_Latn for Indian/Eastern Punjabi or explicit Gurmukhi/India context. Chhattisgarhi/CG music cues include "Cg Song", "Chhattisgarhi/Chhattisarhi Gana", "Mor", "Mola", "Tor", "Nai", "Ka Hoge"; use hne_Latn or hne_Deva, not hif or generic Hindi unless the text is actually standard Hindi. Bundeli/Bundelkhand cues include explicit "Bundeli", "Bundeli Gaane", or "Bundelkhand"; use bns_Latn/bns_Deva rather than hne/bho/hin. Bhojpuri cues include repeated Bhojpuri grammar such as "ba", "bani", "badu", "tohar", "hamar", "rauwa", "saiyan", "ka ho", or explicit Bhojpuri/Bhojpuriya; if only a #bhojpuri tag or artist/genre cue is present while the phrase text is generic Hindi/English, keep the phrase language primary and record Bhojpuri as secondary/low confidence.
-- SPARSE CUES: hashtag-only, mostly-hashtag, emoji-heavy, title-template-only, or proper-noun-only channels do not contain enough written-language evidence for a confident classification. Do not let a single channel name, one short non-English item, hashtags, locations, artist names, or topic labels override repeated natural-language titles/descriptions. If only weak cues remain after cleanup, use status="insufficient_text" or low confidence rather than guessing; preserve recurring secondary evidence with secondary_language_label/is_mixed_language instead.
-- PROPER-NOUN/LITURGY TRAP: religious titles, temple/person/place names, transliterated chants, or topic labels such as "Gita", "Darbar", "Puje", "Bhagavatha", "Matha", "Teertaru", "Pravachana", "Allah", "Quran/Qur'an", "Surah", "Yasin", "Rahman", "Tilawat", "Naat", "Azan", or "Masha Allah" are weak evidence by themselves. Arabic religious words in Latin script do not imply Arabic metadata unless there is Arabic-script text or grammatical Arabic phrasing. For Islamic metadata with Urdu/Hindi connective text such as "ki", "main", "duniya", "sabse/subse", "pyari", "awaz", or "translation", classify the connective language (often urd_Latn/hin_Latn) rather than Arabic. If only names/topics are present, use insufficient_text or low/medium confidence and preserve secondary cues.
-- LANGUAGE-NAME / AD-VARIANT TRAP: product/ad titles can list variants such as "Hindi 20 Sec", "Bengali 6 Sec", or "Punjabi 6 Sec" while the natural text is mostly English. Treat language names in title suffixes, hashtags, and query lists as weak routing tags unless actual phrase text in that language is present. Hashtag-only language names can support a secondary cue but should not be the primary label without phrase evidence.
+- FASTTEXT-INELIGIBLE IS NOT TEXTLESS: snippets tagged [fasttext-ineligible-visible-text: ...] failed a short-text/fastText eligibility rule, not a language-evidence rule. Read the visible words yourself. A short complete sentence ("Disfruta de nuestro contenido hecho para ti", "Offizieller YouTube Channel von...", "If you're here...") or repeated short phrase can justify a classified low/medium-confidence label. Do not return insufficient_text solely because every snippet is fastText-ineligible.
+- SHORT ENGLISH PHRASE RESCUE: do not abstain from eng_Latn when supplied titles/descriptions contain repeated real English phrases or a short field-level English phrase with ordinary word order, such as "Robot vs human", "water vs coconut water", "Holy Quran recitation", "Digital News Portal", "Live Stream", "one more chance", or "Free Fire New Wishlist". Use low confidence when evidence is short. This does not apply to names/handles alone, bare dates, single words, generic hashtags, language/topic tags by themselves, or CTA/SEO boilerplate such as "please support me", "subscribe", "viral shorts", "official video", "full video", "new song", "edit", or "lyrics".
+- SCRIPT CONSISTENCY: the script in primary_language_label must match the highest-tier decisive written evidence you cite. If a non-Latin language is written mostly in Latin characters, label it _Latn and set is_romanized=true; do not output hin_Deva, urd_Arab, mar_Deva, kan_Knda, or similar native-script labels when the decisive text is romanized Latin. Conversely, do not output hin_Latn, uzb_Latn, or similar Latin-script labels when the decisive cited evidence is coherent Devanagari, Cyrillic, Arabic, etc.; use hin_Deva, uzb_Cyrl, urd_Arab, etc. If romanized titles and a native-script description both recur, choose the primary script from the higher-tier decisive evidence and set is_mixed_language/secondary_language_label when appropriate.
+- NATIVE-SCRIPT DECISIVENESS: do not let generic English channel/about descriptions, contact/support text, upload/category descriptions, or media scaffolding override repeated non-generic native-script title phrases or native-script description phrases. If the native-script evidence is coherent and the English evidence is only channel-purpose, welcome/support/contact/business, SEO, or format text, use the native-script label and cite the native-script phrases.
+- DESCRIPTION PROSE VS BOILERPLATE: do not treat every grammatical channel description as Tier 1. Tier 1 description prose must say something substantive in the written language about the channel's content, message, story, claims, instructions, or topic. Descriptions limited to "welcome to my channel", "please subscribe/support", contact or promotion lines, upload/category summaries, business inquiries, social links, or generic "we make videos about..." boilerplate are lower-tier evidence and should not override stronger title/phrase evidence.
+- ROMANIZED NON-LATIN: detect romanized Hindi/Urdu/Punjabi/Pashto/Arabic/Bengali/Tamil/Telugu/Malayalam/Bhojpuri/Haryanvi/Bundeli; label the underlying language with _Latn, is_romanized=true; do not default to English when the title phrases are clearly non-English. Hindi/Hinglish cues include "ke", "ki", "ka", "me/mei/main", "hai", "hoga/hogi", "hone", "ne", "se", "par", "ye/yeh", "kya", "kyu/kyun", "kaise/kase", "apka/aapka", "dil", and "sabko"; these are not Bengali. Urdu-in-Latin cues include "ki/ka/main", "duniya", "subse/sabse", "pyari", "awaz", "kase/kaise", "hoi/hui", "tabdil", "dua", "wazifa", "ishq", "naat", and "tilawat"; "Urdu translation" is a topic/label cue, not Urdu evidence by itself. Punjabi cues include "da/di/de", "sanu", "sade", "noo/nu", "ni", "ae/aiy", "wich", "mola", "ishq/ishqa", "maawan", "tayari", "wazifa", "wird"; Pakistani naat/manqabat or Lahore/Pakistan context supports pnb_Latn only with Punjabi/Shahmukhi grammar or repeated Punjabi lexical cues, not from religious genre/geography alone. Pashto cues include repeated grammar/phrases such as "da ... jwand", "sta", "zama", "sara", "kho", "peghor", or explicit Pashto/Pakhto; do not relabel Pashto-like Pakistani vines as English just because the script is Latin. Use pan_Guru/pan_Latn for Indian/Eastern Punjabi or explicit Gurmukhi/India context. Chhattisgarhi running-text markers include repeated "Mor", "Mola", "Tor", or "Ka Hoge"; labels like "Cg Song" or "Chhattisgarhi Gana" alone are genre metadata, not enough to override ordinary Hindi. Bundeli/Bundelkhand cues require direct Bundeli phrase evidence; region names, "Bundeli" labels, or "Bundelkhand" alone are topic metadata. Bhojpuri running-text markers include repeated grammar such as "ba", "bani", "badu", "tohar", "hamar", "rauwa", "saiyan", or "ka ho"; a Bhojpuri/Bhojpuriya label, #bhojpuri tag, or artist/genre cue alone is not enough when phrase text is generic Hindi/English, so keep the phrase language primary and record Bhojpuri as secondary/low confidence.
+- ROMANIZED SOUTH ASIAN AMBIGUITY: script-blind Hindi/Urdu/Punjabi/Bhojpuri/Nepali evidence often deserves a best guess, but not high confidence from particles alone. If the cues distinguish only a mutually intelligible cluster, choose the most directly evidenced ISO label, use low/medium confidence, and preserve plausible close varieties in secondary_language_label, dialect_or_variant, mixed_languages, or evidence. Use npi_Latn for Nepali, not nep_Latn.
+- SPARSE CUES: hashtag-only, mostly-hashtag, emoji-heavy, title-template-only, or proper-noun-only channels do not contain enough written-language evidence for a confident classification. Do not let a single channel name, handle, brand, proper name, game/media title, one short non-English item, hashtags, locations, artist names, or topic labels override repeated natural-language titles/descriptions. But if weak cues recur across several titles/descriptions/tags or localized dates and consistently point to one language/family, classify with confidence="low" or "medium" and quote the cue. Use status="insufficient_text" only when there is truly minimal language evidence after considering repeated weak signals.
+- PROPER-NOUN/LITURGY TRAP: religious titles, temple/person/place names, transliterated chants, or topic labels such as "Gita", "Darbar", "Puje", "Bhagavatha", "Matha", "Teertaru", "Pravachana", "Allah", "Quran/Qur'an", "Surah", "Yasin", "Rahman", "Tilawat", "Naat", "Azan", "Islamic Knowledge", or "Masha Allah" are weak evidence by themselves. Quran/Surah/Naat/Tilawat labels describe religious subject matter unless grammar-bearing prose accompanies them. Arabic religious words in Latin script do not imply Arabic metadata unless there is Arabic-script text or grammatical Arabic phrasing. Arabic-script text may be Urdu, Punjabi/Shahmukhi, Persian, or another language; Urdu/Persian letterforms and markers such as "ک", "ی", "ے", "ہ", "گ", "کو", "کی", "کا", "کے", "میں", "والا", "والے", "ہے", "ہیں", "دینے" point away from Arabic toward Urdu/Persian-family scripts, while "ساڈی", "اے", "دا", "دی", "دے", "وچ", or "نوں" point toward Punjabi/Shahmukhi. For Islamic metadata with Urdu/Hindi connective text such as "ki", "main", "duniya", "sabse/subse", "pyari", "awaz", or "translation", classify the connective language (often urd_Latn/hin_Latn) rather than Arabic. If only names/topics are present, use insufficient_text or low/medium confidence and preserve secondary cues.
+- LANGUAGE-NAME / REGION / AD-VARIANT TRAP: product/ad titles can list variants such as "Hindi 20 Sec", "Bengali 6 Sec", or "Punjabi 6 Sec" while the natural text is mostly English. Treat language names, regions, ethnicities, music/genre labels, title suffixes, hashtags, topic labels, and query lists such as "Bhojpuri", "Kashmiri funny video", "Tamil Edit", "Punjabi Status", "Urdu translation", "Telugu songs", or "Chaoui Algerian" as topic routing metadata. They are never primary-label evidence by themselves; use them only as secondary or low-confidence tie-break support when another supplied phrase/script cue agrees.
 - SEO-TEMPLATE TRAP: English category words like "lyrics", "recipe", "mukbang", "ASMR", "official video", "full video", "new song", "listen/stream", and "subscribe" are often boilerplate around non-English phrase text. Do not let these terms automatically dominate repeated Hindi/Korean/Telugu/etc. phrase text; if the only non-English signal is a language name or proper noun, keep English primary and record the other cue as secondary or low confidence.
 - MIXED-SCRIPT TITLE TRAP: many titles combine English media scaffolding with the real title phrase, e.g. "ASMR ... 먹방 MUKBANG, EATING", "Raghu Tarang II Quotes for Healthy Living: వండని వంటలు", or "OFFICIAL 4K VIDEO". Downweight the generic English scaffolding and classify from the recurring natural-language phrase/script across titles. Repeated English description templates should not override repeated non-English title phrases.
 - TRANSLATED-TITLE TRAP: titles often pair a source-language title with an English translation after a colon/pipe, e.g. Korean/Russian/Chinese text followed by an English gloss. If the same non-English script or romanized source-language phrases recur across titles, do not count the English gloss or credit shell as equal primary-language evidence.
 - MEDIA-SHELL TRAP: words such as "fancam", "behind", "performance ver.", "full episode", "promo", "preview", "review", "reaction", "cartoon", "gameplay", "nursery rhymes", "kids", and "toy" describe the video format or audience. Treat them as weak category labels unless there is enough surrounding natural-language text in English.
 - TEMPLATE-DESCRIPTION TRAP: duplicated descriptions, query lists, "related tags", "your query solved", "listen here", shopping/booking blocks, and social-link blocks in any language often repeat across every video. They should not multiply the weight of English or SEO terms. Use the varied title text and the first natural-language description as stronger evidence than repeated templates.
-- REGIONAL ISO TRAP: use the most specific current ISO 639-3 code only with direct metadata evidence. Common cues: Haryanvi=bgc; Bundeli/Bundelkhandi=bns; Braj/Brij/Braj Bhasha=bra; Rajasthani=raj and explicit Marwari=mwr; Bhojpuri=bho; Kumaoni=kfy (not kum, which is Kumyk); Garhwali=gbm; Nagpuri/Sadri/Sadani=sck when those names are explicit (not nag, which is Naga Pidgin); Kashmiri=kas (not ksh, which is Kolsch); Tulu=tcy; Hindko=hnd; Kutchi/Kachchi/Kutch=kfr; Gujarati=guj; Chhattisgarhi=hne only for Chhattisgarhi/CG cues; Pashto=pus (not pas); Western/Shahmukhi Punjabi=pnb and Eastern/Gurmukhi Punjabi=pan. If the cue is only a broad genre/location/artist name and the phrase evidence is generic Hindi/Urdu/English, choose the phrase evidence and mention the regional cue as dialect_or_variant or secondary evidence.
+- CTA BOILERPLATE TRAP: phrases such as "Please support me", "welcome to my channel", "thanks for watching", "subscribe to my channel", and "my new channel for live" are not enough to infer English by themselves. Treat them as boilerplate unless there is other coherent English prose.
+- REGIONAL ISO TRAP: use Hindi-belt regional ISO codes only when running title/description/name text contains genuine lect-specific lexical or grammatical markers: Haryanvi=bgc; Bhojpuri=bho; Chhattisgarhi=hne; Rajasthani=raj and explicit Marwari=mwr; Nagpuri/Sadri/Sadani=sck. A region, artist/channel name, genre tag, hashtag, language name, or music label such as "Haryanvi Swad", "bhojpuri masala", "Rajasthan", "Khunti Public", "CG Song", "Sadri/Nagpuri", or "Bhojpuri" is not enough if the phrase evidence is ordinary Hindi/Hinglish/English; default to hin_Deva/hin_Latn or the actual phrase language and preserve the regional cue as dialect_or_variant or secondary evidence. Other regional cues still require direct text evidence: Bundeli/Bundelkhandi=bns; Braj/Brij/Braj Bhasha=bra; Kumaoni=kfy (not kum, which is Kumyk); Garhwali=gbm; Kashmiri=kas (not ksh, which is Kolsch); Tulu=tcy; Hindko=hnd; Kutchi/Kachchi/Kutch=kfr; Gujarati=guj; Pashto=pus (not pas); Western/Shahmukhi Punjabi=pnb and Eastern/Gurmukhi Punjabi=pan.
 - BOSNIAN/CROATIAN/SERBIAN AMBIGUITY: if Latin-script Bosnian/Croatian/Serbian/Serbo-Croatian text is mutually intelligible and the supplied metadata has no decisive country, orthography, or explicit-language cue, use hbs_Latn. Use bos_Latn, hrv_Latn, or srp_Latn only when direct metadata evidence supports that specific variety, such as explicit "bosanski", "hrvatski", "srpski", "Srbija", "Hrvatska", "BiH", or clear Cyrillic Serbian. Sports/news metadata from regional outlets without direct country/language cues should normally be hbs_Latn.
 - ENGLISH vs CREOLE: standard English is eng_Latn; only use jam_Latn/pcm_Latn with genuine creole grammar/lexis.
 - FRENCH vs CREOLE: standard French is fra_Latn; only use gcf_Latn for Guadeloupean/Caribbean French Creole with genuine creole grammar/lexis, not merely Caribbean artists, Zouk/Kassav references, or French proper nouns.
@@ -812,12 +879,16 @@ NORMALIZE TAXONOMY: report Arabic as the macrolanguage ara_Arab (put a known dia
 
 MIXED LANGUAGE: if a second language recurs across multiple fields, set secondary_language_label, is_mixed_language=true, and list mixed_languages. Do not force a single-language call when the supplied metadata is genuinely bilingual; choose the dominant written metadata language and preserve the recurring secondary language.
 
-ABSTAIN rather than guess: if the supplied metadata has no usable text, status="insufficient_text" and leave labels null. Otherwise status="classified".
+CONFIDENCE CAPS: substantive non-boilerplate description prose or repeated coherent title phrases can support high confidence when language/script are clear. Generic about-channel, welcome/support/contact/business, upload/category, or CTA descriptions should not by themselves justify high confidence. A single coherent title/description phrase or repeated non-generic phrases usually supports medium confidence. Localized dates, non-generic hashtags, channel name, language-name/topic tags, or mostly boilerplate should usually be low confidence and must not override higher-quality phrase/prose evidence. Use at most confidence="medium" for script-blind romanized Hindi/Urdu/Punjabi/Bhojpuri/Nepali unless there is repeated clear phrase evidence. If English dominates the character count but a few romanized South Asian cues recur, keep English primary with the South Asian language secondary unless the non-English phrase evidence is clearly dominant. For insufficient_text, confidence must be null.
+
+ABSTAIN only when evidence is genuinely minimal: if the supplied metadata has no usable text, no repeated localized date/month signal, no repeated real English phrase evidence, no repeated non-generic hashtag signal, and no recognizable script/lexical cue, status="insufficient_text" and leave labels null. Do not abstain solely because the visible evidence is short or fastText-ineligible; do abstain for names-only, handles-only, proper-noun-only, topic-only, or religious-icon-only metadata. Otherwise make the best reasonable language guess and use low confidence when the signal is weak.
 Do not return und, zxx, mul, inc, or other family/collective codes as classified language labels; use status="insufficient_text" with null labels instead when the text is not classifiable or only a broad family is known.
+
+FINAL CHECK BEFORE OUTPUT: silently verify that (1) quoted evidence is real supplied metadata, not inferred identity/topic/nationality; (2) the label's script matches the decisive cited evidence in both directions; (3) any Tier 1 description evidence is substantive content/message prose, not generic about/channel/contact/category/CTA boilerplate; (4) generic English about/channel/contact/category text did not override repeated coherent native-script phrase evidence; (5) no language name, region, religious term, hashtag, artist/game title, or channel suffix alone set the label; (6) any Hindi-belt regional code has real lect markers, else prefer Hindi or the phrase language; (7) names/dates/one-word/generic-tags/CTA-SEO only means insufficient_text; (8) recurring short real evidence, including short real English phrases, can justify a low-confidence guess, not textless; (9) the response is valid JSON only.
 
 Base the judgment ONLY on the supplied text. NEVER invent content. Return ONE compact, minified JSON object
 on one line, nothing else. Keep evidence <=160 characters and quote only the shortest decisive text:
-{"status":"classified|insufficient_text","primary_language_label":"iso_Script|null","primary_language_iso639_3":"iso|null","primary_language_script":"Script|null","is_romanized":true|false,"dialect_or_variant":"iso|null","is_high_risk_tail":true|false,"secondary_language_label":"iso_Script|null","is_mixed_language":true|false,"mixed_languages":["iso_Script"],"confidence":"high|medium|low","evidence":"<=160 chars"}"""
+{"status":"classified|insufficient_text","primary_language_label":"iso_Script|null","primary_language_iso639_3":"iso|null","primary_language_script":"Script|null","is_romanized":true|false,"dialect_or_variant":"iso|null","is_high_risk_tail":true|false,"secondary_language_label":"iso_Script|null","is_mixed_language":true|false,"mixed_languages":["iso_Script"],"confidence":"high|medium|low|null","evidence":"<=160 chars"}"""
 
 # Response JSON schema for providers that enforce structured output. Gemini requests JSON MIME type only.
 LANG_RESPONSE_JSON_SCHEMA = {
@@ -834,7 +905,7 @@ LANG_RESPONSE_JSON_SCHEMA = {
         "secondary_language_label": {"type": ["string", "null"]},
         "is_mixed_language": {"type": "boolean"},
         "mixed_languages": {"type": "array", "items": {"type": "string"}},
-        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+        "confidence": {"type": ["string", "null"], "enum": ["high", "medium", "low", None]},
         "evidence": {"type": "string", "maxLength": 180},
     },
     "required": ["status", "primary_language_label", "is_romanized", "is_high_risk_tail",
@@ -966,6 +1037,70 @@ else:
         sig = sig.where(indic_signal)
         route_frames.append(sig.select(*cmp_df.columns, F.lit("shared_bias_english_indic").alias("route_reason")))
 
+    if ROUTE_UNCLASSIFIED:
+        # Final-arbiter route: channel_model_comparison is built from channels with valid model aggregation
+        # rows, so zero-valid channels can be absent from cmp_df. Use the final channel table, which is
+        # joined back to the full source universe and carries language_status/consensus_status.
+        if not _table_exists_full(channels_full):
+            raise ValueError(
+                f"route_unclassified=true but channels_table does not exist: {channels_full}. "
+                "Point channels_table at the final notebook-01 channel output."
+            )
+        ch_src = spark.table(channels_full)
+        ch_cols = set(ch_src.columns)
+        if "run_id" in ch_cols:
+            ch_src = ch_src.where(F.col("run_id") == F.lit(SOURCE_RUN_ID))
+        if "inference_hash_buckets" in ch_cols:
+            ch_src = ch_src.where(F.col("inference_hash_buckets") == F.lit(INFERENCE_HASH_BUCKETS))
+
+        unclassified_condition = F.lit(False)
+        saw_unclassified_signal = False
+        both_labels_null_condition = None
+        if "language_status" in ch_cols:
+            saw_unclassified_signal = True
+            unclassified_condition = unclassified_condition | (
+                F.col("language_status") == F.lit("insufficient_text_or_unclassified")
+            )
+        if "consensus_status" in ch_cols:
+            saw_unclassified_signal = True
+            unclassified_condition = unclassified_condition | (F.col("consensus_status") == F.lit("insufficient_text"))
+        if {"openlid_primary_language_label", "glotlid_primary_language_label"}.issubset(ch_cols):
+            saw_unclassified_signal = True
+            both_labels_null_condition = (
+                F.col("openlid_primary_language_label").isNull()
+                & F.col("glotlid_primary_language_label").isNull()
+            )
+            unclassified_condition = unclassified_condition | both_labels_null_condition
+        if "valid_language_segment_count" in ch_cols:
+            saw_unclassified_signal = True
+            zero_valid_condition = F.coalesce(F.col("valid_language_segment_count"), F.lit(0)) == F.lit(0)
+            if both_labels_null_condition is not None:
+                zero_valid_condition = zero_valid_condition & both_labels_null_condition
+            unclassified_condition = unclassified_condition | zero_valid_condition
+        if not saw_unclassified_signal:
+            raise ValueError(
+                f"route_unclassified=true but {channels_full} lacks language_status, consensus_status, "
+                "valid_language_segment_count, and OpenLID/GlotLID label fields."
+            )
+
+        def _ch_col(name: str, data_type: str = "string"):
+            return F.col(name) if name in ch_cols else F.lit(None).cast(data_type)
+
+        u = (
+            ch_src.where(unclassified_condition)
+            .select(
+                "channel_id",
+                _ch_col("channel_hash_bucket", "int").alias("channel_hash_bucket"),
+                _ch_col("consensus_status").alias("consensus_status"),
+                _ch_col("consensus_language_label").alias("consensus_language_label"),
+                _ch_col("consensus_source").alias("consensus_source"),
+                _ch_col("openlid_primary_language_label").alias("openlid_primary_language_label"),
+                _ch_col("glotlid_primary_language_label").alias("glotlid_primary_language_label"),
+            )
+            .withColumn("route_reason", F.lit("unclassified"))
+        )
+        route_frames.append(u)
+
     if ROUTE_AGREEMENT_AUDIT:
         # E3: uniform-random blind sample of the agreement bucket (deterministic hash) to measure accuracy/bias.
         audit_threshold = int(max(0.0, min(1.0, AGREEMENT_AUDIT_FRACTION)) * 1_000_000)
@@ -982,7 +1117,8 @@ if not route_frames:
 # Union; if a channel matches multiple routes, keep the highest-priority reason.
 _priority = F.create_map(*sum([[F.lit(k), F.lit(v)] for k, v in {
     "random_validation": 0, "random_validation_lid_iso_disagreement": 0,
-    "disagreement": 1, "unresolved_tail": 2, "shared_bias_english_indic": 3, "agreement_audit": 4,
+    "disagreement": 1, "unresolved_tail": 2, "shared_bias_english_indic": 3, "unclassified": 4,
+    "agreement_audit": 5,
 }.items()], []))
 routed = route_frames[0]
 for rf in route_frames[1:]:
@@ -1034,6 +1170,87 @@ seg = (
     )
 )
 
+def _first_existing_col(cols, candidates):
+    for candidate in candidates:
+        if candidate in cols:
+            return candidate
+    return None
+
+
+def _source_text_segment_frame(df, segment_type: str, text_col: str):
+    text_expr = F.trim(F.coalesce(F.col(text_col).cast("string"), F.lit("")))
+    return (
+        df.where(F.length(text_expr) > 0)
+        .select(
+            "channel_id",
+            F.lit(segment_type).alias("segment_type"),
+            F.substring(text_expr, 1, MAX_SEGMENT_CHARS).alias("text"),
+            F.lit(False).alias("is_valid"),
+            F.lit("source_fallback_unsegmented").cast("string").alias("short_text_reason"),
+            F.length(F.regexp_replace(text_expr, r"[^\p{L}]", "")).cast("int").alias("clean_letter_count"),
+            F.length(text_expr).cast("int").alias("clean_text_len"),
+            F.lit(None).cast("string").alias("dominant_script"),
+            F.lit(None).cast("double").alias("dominant_script_share"),
+        )
+    )
+
+
+source_fallback_frames = []
+if source_channels_full or source_videos_full:
+    channels_with_segments = seg.select("channel_id").distinct()
+    routed_without_segments = routed.select("channel_id").join(channels_with_segments, on="channel_id", how="left_anti").persist()
+    n_without_segments = routed_without_segments.count()
+    print(f"Routed channels without segments_input rows: {n_without_segments:,}")
+
+    if n_without_segments > 0 and source_channels_full:
+        if not _table_exists_full(source_channels_full):
+            raise ValueError(f"source_channels_table was set but does not exist: {source_channels_full}")
+        src_ch = spark.table(source_channels_full).join(routed_without_segments, on="channel_id", how="inner")
+        src_ch_cols = set(src_ch.columns)
+        ch_name_col = _first_existing_col(src_ch_cols, ["channel_name", "title", "name"])
+        ch_desc_col = _first_existing_col(src_ch_cols, ["channel_description", "description", "about", "channel_about"])
+        if ch_name_col:
+            source_fallback_frames.append(_source_text_segment_frame(src_ch, "channel_name", ch_name_col))
+        if ch_desc_col:
+            source_fallback_frames.append(_source_text_segment_frame(src_ch, "channel_description", ch_desc_col))
+
+    if n_without_segments > 0 and source_videos_full:
+        if not _table_exists_full(source_videos_full):
+            raise ValueError(f"source_videos_table was set but does not exist: {source_videos_full}")
+        src_v = spark.table(source_videos_full).join(routed_without_segments, on="channel_id", how="inner")
+        src_v_cols = set(src_v.columns)
+        video_title_col = _first_existing_col(src_v_cols, ["video_title", "title"])
+        video_desc_col = _first_existing_col(src_v_cols, ["video_description", "description"])
+        order_cols = []
+        if "position" in src_v_cols:
+            order_cols.append(F.col("position").asc_nulls_last())
+        if "published_at" in src_v_cols:
+            order_cols.append(F.col("published_at").desc_nulls_last())
+        elif "publish_time" in src_v_cols:
+            order_cols.append(F.col("publish_time").desc_nulls_last())
+        if "video_id" in src_v_cols:
+            order_cols.append(F.col("video_id").asc_nulls_last())
+        if not order_cols:
+            order_cols.append(F.monotonically_increasing_id())
+        video_limit = max(MAX_VIDEO_TITLES, MAX_VIDEO_DESCRIPTIONS, 10)
+        src_v_ranked = (
+            src_v.withColumn("_video_rank", F.row_number().over(Window.partitionBy("channel_id").orderBy(*order_cols)))
+            .where(F.col("_video_rank") <= F.lit(video_limit))
+            .drop("_video_rank")
+        )
+        if video_title_col:
+            source_fallback_frames.append(_source_text_segment_frame(src_v_ranked, "video_title", video_title_col))
+        if video_desc_col:
+            source_fallback_frames.append(_source_text_segment_frame(src_v_ranked, "video_description", video_desc_col))
+
+    if source_fallback_frames:
+        source_fallback = source_fallback_frames[0]
+        for sf in source_fallback_frames[1:]:
+            source_fallback = source_fallback.unionByName(sf, allowMissingColumns=True)
+        seg = seg.unionByName(source_fallback, allowMissingColumns=True)
+        print("Added raw source fallback segments for routed channels missing segments_input rows.")
+    routed_without_segments.unpersist()
+
 seg_by_channel = seg.groupBy("channel_id").agg(
     F.collect_list(F.struct(
         "segment_type", "text", "is_valid", "short_text_reason", "clean_letter_count",
@@ -1046,6 +1263,7 @@ _max_titles = MAX_VIDEO_TITLES
 _max_descs = MAX_VIDEO_DESCRIPTIONS
 _strip_prompt_boilerplate = STRIP_PROMPT_BOILERPLATE
 _dedupe_prompt_segments = DEDUPE_PROMPT_SEGMENTS
+_prompt_best_guess_mode = PROMPT_BEST_GUESS_MODE
 
 _PROMPT_BOILERPLATE_LINE_PATTERNS = [
     r"^\W*provided to youtube by\b",
@@ -1167,6 +1385,86 @@ _PROMPT_LANGUAGE_HINT_PATTERNS = {
     "wol": [r"\bwolof\b"],
     "zsm": [r"\bmalay\b", r"\bbahasa malaysia\b"],
 }
+_PROMPT_LOCALIZED_MONTH_PATTERNS = {
+    # Exclude English-identical names such as April/August/September/November; they created noisy German cues.
+    "deu": [r"\bjanuar\b", r"\bfebruar\b", r"\bmärz\b", r"\bmaerz\b", r"\bmai\b", r"\bjuni\b", r"\bjuli\b", r"\boktober\b", r"\bdezember\b"],
+    "fra": [r"\bjanvier\b", r"\bfévrier\b", r"\bfevrier\b", r"\bmars\b", r"\bavril\b", r"\bmai\b", r"\bjuin\b", r"\bjuillet\b", r"\baoût\b", r"\baout\b", r"\bseptembre\b", r"\boctobre\b", r"\bnovembre\b", r"\bdécembre\b", r"\bdecembre\b"],
+    "ind": [r"\bjanuari\b", r"\bfebruari\b", r"\bmaret\b", r"\bmei\b", r"\bjuni\b", r"\bjuli\b", r"\bagustus\b", r"\bseptember\b", r"\boktober\b", r"\bnovember\b", r"\bdesember\b"],
+    "ita": [r"\bgennaio\b", r"\bfebbraio\b", r"\bmarzo\b", r"\baprile\b", r"\bmaggio\b", r"\bgiugno\b", r"\bluglio\b", r"\bagosto\b", r"\bsettembre\b", r"\bottobre\b", r"\bnovembre\b", r"\bdicembre\b"],
+    "por": [r"\bjaneiro\b", r"\bfevereiro\b", r"\bmarço\b", r"\bmarco\b", r"\babril\b", r"\bmaio\b", r"\bjunho\b", r"\bjulho\b", r"\bagosto\b", r"\bsetembro\b", r"\boutubro\b", r"\bnovembro\b", r"\bdezembro\b"],
+    "rus": [r"\bянваря\b", r"\bфевраля\b", r"\bмарта\b", r"\bапреля\b", r"\bмая\b", r"\bиюня\b", r"\bиюля\b", r"\bавгуста\b", r"\bсентября\b", r"\bоктября\b", r"\bноября\b", r"\bдекабря\b"],
+    "spa": [r"\benero\b", r"\bfebrero\b", r"\bmarzo\b", r"\babril\b", r"\bmayo\b", r"\bjunio\b", r"\bjulio\b", r"\bagosto\b", r"\bseptiembre\b", r"\bsetiembre\b", r"\boctubre\b", r"\bnoviembre\b", r"\bdiciembre\b"],
+    "tur": [r"\bocak\b", r"\bşubat\b", r"\bsubat\b", r"\bmart\b", r"\bnisan\b", r"\bmayıs\b", r"\bmayis\b", r"\bhaziran\b", r"\btemmuz\b", r"\bağustos\b", r"\bagustos\b", r"\beylül\b", r"\beylul\b", r"\bekim\b", r"\bkasım\b", r"\bkasim\b", r"\baralık\b", r"\baralik\b"],
+    "vie": [r"\bngày\b", r"\bngay\b", r"\btháng\b", r"\bthang\b"],
+}
+
+_PROMPT_ROMANIZED_SOUTH_ASIAN_PATTERNS = {
+    "hin_urd_shared": [
+        r"\b(ki|ka|ke|ko|se|hai|hain|mei|mein|main|ye|yeh|kya|kyu|kyun|kaise|kase|bhai|dil|aap|aapka|sabko|rasta|raasta|samne|saamne)\b",
+    ],
+    "hin": [
+        r"\b(namaste|dhokha|dhadi|sada\s+bahaar|nagme|bach(?:a|cha)|aaft|hoga|hogi|hone)\b",
+    ],
+    "urd": [
+        r"\b(dua|wazifa|naat|tilawat|darood|duniya|subse|sabse|pyari|awaz|ishq|rasool|tabdil)\b",
+    ],
+    "pnb": [
+        r"\b(saadi|sadi|sadda|sade|sanu|noo|nu|ae|aiy|wich|chany|maawan|mola|ishqa)\b",
+    ],
+    "bho": [
+        r"\b(ba|bani|badu|tohar|hamar|rauwa|saiyan)\b",
+        r"\bka\s+ho\b",
+    ],
+    "npi": [
+        r"\b(nepal\s+ghumgham|ghumgham)\b",
+    ],
+    "hne": [
+        r"\b(mor|mola|tor|ka\s+hoge)\b",
+    ],
+}
+
+_PROMPT_ARABIC_SCRIPT_SOUTH_ASIAN_PATTERNS = {
+    "urd": [
+        r"کو", r"کی", r"کا", r"کے", r"میں", r"نہیں", r"والا", r"والے", r"والوں",
+        r"دینے", r"ہے", r"ہیں", r"سکون", r"ک", r"ی", r"ے", r"ہ", r"گ",
+    ],
+    "fas_or_urd_letterforms": [r"ک", r"ی", r"ے", r"ہ", r"گ"],
+    "pnb": [
+        r"ساڈی", r"ساڈا", r"ساڈے", r"اے", r"دا", r"دی", r"دے", r"وچ", r"نوں", r"مینوں",
+    ],
+}
+
+_PROMPT_TOPIC_LANGUAGE_MENTION_PATTERNS = {
+    "religious_topic_not_language": [
+        r"\b(allah|masha\s*allah|mashaallah|insha\s*allah|bismillah|quran|qur'?an|surah|ayat|yasin|rahman|tilawat|naat|azan|darood|islamic\s+knowledge|makkah|madina|kaaba|gita|pravachana)\b",
+        r"ﷺ",
+    ],
+    "language_or_region_tag_not_phrase": [
+        r"\b(hindi|urdu|punjabi|bhojpuri|nepali|arabic|bangla|bengali|tamil|telugu|malayalam|korean|thai|russian|spanish|portuguese|english|kashmiri|chaoui|algerian|marathi|kannada|bodo)\b",
+        r"\b(tamil|punjabi|bhojpuri|telugu|kashmiri)\s+(edit|status|song|songs|funny|video|shorts?)\b",
+    ],
+    "media_topic_not_language": [
+        r"\b(roblox|minecraft|pubg|free\s*fire|gameplay|shorts|vlog|reaction|status|lyrics|song|movie|film|drama|cartoon|anime|fancam)\b",
+    ],
+    "geography_or_ethnicity_not_language": [
+        r"\b(karachites?|lahoris?|pakistan(?:i)?|india(?:n)?|bangladesh(?:i)?|kashmir(?:i)?|algeria(?:n)?|chaoui|desi)\b",
+    ],
+}
+
+_PROMPT_SHORT_SENTENCE_CUE_PATTERNS = {
+    "eng": [r"\b(if|you|your|you're|the|this|that|for|with|from|to|is|are|was|were|i'?m|boys|feeling)\b"],
+    "spa": [r"\b(disfruta|nuestro|nuestra|contenido|para|hecho|ti|que|con|los|las|del|de|el|la)\b"],
+    "deu": [r"\b(offiziell(?:er|e|es)?|youtube|channel|kanal|von|und|für|fuer|mit|der|die|das)\b"],
+    "fra": [r"\b(cha[iî]ne|officielle|pour|avec|dans|les|des|une|vous)\b"],
+    "por": [r"\b(conte[uú]do|para|com|dos|das|uma|voce|voc[êe])\b"],
+    "ind": [r"\b(kumpulan|lucu|ngakak|abis|yang|untuk|dengan|terbaru|kok\s+bisa|kalo|kalau|jarang|euy|ganteng)\b"],
+    "tur": [r"\b(hay[ıi]r|ke[şs]fet|evet|de[ğg]il|benim|senin|i[çc]in|ile)\b"],
+    "ara_latn": [r"\b(3ala|3arabi|7abib(?:i)?|7obi|2albi|9albi|salam|shukran|yalla)\b"],
+}
+
+_PROMPT_CTA_BOILERPLATE_PATTERNS = [
+    r"\b(please\s+support\s+me|support\s+my\s+channel|welcome\s+to\s+my\s+channel|thanks?\s+for\s+watching|subscribe\s+(to\s+)?my\s+channel|like\s+share\s+(and\s+)?subscribe|my\s+new\s+channel\s+for\s+live)\b",
+]
 
 
 def _char_script_family(ch: str) -> Optional[str]:
@@ -1225,6 +1523,112 @@ def _language_hint_counts(text: str) -> Dict[str, int]:
     return counts
 
 
+def _localized_month_hint_counts(text: str) -> Dict[str, int]:
+    lowered = str(text or "").lower()
+    counts: Dict[str, int] = {}
+    for iso, patterns in _PROMPT_LOCALIZED_MONTH_PATTERNS.items():
+        hits = sum(len(re.findall(pattern, lowered, flags=re.IGNORECASE)) for pattern in patterns)
+        if hits:
+            counts[iso] = hits
+    return counts
+
+
+def _pattern_hint_counts(text: str, patterns_by_label: Dict[str, List[str]]) -> Dict[str, int]:
+    value = str(text or "")
+    lowered = value.lower()
+    counts: Dict[str, int] = {}
+    for label, patterns in patterns_by_label.items():
+        hits = sum(len(re.findall(pattern, lowered, flags=re.IGNORECASE)) for pattern in patterns)
+        if hits:
+            counts[label] = hits
+    return counts
+
+
+def _romanized_south_asian_hint_counts(text: str) -> Dict[str, int]:
+    return _pattern_hint_counts(text, _PROMPT_ROMANIZED_SOUTH_ASIAN_PATTERNS)
+
+
+def _arabic_script_south_asian_marker_counts(text: str) -> Dict[str, int]:
+    counts = _text_script_counts(text)
+    if counts.get("arabic", 0) < 2:
+        return {}
+    value = str(text or "")
+    marker_counts: Dict[str, int] = {}
+    for label, patterns in _PROMPT_ARABIC_SCRIPT_SOUTH_ASIAN_PATTERNS.items():
+        hits = sum(len(re.findall(pattern, value)) for pattern in patterns)
+        if hits:
+            marker_counts[label] = hits
+    return marker_counts
+
+
+def _topic_language_mention_counts(text: str) -> Dict[str, int]:
+    return _pattern_hint_counts(text, _PROMPT_TOPIC_LANGUAGE_MENTION_PATTERNS)
+
+
+def _short_sentence_cue_counts(text: str) -> Dict[str, int]:
+    return _pattern_hint_counts(text, _PROMPT_SHORT_SENTENCE_CUE_PATTERNS)
+
+
+def _cta_boilerplate_count(text: str) -> int:
+    lowered = str(text or "").lower()
+    return sum(len(re.findall(pattern, lowered, flags=re.IGNORECASE)) for pattern in _PROMPT_CTA_BOILERPLATE_PATTERNS)
+
+
+def _looks_like_short_sentence_or_phrase(text: str, segment_type: str) -> bool:
+    cleaned = re.sub(r"\s+", " ", str(text or "")).strip()
+    if not cleaned:
+        return False
+    if _cta_boilerplate_count(cleaned):
+        return False
+    letters = _letter_count(cleaned)
+    if letters < 10 or letters > 180:
+        return False
+    words = re.findall(r"[^\W\d_]+", cleaned, flags=re.UNICODE)
+    if len(words) < 2:
+        return False
+    scripts = _text_script_counts(cleaned)
+    non_latin_letters = sum(n for script, n in scripts.items() if script != "latin")
+    if non_latin_letters >= 8:
+        return True
+    if (segment_type or "").lower() == "channel_name" and letters < 30:
+        return False
+    if _short_sentence_cue_counts(cleaned) or _romanized_south_asian_hint_counts(cleaned):
+        return True
+    if re.search(r"[.!?]", cleaned) and letters >= 18:
+        return True
+    return False
+
+
+def _looks_like_coherent_description(text: str, segment_type: str) -> bool:
+    st = (segment_type or "").lower()
+    if st not in {"channel_description", "video_description"}:
+        return False
+    cleaned = re.sub(r"\s+", " ", str(text or "")).strip()
+    letters = _letter_count(cleaned)
+    if letters < 35 or letters > 500:
+        return False
+    if _cta_boilerplate_count(cleaned):
+        return False
+    if _is_hashtag_dominated_line(cleaned):
+        return False
+    words = re.findall(r"[^\W\d_]+", cleaned, flags=re.UNICODE)
+    if len(words) < 6:
+        return False
+    scripts = _text_script_counts(cleaned)
+    non_latin_letters = sum(n for script, n in scripts.items() if script != "latin")
+    if non_latin_letters >= 12:
+        return True
+    return bool(_short_sentence_cue_counts(cleaned) or re.search(r"[.!?]", cleaned))
+
+
+def _split_hashtag_tag(raw_tag: str) -> str:
+    tag = str(raw_tag or "").strip("_")
+    tag = re.sub(r"[_-]+", " ", tag)
+    tag = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", tag)
+    tag = re.sub(r"(?<=[A-Za-z])(?=\d)|(?<=\d)(?=[A-Za-z])", " ", tag)
+    return re.sub(r"\s+", " ", tag).strip()
+
+
 def _extract_non_generic_hashtags(text: str):
     tags = []
     for raw_tag in _HASHTAG_RE.findall(str(text or "")):
@@ -1232,6 +1636,17 @@ def _extract_non_generic_hashtags(text: str):
         if tag and tag not in _PROMPT_GENERIC_HASHTAGS:
             tags.append(tag)
     return tags
+
+
+def _expand_non_generic_hashtags(text: str) -> str:
+    def _sub(match):
+        raw_tag = match.group(1)
+        tag = raw_tag.strip("_").lower()
+        if not tag or tag in _PROMPT_GENERIC_HASHTAGS:
+            return ""
+        return " " + _split_hashtag_tag(raw_tag) + " "
+
+    return _HASHTAG_RE.sub(_sub, text)
 
 
 def _is_hashtag_dominated_line(text: str) -> bool:
@@ -1254,16 +1669,13 @@ def _remove_generic_hashtags(text: str) -> str:
     return _HASHTAG_RE.sub(_sub, text)
 
 
-def _remove_hashtag_tokens(text: str) -> str:
-    return _HASHTAG_RE.sub("", text)
-
-
 def _clean_prompt_text(text: str, segment_type: str) -> str:
     lines = []
     for raw_line in str(text or "").splitlines():
         line = raw_line.strip()
         if not line:
             continue
+        non_generic_tags = _extract_non_generic_hashtags(line)
         hashtag_dominated = _is_hashtag_dominated_line(line)
         line = _URL_RE.sub("", line).strip()
         if not line:
@@ -1284,9 +1696,9 @@ def _clean_prompt_text(text: str, segment_type: str) -> str:
                 line = _GENERIC_TITLE_SCAFFOLD_RE.sub("", line)
             line = re.sub(r"\bauto-generated by youtube\b", "", line, flags=re.IGNORECASE)
             line = _remove_generic_hashtags(line)
-            line = _remove_hashtag_tokens(line)
+            line = _expand_non_generic_hashtags(line)
         line = re.sub(r"\s+", " ", line).strip(" -|\u00b7:;►•*")
-        if hashtag_dominated and _letter_count(line) < 20:
+        if hashtag_dominated and _letter_count(line) < 20 and not non_generic_tags:
             continue
         if line and any(ch.isalpha() for ch in line):
             lines.append(line)
@@ -1319,13 +1731,22 @@ def build_user_prompt(segments) -> str:
         ),
     )
     name, titles, descs, other = [], [], [], []
-    invalid_marker = " [lid-invalid:"
+    invalid_marker = " [fasttext-ineligible-visible-text:"
     seen = set()
     script_stats = {}
     text_script_stats = {}
     field_stats = {}
     language_hint_stats = {}
     weak_hashtag_hint_stats = {}
+    hashtag_stats = {}
+    localized_month_stats = {}
+    short_sentence_stats = {}
+    coherent_description_stats = {}
+    cta_boilerplate_stats = {}
+    romanized_south_asian_stats = {}
+    arabic_script_south_asian_stats = {}
+    topic_language_mention_stats = {}
+    repeated_pattern_stats = {}
 
     def _invalid_tag(s) -> str:
         if s["is_valid"]:
@@ -1375,6 +1796,65 @@ def build_user_prompt(segments) -> str:
             bucket_stats = weak_hashtag_hint_stats.setdefault(bucket, {})
             bucket_stats[iso] = bucket_stats.get(iso, 0) + n_hits
 
+    def _record_hashtag_stats(bucket: str, raw_text: str) -> None:
+        tags = _extract_non_generic_hashtags(raw_text)
+        if not tags:
+            return
+        bucket_stats = hashtag_stats.setdefault(bucket, {})
+        for tag in tags:
+            display_tag = _split_hashtag_tag(tag) or tag
+            bucket_stats[display_tag] = bucket_stats.get(display_tag, 0) + 1
+
+    def _record_localized_month_hints(bucket: str, raw_text: str) -> None:
+        hints = _localized_month_hint_counts(raw_text)
+        if not hints:
+            return
+        bucket_stats = localized_month_stats.setdefault(bucket, {})
+        for iso, n_hits in hints.items():
+            bucket_stats[iso] = bucket_stats.get(iso, 0) + n_hits
+
+    def _merge_bucket_counts(store, bucket: str, counts: Dict[str, int]) -> None:
+        if not counts:
+            return
+        bucket_stats = store.setdefault(bucket, {})
+        for label, n_hits in counts.items():
+            bucket_stats[label] = bucket_stats.get(label, 0) + n_hits
+
+    def _record_short_sentence_candidate(bucket: str, st: str, txt: str) -> None:
+        if not _looks_like_short_sentence_or_phrase(txt, st):
+            return
+        stats = short_sentence_stats.setdefault(bucket, {"n": 0, "cues": {}, "samples": []})
+        stats["n"] += 1
+        for label, n_hits in _short_sentence_cue_counts(txt).items():
+            stats["cues"][label] = stats["cues"].get(label, 0) + n_hits
+        sample = re.sub(r"\s+", " ", str(txt or "")).strip()[:110]
+        if sample and sample not in stats["samples"] and len(stats["samples"]) < 4:
+            stats["samples"].append(sample)
+
+    def _record_coherent_description_candidate(bucket: str, st: str, txt: str) -> None:
+        if not _looks_like_coherent_description(txt, st):
+            return
+        stats = coherent_description_stats.setdefault(bucket, {"n": 0, "cues": {}, "samples": []})
+        stats["n"] += 1
+        for label, n_hits in _short_sentence_cue_counts(txt).items():
+            stats["cues"][label] = stats["cues"].get(label, 0) + n_hits
+        sample = re.sub(r"\s+", " ", str(txt or "")).strip()[:140]
+        if sample and sample not in stats["samples"] and len(stats["samples"]) < 3:
+            stats["samples"].append(sample)
+
+    def _record_cta_boilerplate(bucket: str, txt: str) -> None:
+        n_hits = _cta_boilerplate_count(txt)
+        if not n_hits:
+            return
+        cta_boilerplate_stats[bucket] = cta_boilerplate_stats.get(bucket, 0) + n_hits
+
+    def _record_repeated_pattern(bucket: str, key: str, txt: str) -> None:
+        if not key or len(key) <= len(bucket) + 8:
+            return
+        bucket_stats = repeated_pattern_stats.setdefault(bucket, {})
+        stats = bucket_stats.setdefault(key, {"n": 0, "sample": txt[:120]})
+        stats["n"] += 1
+
     def _bucket_for_segment_type(st: str) -> str:
         if st == "channel_name":
             return "channel_name"
@@ -1387,30 +1867,37 @@ def build_user_prompt(segments) -> str:
     for s in segments:
         st = (s["segment_type"] or "").lower()
         bucket = _bucket_for_segment_type(st)
+        _record_hashtag_stats(bucket, s["text"])
         _record_weak_hashtag_hints(bucket, s["text"])
+        _record_localized_month_hints(bucket, s["text"])
         txt = _clean_prompt_text(s["text"], st)
         if not txt:
             continue
+        _record_text_stats(bucket, txt)
+        _record_short_sentence_candidate(bucket, st, txt)
+        _record_coherent_description_candidate(bucket, st, txt)
+        _record_cta_boilerplate(bucket, txt)
+        _merge_bucket_counts(romanized_south_asian_stats, bucket, _romanized_south_asian_hint_counts(txt))
+        _merge_bucket_counts(arabic_script_south_asian_stats, bucket, _arabic_script_south_asian_marker_counts(txt))
+        _merge_bucket_counts(topic_language_mention_stats, bucket, _topic_language_mention_counts(txt))
+        _record_script(bucket, s)
+        key = f"{st}:{_prompt_dedupe_key(txt)}"
         if _dedupe_prompt_segments:
-            key = f"{st}:{_prompt_dedupe_key(txt)}"
+            _record_repeated_pattern(bucket, key, txt)
+        if _dedupe_prompt_segments:
             if key in seen:
                 continue
             if len(key) > len(st) + 8:
                 seen.add(key)
         entry = f"{txt}{_invalid_tag(s)}"
-        _record_text_stats(bucket, txt)
         if st == "channel_name":
             name.append(entry)
-            _record_script("channel_name", s)
         elif st == "video_title":
             titles.append(entry)
-            _record_script("video_title", s)
         elif st in ("video_description", "channel_description"):
             descs.append(entry)
-            _record_script("description", s)
         else:
             other.append(entry)
-            _record_script("other", s)
     # Prioritize valid (untagged) entries, then fall back to short ones, within the per-type caps.
     def _order(items):
         return [x for x in items if invalid_marker not in x] + [x for x in items if invalid_marker in x]
@@ -1448,6 +1935,8 @@ def build_user_prompt(segments) -> str:
     descs = _select_diverse(descs, _max_descs)
     other = _select_diverse(other, _max_titles)
     lines = []
+    if _prompt_best_guess_mode:
+        lines.append("FINAL FALLBACK MODE: use low confidence for a reasonable best guess from repeated weak cues; use insufficient_text only when language evidence is truly minimal.")
     if not field_stats:
         lines.append("NO USABLE NATURAL-LANGUAGE TITLE/DESCRIPTION TEXT REMAINED AFTER CLEANUP.")
     if field_stats:
@@ -1479,10 +1968,212 @@ def build_user_prompt(segments) -> str:
             text_script_parts.append(f"{bucket}: {script_part}")
         if text_script_parts:
             lines.append("TEXT SCRIPT SUMMARY (letter counts after cleanup): " + " | ".join(text_script_parts))
+
+    def _priority_sample_text(samples, limit=2, char_limit=80):
+        values = []
+        for sample in samples or []:
+            cleaned = re.sub(r"\s+", " ", str(sample or "")).strip()
+            if not cleaned or cleaned in values:
+                continue
+            values.append(cleaned[:char_limit])
+            if len(values) >= limit:
+                break
+        return "; ".join(values)
+
+    def _priority_cue_text(cues, limit=3):
+        if not cues:
+            return ""
+        top = sorted(cues.items(), key=lambda kv: (-kv[1], kv[0]))[:limit]
+        return " cues=" + ",".join(f"{label}={n}" for label, n in top)
+
+    def _priority_sample_stats(stats_by_bucket, buckets, sample_limit=2):
+        parts = []
+        for bucket in buckets:
+            if bucket not in stats_by_bucket:
+                continue
+            stats = stats_by_bucket[bucket]
+            samples = _priority_sample_text(stats.get("samples", []), sample_limit)
+            sample_part = f" examples={samples}" if samples else ""
+            parts.append(f"{bucket}: n={stats.get('n', 0)}{_priority_cue_text(stats.get('cues', {}))}{sample_part}")
+        return " | ".join(parts)
+
+    def _priority_count_stats(stats_by_bucket, buckets, limit=4):
+        parts = []
+        for bucket in buckets:
+            if bucket not in stats_by_bucket:
+                continue
+            top = sorted(stats_by_bucket[bucket].items(), key=lambda kv: (-kv[1], kv[0]))[:limit]
+            if top:
+                parts.append(f"{bucket}: " + ",".join(f"{label}={n}" for label, n in top))
+        return " | ".join(parts)
+
+    def _is_priority_repeated_phrase(sample: str) -> bool:
+        cleaned = re.sub(r"\s+", " ", str(sample or "")).strip()
+        if _letter_count(cleaned) < 10:
+            return False
+        if _cta_boilerplate_count(cleaned) or _is_hashtag_dominated_line(cleaned):
+            return False
+        scripts = _text_script_counts(cleaned)
+        non_latin_letters = sum(n for script, n in scripts.items() if script != "latin")
+        if non_latin_letters >= 8 or _romanized_south_asian_hint_counts(cleaned):
+            return True
+        cue_counts = _short_sentence_cue_counts(cleaned)
+        if _GENERIC_TITLE_SCAFFOLD_RE.search(cleaned) and set(cue_counts).issubset({"eng"}):
+            return False
+        return bool(cue_counts) or _letter_count(cleaned) >= 25
+
+    def _priority_repeated_phrase_stats():
+        parts = []
+        for bucket in ["video_title", "description", "other"]:
+            if bucket not in repeated_pattern_stats:
+                continue
+            repeats = sorted(
+                (
+                    stats for stats in repeated_pattern_stats[bucket].values()
+                    if stats["n"] > 1 and _is_priority_repeated_phrase(stats.get("sample", ""))
+                ),
+                key=lambda stats: (-stats["n"], stats["sample"]),
+            )
+            if repeats:
+                parts.append(
+                    f"{bucket}: "
+                    + "; ".join(f"x{stats['n']} {str(stats.get('sample', ''))[:80]}" for stats in repeats[:3])
+                )
+        return " | ".join(parts)
+
+    def _priority_boilerplate_stats():
+        parts = []
+        if cta_boilerplate_stats:
+            cta_parts = [
+                f"{bucket}=cta_or_channel_boilerplate:{cta_boilerplate_stats[bucket]}"
+                for bucket in ["video_title", "description", "channel_name", "other"]
+                if bucket in cta_boilerplate_stats
+            ]
+            if cta_parts:
+                parts.append("cta=" + ",".join(cta_parts))
+        topic_part = _priority_count_stats(topic_language_mention_stats, ["video_title", "description", "channel_name", "other"], 3)
+        if topic_part:
+            parts.append("topic_or_language_name=" + topic_part)
+        return " | ".join(parts)
+
+    priority_parts = []
+    t1 = _priority_sample_stats(coherent_description_stats, ["description"], 2)
+    if t1:
+        priority_parts.append(f"T1 substantive_description_prose_if_not_boilerplate={t1}")
+    t2 = _priority_sample_stats(short_sentence_stats, ["video_title"], 3)
+    if t2:
+        priority_parts.append(f"T2 coherent_title_phrases={t2}")
+    t3 = _priority_repeated_phrase_stats()
+    if t3:
+        priority_parts.append(f"T3 repeated_non_generic_phrases={t3}")
+    t4 = _priority_count_stats(localized_month_stats, ["video_title", "description", "channel_name", "other"], 4)
+    if t4:
+        priority_parts.append(f"T4 localized_date_month_cues={t4}")
+    t5 = _priority_count_stats(hashtag_stats, ["video_title", "description", "channel_name", "other"], 4)
+    if t5:
+        priority_parts.append(f"T5 non_generic_hashtags={t5}")
+    t6 = _priority_sample_text(name, 1, 80)
+    if t6:
+        priority_parts.append(f"T6 channel_name={t6}")
+    t7 = _priority_boilerplate_stats()
+    if t7:
+        priority_parts.append(f"T7 generic_english_seo_boilerplate={t7}")
+    if priority_parts:
+        priority_line = (
+            "EVIDENCE PRIORITY SUMMARY (higher tiers outrank lower tiers; field weights break ties within comparable tiers): "
+            + " || ".join(priority_parts)
+        )
+        if len(priority_line) > 1400:
+            priority_line = priority_line[:1397].rstrip() + "..."
+        lines.append(priority_line)
+    if short_sentence_stats:
+        short_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket not in short_sentence_stats:
+                continue
+            stats = short_sentence_stats[bucket]
+            cue_part = ""
+            if stats.get("cues"):
+                cues = sorted(stats["cues"].items(), key=lambda kv: (-kv[1], kv[0]))
+                cue_part = " cues=" + ",".join(f"{label}={n}" for label, n in cues[:5])
+            samples = "; ".join(stats.get("samples", [])[:3])
+            short_parts.append(f"{bucket}: n={stats['n']}{cue_part} examples={samples}")
+        if short_parts:
+            lines.append("SHORT SENTENCE/PHRASE CUES (Tier 2 when from titles; lower-tier support otherwise): " + " | ".join(short_parts))
+    if coherent_description_stats:
+        desc_parts = []
+        for bucket in ["description", "video_title", "channel_name", "other"]:
+            if bucket not in coherent_description_stats:
+                continue
+            stats = coherent_description_stats[bucket]
+            cue_part = ""
+            if stats.get("cues"):
+                cues = sorted(stats["cues"].items(), key=lambda kv: (-kv[1], kv[0]))
+                cue_part = " cues=" + ",".join(f"{label}={n}" for label, n in cues[:5])
+            samples = "; ".join(stats.get("samples", [])[:2])
+            desc_parts.append(f"{bucket}: n={stats['n']}{cue_part} examples={samples}")
+        if desc_parts:
+            lines.append(
+                "COHERENT DESCRIPTION PROSE (Tier 1 only when substantive content/message; "
+                "generic about/support/contact/upload/category text is lower-tier boilerplate): "
+                + " | ".join(desc_parts)
+            )
+    if cta_boilerplate_stats:
+        cta_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket in cta_boilerplate_stats:
+                cta_parts.append(f"{bucket}: cta_or_channel_boilerplate={cta_boilerplate_stats[bucket]}")
+        if cta_parts:
+            lines.append("CTA/CHANNEL BOILERPLATE (Tier 7; generic about/support/contact/upload/category text is not Tier 1): " + " | ".join(cta_parts))
+    if romanized_south_asian_stats:
+        sa_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket not in romanized_south_asian_stats:
+                continue
+            hints = sorted(romanized_south_asian_stats[bucket].items(), key=lambda kv: (-kv[1], kv[0]))
+            sa_parts.append(f"{bucket}: " + ", ".join(f"{label}={n_hits}" for label, n_hits in hints[:6]))
+        if sa_parts:
+            lines.append("ROMANIZED SOUTH ASIAN CUES (weak; use low/medium confidence unless phrase evidence is clear): " + " | ".join(sa_parts))
+    if arabic_script_south_asian_stats:
+        arabic_sa_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket not in arabic_script_south_asian_stats:
+                continue
+            hints = sorted(arabic_script_south_asian_stats[bucket].items(), key=lambda kv: (-kv[1], kv[0]))
+            arabic_sa_parts.append(f"{bucket}: " + ", ".join(f"{label}={n_hits}" for label, n_hits in hints[:5]))
+        if arabic_sa_parts:
+            lines.append("ARABIC-SCRIPT URDU/PUNJABI CUES (these argue against naive ara_Arab if Arabic grammar is absent): " + " | ".join(arabic_sa_parts))
+    if topic_language_mention_stats:
+        topic_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket not in topic_language_mention_stats:
+                continue
+            hints = sorted(topic_language_mention_stats[bucket].items(), key=lambda kv: (-kv[1], kv[0]))
+            topic_parts.append(f"{bucket}: " + ", ".join(f"{label}={n_hits}" for label, n_hits in hints[:5]))
+        if topic_parts:
+            lines.append("TOPIC/LANGUAGE-NAME MENTIONS (routing/topic cues; not phrase evidence by themselves): " + " | ".join(topic_parts))
+    if localized_month_stats:
+        date_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket not in localized_month_stats:
+                continue
+            hints = sorted(localized_month_stats[bucket].items(), key=lambda kv: (-kv[1], kv[0]))
+            date_parts.append(f"{bucket}: " + ", ".join(f"{iso}={n_hits}" for iso, n_hits in hints[:5]))
+        if date_parts:
+            lines.append("LOCALIZED DATE/MONTH CUES (Tier 4; weak but usable if repeated): " + " | ".join(date_parts))
     if language_hint_stats:
         hints = sorted(language_hint_stats.items(), key=lambda kv: (-kv[1], kv[0]))
         hint_part = ", ".join(f"{iso}={n_hits}" for iso, n_hits in hints[:8])
         lines.append("LANGUAGE HINTS (non-decisive cue counts): " + hint_part)
+    if hashtag_stats:
+        tag_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket not in hashtag_stats:
+                continue
+            tags = sorted(hashtag_stats[bucket].items(), key=lambda kv: (-kv[1], kv[0]))
+            tag_parts.append(f"{bucket}: " + ", ".join(f"{tag}={n}" for tag, n in tags[:8]))
+        if tag_parts:
+            lines.append("NON-GENERIC HASHTAGS (Tier 5; weak cues that do not override prose/phrases): " + " | ".join(tag_parts))
     if weak_hashtag_hint_stats:
         weak_parts = []
         for bucket in ["video_title", "description", "channel_name", "other"]:
@@ -1491,9 +2182,25 @@ def build_user_prompt(segments) -> str:
             hints = sorted(weak_hashtag_hint_stats[bucket].items(), key=lambda kv: (-kv[1], kv[0]))
             weak_parts.append(f"{bucket}: " + ", ".join(f"{iso}={n_hits}" for iso, n_hits in hints[:5]))
         if weak_parts:
-            lines.append("WEAK HASHTAG LANGUAGE CUES (not decisive; require phrase evidence): " + " | ".join(weak_parts))
+            lines.append("WEAK HASHTAG LANGUAGE CUES (not decisive alone; usable as low-confidence support if repeated and not contradicted): " + " | ".join(weak_parts))
+    if repeated_pattern_stats:
+        repeat_parts = []
+        for bucket in ["video_title", "description", "channel_name", "other"]:
+            if bucket not in repeated_pattern_stats:
+                continue
+            repeats = sorted(
+                (stats for stats in repeated_pattern_stats[bucket].values() if stats["n"] > 1),
+                key=lambda stats: (-stats["n"], stats["sample"]),
+            )
+            if repeats:
+                repeat_parts.append(
+                    f"{bucket}: "
+                    + " | ".join(f"x{stats['n']} {stats['sample']}" for stats in repeats[:4])
+                )
+        if repeat_parts:
+            lines.append("REPEATED PATTERNS (Tier 3 only when non-boilerplate; generic templates remain Tier 7): " + " || ".join(repeat_parts))
     if name:
-        lines.append(f"CHANNEL NAME: {name[0]}")
+        lines.append(f"CHANNEL NAME (Tier 6; lower priority than prose/phrases/tags): {name[0]}")
     if titles:
         lines.append("VIDEO TITLES:")
         lines += [f"- {t}" for t in titles]
@@ -1502,7 +2209,7 @@ def build_user_prompt(segments) -> str:
         lines += [f"- {d}" for d in descs]
     if other and not (titles or descs):
         lines += [f"- {o}" for o in other]
-    lines.append("(Provider metadata, generic URLs, duplicate segments, and hashtag tokens may have been removed before this prompt. Direct language-name hashtags are summarized only as weak cues. Items tagged [lid-invalid: ...] failed the fastText eligibility rule; repeated short items can still be meaningful evidence.)")
+    lines.append("(Provider metadata, generic URLs, and generic hashtags may have been removed before this prompt. Apply the evidence priority hierarchy before field weights: prose and phrases outrank repeated dates, hashtags, channel names, and boilerplate. Items tagged [fasttext-ineligible-visible-text: ...] were too short or otherwise ineligible for fastText; they are visible text, not invalid language evidence.)")
     prompt = "Channel metadata to classify:\n" + "\n".join(lines)
     return prompt[:_prompt_max]
 
@@ -1528,6 +2235,7 @@ requests = (
     .withColumn("system_prompt", F.lit(SYSTEM_PROMPT))
     .withColumn("temperature", F.lit(TEMPERATURE).cast("double") if TEMPERATURE is not None else F.lit(None).cast("double"))
     .withColumn("max_output_tokens", F.lit(MAX_OUTPUT_TOKENS))
+    .withColumn("prompt_version", F.lit(PROMPT_VERSION))
 )
 
 # COMMAND ----------
@@ -1646,7 +2354,27 @@ elif SUBMIT_BATCHES and REUSE_EXISTING_REQUESTS_ON_SUBMIT:
 if _reuse_existing_requests_reason and _table_exists_full(panel_requests_full):
     existing_run_requests = spark.table(panel_requests_full).where(F.col("run_id") == F.lit(RUN_ID))
     if existing_run_requests.limit(1).count() > 0:
-        if REFRESH_REQUEST_PROVIDER_FILTER:
+        existing_request_cols = set(existing_run_requests.columns)
+        prompt_version_ok_for_submit = True
+        if _reuse_existing_requests_reason == "submit_batches=true":
+            if "prompt_version" not in existing_request_cols:
+                prompt_version_ok_for_submit = False
+            else:
+                prompt_version_ok_for_submit = (
+                    existing_run_requests
+                    .where(F.coalesce(F.col("prompt_version"), F.lit("")) != F.lit(PROMPT_VERSION))
+                    .limit(1)
+                    .count()
+                    == 0
+                )
+            if not prompt_version_ok_for_submit:
+                print(
+                    "Existing request table prompt_version does not match current prompt_version; "
+                    "regenerating request rows for submit:",
+                    panel_requests_full,
+                )
+
+        if prompt_version_ok_for_submit and REFRESH_REQUEST_PROVIDER_FILTER:
             refresh_filter = F.col("provider").isin(*sorted(REFRESH_REQUEST_PROVIDER_FILTER))
             if REFRESH_REQUEST_MODEL_FILTER:
                 refresh_filter = refresh_filter & F.col("model").isin(*sorted(REFRESH_REQUEST_MODEL_FILTER))
@@ -1671,7 +2399,7 @@ if _reuse_existing_requests_reason and _table_exists_full(panel_requests_full):
                 sorted(REFRESH_REQUEST_MODEL_FILTER) if REFRESH_REQUEST_MODEL_FILTER else "ALL",
                 "while preserving stored prompts.",
             )
-        else:
+        elif prompt_version_ok_for_submit:
             requests = existing_run_requests
             _using_existing_requests = True
             print(f"Reusing existing request table for {_reuse_existing_requests_reason}:", panel_requests_full)
@@ -2435,6 +3163,405 @@ def normalize_prediction_udf(raw_text: str):
     )
 
 
+_PROMPT_SCRIPT_SUMMARY_RE = re.compile(
+    r"\b(latin|arabic|devanagari|gurmukhi|bengali|tamil|telugu|malayalam|kannada|gujarati|odia|sinhala|thai|lao|hangul|japanese|han|greek|cyrillic|hebrew)=(\d+)\b",
+    flags=re.IGNORECASE,
+)
+
+
+def _prompt_line(prompt_user: str, prefix: str) -> str:
+    for line in str(prompt_user or "").splitlines():
+        if line.startswith(prefix):
+            return line
+    return ""
+
+
+def _prompt_text_script_family_counts(prompt_user: str) -> Dict[str, int]:
+    line = _prompt_line(prompt_user, "TEXT SCRIPT SUMMARY")
+    counts: Dict[str, int] = {}
+    for script_raw, n_raw in _PROMPT_SCRIPT_SUMMARY_RE.findall(line):
+        family = SCRIPT_FAMILY_CANONICAL.get(script_raw.lower())
+        if not family:
+            continue
+        try:
+            counts[family] = counts.get(family, 0) + int(n_raw)
+        except Exception:
+            pass
+    return counts
+
+
+def _summary_label_counts(line: str) -> Dict[str, int]:
+    counts: Dict[str, int] = {}
+    for label, n_raw in re.findall(r"\b([a-z_]+)=([0-9]+)\b", str(line or ""), flags=re.IGNORECASE):
+        try:
+            counts[label.lower()] = counts.get(label.lower(), 0) + int(n_raw)
+        except Exception:
+            pass
+    return counts
+
+
+@F.udf(ArrayType(StringType()))
+def prediction_quality_flags_udf(
+    prompt_user: str,
+    status: str,
+    pred_base_iso: str,
+    pred_script_family: str,
+    confidence: str,
+) -> List[str]:
+    flags: List[str] = []
+    status_l = str(status or "").strip().lower()
+    iso = str(pred_base_iso or "").strip().lower()
+    script = str(pred_script_family or "").strip()
+    confidence_l = str(confidence or "").strip().lower()
+    prompt = str(prompt_user or "")
+
+    short_line = _prompt_line(prompt, "SHORT SENTENCE/PHRASE CUES")
+    coherent_desc_line = _prompt_line(prompt, "COHERENT DESCRIPTION CUES")
+    romanized_sa_line = _prompt_line(prompt, "ROMANIZED SOUTH ASIAN CUES")
+    arabic_sa_line = _prompt_line(prompt, "ARABIC-SCRIPT URDU/PUNJABI CUES")
+    topic_line = _prompt_line(prompt, "TOPIC/LANGUAGE-NAME MENTIONS")
+
+    if status_l == "insufficient_text":
+        if short_line:
+            flags.append("insufficient_with_short_sentence_cues")
+        if romanized_sa_line:
+            flags.append("insufficient_with_romanized_south_asian_cues")
+        if arabic_sa_line:
+            flags.append("insufficient_with_arabic_script_south_asian_cues")
+        return flags
+
+    if status_l != "classified":
+        return flags
+
+    script_counts = _prompt_text_script_family_counts(prompt)
+    if script and script_counts:
+        predicted_count = script_counts.get(script, 0)
+        top_script, top_count = max(script_counts.items(), key=lambda kv: kv[1])
+        if predicted_count == 0 and top_count >= 12:
+            flags.append("predicted_script_absent_from_prompt_text")
+        elif script != top_script and top_count >= 40 and predicted_count < max(6, int(top_count * 0.15)):
+            flags.append("review_predicted_script_is_minor_prompt_script")
+
+    if iso == "ara" and arabic_sa_line:
+        flags.append("review_arabic_prediction_with_urdu_punjabi_markers")
+
+    romanized_sa_counts = _summary_label_counts(romanized_sa_line)
+    south_asian_iso = {"hin", "urd", "pnb", "pan", "bho", "npi", "hne", "bns", "bra", "bgc", "raj", "mwr"}
+    if iso == "eng" and sum(romanized_sa_counts.values()) >= 3:
+        flags.append("review_english_prediction_with_repeated_south_asian_romanized_cues")
+    if iso in south_asian_iso and confidence_l == "high" and romanized_sa_counts.get("hin_urd_shared", 0) >= 2:
+        flags.append("review_high_confidence_script_blind_south_asian_prediction")
+
+    topic_counts = _summary_label_counts(topic_line)
+    if topic_counts and not short_line and not romanized_sa_line and not arabic_sa_line:
+        flags.append("review_classified_from_topic_or_language_mentions_only_possible")
+    if iso == "ara" and topic_counts.get("religious_topic_not_language", 0) and not coherent_desc_line and not arabic_sa_line:
+        flags.append("review_religious_topic_only_language_inference_possible")
+
+    return flags
+
+
+_ROMANIZABLE_BASE_ISO = {
+    "asm", "ben", "bgc", "bho", "bns", "bra", "brx", "guj", "hin", "hne", "kan",
+    "kas", "mag", "mal", "mar", "mni", "npi", "ori", "ory", "pan", "pnb", "raj",
+    "sat", "snd", "tam", "tel", "urd",
+}
+
+_BASE_ISO_COMPATIBLE_NATIVE_SCRIPTS = {
+    "ara": {"Arab"},
+    "asm": {"Beng"},
+    "ben": {"Beng"},
+    "bgc": {"Deva"},
+    "bho": {"Deva"},
+    "bns": {"Deva"},
+    "bra": {"Deva"},
+    "brx": {"Deva"},
+    "bul": {"Cyrl"},
+    "cmn": {"Hani"},
+    "ell": {"Grek"},
+    "fas": {"Arab"},
+    "guj": {"Gujr"},
+    "heb": {"Hebr"},
+    "hin": {"Deva"},
+    "hne": {"Deva"},
+    "jpn": {"Jpan"},
+    "kan": {"Knda"},
+    "kas": {"Arab", "Deva"},
+    "kaz": {"Cyrl"},
+    "khm": {"Khmr"},
+    "kir": {"Cyrl"},
+    "kor": {"Hang"},
+    "lao": {"Laoo"},
+    "mag": {"Deva"},
+    "mal": {"Mlym"},
+    "mar": {"Deva"},
+    "mkd": {"Cyrl"},
+    "mni": {"Beng"},
+    "mon": {"Cyrl"},
+    "npi": {"Deva"},
+    "ory": {"Orya"},
+    "pan": {"Guru"},
+    "pes": {"Arab"},
+    "pnb": {"Arab"},
+    "raj": {"Deva"},
+    "rus": {"Cyrl"},
+    "sat": {"Beng"},
+    "snd": {"Arab", "Deva"},
+    "sin": {"Sinh"},
+    "srp": {"Cyrl"},
+    "tam": {"Taml"},
+    "tel": {"Telu"},
+    "tgk": {"Cyrl"},
+    "tha": {"Thai"},
+    "urd": {"Arab"},
+    "ukr": {"Cyrl"},
+    "uzb": {"Cyrl"},
+    "yue": {"Hani"},
+}
+
+_HINDI_BELT_REGIONAL_BASE_ISO = {"bgc", "bho", "hne", "mwr", "raj", "sck"}
+
+_REGIONAL_HINDI_BELT_STRONG_MARKER_PATTERNS = {
+    "bho": [
+        r"\b(ba|bani|badu|tohar|hamar|rauwa|bhail|bhailu)\b",
+    ],
+    "hne": [
+        r"\b(mor|mola|tor)\b",
+    ],
+    "mwr": [
+        r"\b(mharo|mhari|mhare|tharo|thari|thare|ghani)\b",
+        r"(म्हारो|म्हारी|म्हारे|थारो|थारी|थारे|घणी)",
+    ],
+    "raj": [
+        r"\b(mharo|mhari|mhare|tharo|thari|thare|ghani)\b",
+        r"(म्हारो|म्हारी|म्हारे|थारो|थारी|थारे|घणी)",
+    ],
+}
+
+_REGIONAL_HINDI_BELT_STRONG_PHRASE_PATTERNS = {
+    "bho": [r"\bka\s+ho\b"],
+    "hne": [r"\bka\s+hoge\b"],
+    "mwr": [r"\bpadharo\b", r"पधारो"],
+    "raj": [r"\bpadharo\b", r"पधारो"],
+}
+
+calibration_schema = StructType([
+    StructField("calibrated_status", StringType(), True),
+    StructField("calibrated_language_label", StringType(), True),
+    StructField("calibrated_base_iso", StringType(), True),
+    StructField("calibrated_script", StringType(), True),
+    StructField("calibrated_is_romanized", BooleanType(), True),
+    StructField("calibrated_confidence", StringType(), True),
+    StructField("calibration_flags", ArrayType(StringType()), True),
+])
+
+
+def _label_from_parts(base_iso: Optional[str], script: Optional[str]) -> Optional[str]:
+    if base_iso and script:
+        return f"{base_iso}_{script}"
+    return base_iso or None
+
+
+def _cap_confidence_value(confidence: str, max_confidence: str) -> str:
+    order = {"low": 1, "medium": 2, "high": 3}
+    inv = {1: "low", 2: "medium", 3: "high"}
+    current = order.get(str(confidence or "").lower(), 1)
+    cap = order.get(str(max_confidence or "").lower(), current)
+    return inv[min(current, cap)]
+
+
+def _dominant_non_latin_script(script_counts: Dict[str, int]) -> Optional[str]:
+    counts = {script: int(n or 0) for script, n in (script_counts or {}).items() if int(n or 0) > 0}
+    total = sum(counts.values())
+    if total <= 0:
+        return None
+    native_counts = {script: n for script, n in counts.items() if script != "Latn"}
+    if not native_counts:
+        return None
+    top_script, top_count = max(native_counts.items(), key=lambda kv: kv[1])
+    return top_script if (top_count / float(total)) > 0.5 else None
+
+
+def _compatible_native_script(base_iso: Optional[str], native_script: Optional[str]) -> bool:
+    if not base_iso or not native_script:
+        return False
+    return native_script in _BASE_ISO_COMPATIBLE_NATIVE_SCRIPTS.get(base_iso, set())
+
+
+def _prompt_evidence_text(prompt_user: str) -> str:
+    summary_prefixes = (
+        "FINAL FALLBACK MODE:",
+        "NO USABLE NATURAL-LANGUAGE",
+        "FIELD SUMMARY",
+        "SEGMENT SCRIPT SUMMARY",
+        "TEXT SCRIPT SUMMARY",
+        "SHORT SENTENCE/PHRASE CUES",
+        "COHERENT DESCRIPTION CUES",
+        "CTA/CHANNEL BOILERPLATE",
+        "ROMANIZED SOUTH ASIAN CUES",
+        "ARABIC-SCRIPT URDU/PUNJABI CUES",
+        "TOPIC/LANGUAGE-NAME MENTIONS",
+        "LANGUAGE HINTS",
+        "NON-GENERIC HASHTAGS",
+        "LOCALIZED DATE/MONTH CUES",
+        "REPEATED SHORT/TEMPLATE PATTERNS",
+    )
+    lines = []
+    for line in str(prompt_user or "").splitlines():
+        if line.startswith(summary_prefixes):
+            continue
+        if line.startswith("(Provider metadata,"):
+            continue
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def _has_regional_hindi_belt_markers(base_iso: Optional[str], prompt_user: str) -> bool:
+    if base_iso not in _HINDI_BELT_REGIONAL_BASE_ISO:
+        return False
+    evidence = _prompt_evidence_text(prompt_user)
+    for pattern in _REGIONAL_HINDI_BELT_STRONG_PHRASE_PATTERNS.get(base_iso, []):
+        if re.search(pattern, evidence, flags=re.IGNORECASE):
+            return True
+    marker_hits = 0
+    for pattern in _REGIONAL_HINDI_BELT_STRONG_MARKER_PATTERNS.get(base_iso, []):
+        marker_hits += len(re.findall(pattern, evidence, flags=re.IGNORECASE))
+    return marker_hits >= 2
+
+
+def _hindi_belt_fallback_script(script_counts: Dict[str, int], current_script: Optional[str]) -> str:
+    if script_counts.get("Deva", 0) >= 12 or current_script == "Deva":
+        return "Deva"
+    return "Latn"
+
+
+@F.udf(calibration_schema)
+def calibrate_llm_prediction_udf(
+    prompt_user: str,
+    status: str,
+    pred_base_iso: str,
+    pred_script_family: str,
+    is_romanized: bool,
+    confidence: str,
+    prediction_quality_flags,
+    apply_calibration: bool,
+):
+    status_l = str(status or "").strip().lower()
+    base_iso = _clean_base_iso_value(pred_base_iso)
+    script = _clean_script_value(pred_script_family)
+    cal_status = status_l if status_l in {"classified", "insufficient_text"} else status
+    cal_base_iso = base_iso
+    cal_script = script
+    cal_is_romanized = bool(is_romanized) if is_romanized is not None else False
+    cal_confidence = str(confidence or "").strip().lower() or None
+    cal_flags = []
+    quality_flags = [str(x) for x in (prediction_quality_flags or []) if x]
+    quality_flag_set = set(quality_flags)
+    prompt = str(prompt_user or "")
+
+    if not cal_confidence and cal_status == "classified":
+        cal_confidence = "low"
+
+    if not apply_calibration or cal_status != "classified" or not cal_base_iso:
+        return (
+            cal_status,
+            _label_from_parts(cal_base_iso, cal_script) if cal_status == "classified" else None,
+            cal_base_iso if cal_status == "classified" else None,
+            cal_script if cal_status == "classified" else None,
+            cal_is_romanized if cal_status == "classified" else False,
+            cal_confidence,
+            cal_flags,
+        )
+
+    script_counts = _prompt_text_script_family_counts(prompt)
+    top_script = None
+    if script_counts:
+        top_script = max(script_counts.items(), key=lambda kv: kv[1])[0]
+    dominant_native_script = _dominant_non_latin_script(script_counts)
+    should_calibrate_latn_to_native = (
+        cal_script == "Latn"
+        and _compatible_native_script(cal_base_iso, dominant_native_script)
+    )
+    short_line = _prompt_line(prompt, "SHORT SENTENCE/PHRASE CUES")
+    coherent_desc_line = _prompt_line(prompt, "COHERENT DESCRIPTION CUES")
+    romanized_sa_line = _prompt_line(prompt, "ROMANIZED SOUTH ASIAN CUES")
+    arabic_sa_line = _prompt_line(prompt, "ARABIC-SCRIPT URDU/PUNJABI CUES")
+    topic_line = _prompt_line(prompt, "TOPIC/LANGUAGE-NAME MENTIONS")
+    cta_line = _prompt_line(prompt, "CTA/CHANNEL BOILERPLATE")
+    topic_only = bool(topic_line) and not (short_line or coherent_desc_line or romanized_sa_line or arabic_sa_line)
+
+    if "predicted_script_absent_from_prompt_text" in quality_flag_set:
+        if should_calibrate_latn_to_native:
+            cal_script = dominant_native_script
+            cal_is_romanized = False
+            cal_confidence = _cap_confidence_value(cal_confidence, "medium")
+            cal_flags.append("calibrated_latn_to_native_script")
+            cal_flags.append("calibrated_confidence_cap_medium_script_correction")
+        elif topic_only:
+            cal_status = "insufficient_text"
+            cal_base_iso = None
+            cal_script = None
+            cal_is_romanized = False
+            cal_confidence = None
+            cal_flags.append("calibrated_to_insufficient_topic_only_script_absent")
+        elif (
+            top_script == "Latn"
+            and script_counts.get("Latn", 0) >= 12
+            and cal_base_iso in _ROMANIZABLE_BASE_ISO
+        ):
+            cal_script = "Latn"
+            cal_is_romanized = True
+            cal_confidence = _cap_confidence_value(cal_confidence, "medium")
+            cal_flags.append("calibrated_script_absent_to_latn")
+            cal_flags.append("calibrated_confidence_cap_medium_script_correction")
+        else:
+            cal_flags.append("review_script_absent_calibration_not_applied")
+
+    if cal_status == "classified":
+        if should_calibrate_latn_to_native and cal_script == "Latn":
+            cal_script = dominant_native_script
+            cal_is_romanized = False
+            cal_confidence = _cap_confidence_value(cal_confidence, "medium")
+            cal_flags.append("calibrated_latn_to_native_script")
+            cal_flags.append("calibrated_confidence_cap_medium_script_correction")
+        if (
+            cal_base_iso in _HINDI_BELT_REGIONAL_BASE_ISO
+            and not _has_regional_hindi_belt_markers(cal_base_iso, prompt)
+        ):
+            fallback_script = _hindi_belt_fallback_script(script_counts, cal_script)
+            cal_base_iso = "hin"
+            cal_script = fallback_script
+            cal_is_romanized = fallback_script == "Latn"
+            cal_confidence = _cap_confidence_value(cal_confidence, "medium")
+            cal_flags.append("calibrated_regional_hindi_belt_to_hin")
+            cal_flags.append("calibrated_confidence_cap_medium_regional_hindi_belt")
+        if "review_high_confidence_script_blind_south_asian_prediction" in quality_flag_set:
+            new_confidence = _cap_confidence_value(cal_confidence, "medium")
+            if new_confidence != cal_confidence:
+                cal_flags.append("calibrated_confidence_cap_medium_script_blind")
+            cal_confidence = new_confidence
+        if "review_classified_from_topic_or_language_mentions_only_possible" in quality_flag_set and not coherent_desc_line:
+            new_confidence = _cap_confidence_value(cal_confidence, "low")
+            if new_confidence != cal_confidence:
+                cal_flags.append("calibrated_confidence_cap_low_topic_only")
+            cal_confidence = new_confidence
+        if cta_line and not (coherent_desc_line or romanized_sa_line or arabic_sa_line):
+            new_confidence = _cap_confidence_value(cal_confidence, "low")
+            if new_confidence != cal_confidence:
+                cal_flags.append("calibrated_confidence_cap_low_cta_boilerplate")
+            cal_confidence = new_confidence
+
+    return (
+        cal_status,
+        _label_from_parts(cal_base_iso, cal_script) if cal_status == "classified" else None,
+        cal_base_iso if cal_status == "classified" else None,
+        cal_script if cal_status == "classified" else None,
+        cal_is_romanized if cal_status == "classified" else False,
+        cal_confidence,
+        cal_flags,
+    )
+
+
 if IMPORT_RESULTS:
     # D4: recurse through this run's result subtree when available. Falling back to RESULTS_INPUT_DIR keeps
     # older manual layouts importable while avoiding stale cross-run files in normal runs.
@@ -2461,6 +3588,7 @@ if IMPORT_RESULTS:
             F.col("model").alias("_request_model"),
             F.col("model_tier").alias("_request_model_tier"),
             F.col("channel_id").alias("_request_channel_id"),
+            F.col("prompt_user").alias("_request_prompt_user"),
         )
         .dropDuplicates(["request_id"])
     )
@@ -2472,7 +3600,6 @@ if IMPORT_RESULTS:
         .withColumn("model", F.col("_request_model"))
         .withColumn("model_tier", F.col("_request_model_tier"))
         .withColumn("channel_id", F.col("_request_channel_id"))
-        .drop("_request_run_id", "_request_provider", "_request_model", "_request_model_tier", "_request_channel_id")
         .withColumn("_pred_iso_raw", F.lower(F.trim(F.col("primary_language_iso639_3"))))
         .withColumn("_pred_iso_from_label", F.lower(F.trim(F.split("primary_language_label", "_").getItem(0))))
         .withColumn("_pred_iso_raw", F.when(F.col("_pred_iso_raw").isin("", "null", "none"), F.lit(None)).otherwise(F.col("_pred_iso_raw")))
@@ -2482,7 +3609,38 @@ if IMPORT_RESULTS:
         .withColumn("pred_script_family", script_family_expr(F.coalesce(F.col("primary_language_script"), F.col("_pred_script_from_label"))))
         .withColumn("pred_normalized_base_iso", canonical_base_iso_expr(F.col("pred_base_iso")))
         .withColumn("pred_normalized_language_label", normalized_language_label_expr(F.col("pred_base_iso"), F.col("pred_script_family")))
-        .drop("_pred_iso_raw", "_pred_iso_from_label", "_pred_script_from_label")
+        .withColumn(
+            "prediction_quality_flags",
+            prediction_quality_flags_udf(
+                F.col("_request_prompt_user"),
+                F.col("status"),
+                F.col("pred_base_iso"),
+                F.col("pred_script_family"),
+                F.col("confidence"),
+            ),
+        )
+        .withColumn(
+            "_calibrated_prediction",
+            calibrate_llm_prediction_udf(
+                F.col("_request_prompt_user"),
+                F.col("status"),
+                F.col("pred_base_iso"),
+                F.col("pred_script_family"),
+                F.col("is_romanized"),
+                F.col("confidence"),
+                F.col("prediction_quality_flags"),
+                F.lit(APPLY_LLM_CALIBRATION),
+            ),
+        )
+        .select("*", "_calibrated_prediction.*")
+        .drop("_calibrated_prediction")
+        .withColumn("calibrated_normalized_base_iso", canonical_base_iso_expr(F.col("calibrated_base_iso")))
+        .withColumn("calibrated_normalized_language_label", normalized_language_label_expr(F.col("calibrated_base_iso"), F.col("calibrated_script")))
+        .drop(
+            "_request_run_id", "_request_provider", "_request_model", "_request_model_tier",
+            "_request_channel_id", "_request_prompt_user",
+            "_pred_iso_raw", "_pred_iso_from_label", "_pred_script_from_label",
+        )
     )
     imported_at_utc = datetime.utcnow().isoformat()
     result_status_l = F.lower(F.coalesce(F.col("result_status").cast("string"), F.lit("")))
@@ -2498,8 +3656,8 @@ if IMPORT_RESULTS:
         .withColumn("imported_at_utc", F.lit(imported_at_utc))
         .withColumn(
             "is_valid_panel_vote",
-            (F.col("pred_normalized_base_iso").isNotNull())
-            & (F.lower(F.coalesce(F.col("status").cast("string"), F.lit(""))) == F.lit("classified"))
+            (F.col("calibrated_normalized_base_iso").isNotNull())
+            & (F.lower(F.coalesce(F.col("calibrated_status").cast("string"), F.lit(""))) == F.lit("classified"))
             & F.col("parse_error").isNull()
             & F.col("prediction_parse_error").isNull()
             & (~failed_result_status)
@@ -2529,10 +3687,10 @@ if IMPORT_RESULTS:
             F.col("provider").alias("provider"),
             F.col("model").alias("model"),
             F.col("model_tier").alias("model_tier"),
-            F.col("primary_language_label").alias("language_label"),
-            F.col("pred_base_iso").alias("base_iso"),
-            F.col("pred_normalized_base_iso").alias("normalized_base_iso"),
-            F.col("pred_normalized_language_label").alias("normalized_language_label"),
+            F.col("calibrated_language_label").alias("language_label"),
+            F.col("calibrated_base_iso").alias("base_iso"),
+            F.col("calibrated_normalized_base_iso").alias("normalized_base_iso"),
+            F.col("calibrated_normalized_language_label").alias("normalized_language_label"),
         )
         .withColumn("model_key", F.concat_ws(":", F.col("provider"), F.col("model")))
     )
@@ -2582,7 +3740,7 @@ if IMPORT_RESULTS:
     # --- Reconcile: majority vote on base ISO, but PRESERVE the full winning label/script + side fields. ---
     n_models = len(MODELS)
     configured_majority_threshold = max(MIN_PANEL_VOTES_FOR_MAJORITY, (n_models // 2) + 1)
-    _panel_vote_iso_source = "pred_normalized_base_iso" if PANEL_MAJORITY_VOTE_BASIS == "normalized_base_iso" else "pred_base_iso"
+    _panel_vote_iso_source = "calibrated_normalized_base_iso" if PANEL_MAJORITY_VOTE_BASIS == "normalized_base_iso" else "calibrated_base_iso"
     votes = parsed.where(F.col("is_valid_panel_vote") == F.lit(True)).withColumn("_panel_vote_iso", F.col(_panel_vote_iso_source))
     per_iso = votes.groupBy("channel_id", "_panel_vote_iso").agg(F.count(F.lit(1)).alias("n_votes"))
     vote_dist = (
@@ -2603,37 +3761,37 @@ if IMPORT_RESULTS:
                .select("channel_id", F.col("_panel_vote_iso").alias("panel_majority_vote_iso"), "n_votes"))
     # Full winning label among the winning-ISO voters (mode; tie-break by confidence). Preserves script
     # (e.g. hin_Deva vs hin_Latn) and the side fields, not just the base ISO.
-    _conf_rank = F.when(F.col("confidence") == "high", 3).when(F.col("confidence") == "medium", 2).when(F.col("confidence") == "low", 1).otherwise(0)
+    _conf_rank = F.when(F.col("calibrated_confidence") == "high", 3).when(F.col("calibrated_confidence") == "medium", 2).when(F.col("calibrated_confidence") == "low", 1).otherwise(0)
     _empty_string_array = F.from_json(F.lit("[]"), ArrayType(StringType()))
     winners = votes.join(top_iso, on="channel_id", how="inner").where(F.col("_panel_vote_iso") == F.col("panel_majority_vote_iso"))
-    lbl = winners.groupBy("channel_id", "primary_language_label").agg(
+    lbl = winners.groupBy("channel_id", "calibrated_language_label").agg(
         F.count(F.lit(1)).alias("lbl_n"),
         F.max(_conf_rank).alias("conf_rank"),
-        F.first("primary_language_script", ignorenulls=True).alias("panel_language_script_from_model"),
-        F.first("pred_normalized_language_label", ignorenulls=True).alias("panel_normalized_language_label_from_model"),
+        F.first("calibrated_script", ignorenulls=True).alias("panel_language_script_from_model"),
+        F.first("calibrated_normalized_language_label", ignorenulls=True).alias("panel_normalized_language_label_from_model"),
         F.first("secondary_language_label", ignorenulls=True).alias("panel_secondary_language_label"),
         F.first("dialect_or_variant", ignorenulls=True).alias("panel_dialect_or_variant"),
         F.array_distinct(F.flatten(F.collect_list(F.coalesce(F.col("mixed_languages"), _empty_string_array)))).alias("panel_mixed_languages"),
         F.max(F.col("is_mixed_language").cast("int")).alias("_mixed_int"),
-        F.max(F.col("is_romanized").cast("int")).alias("_romanized_int"),
+        F.max(F.col("calibrated_is_romanized").cast("int")).alias("_romanized_int"),
         F.first("evidence", ignorenulls=True).alias("panel_evidence"),
     )
-    w_lbl = Window.partitionBy("channel_id").orderBy(F.desc("lbl_n"), F.desc("conf_rank"), F.asc("primary_language_label"))
+    w_lbl = Window.partitionBy("channel_id").orderBy(F.desc("lbl_n"), F.desc("conf_rank"), F.asc("calibrated_language_label"))
     full = (lbl.withColumn("_rk", F.row_number().over(w_lbl)).where(F.col("_rk") == 1)
             .withColumn("panel_confidence", F.when(F.col("conf_rank") == 3, F.lit("high"))
                         .when(F.col("conf_rank") == 2, F.lit("medium"))
                         .when(F.col("conf_rank") == 1, F.lit("low")))
-            .select("channel_id", F.col("primary_language_label").alias("panel_language_label"),
+            .select("channel_id", F.col("calibrated_language_label").alias("panel_language_label"),
                     "panel_language_script_from_model", "panel_normalized_language_label_from_model",
                     "panel_secondary_language_label",
                     "panel_dialect_or_variant", "panel_mixed_languages", "panel_confidence",
                     "_mixed_int", "_romanized_int", "panel_evidence"))
     # Per-provider labels + reach (full predictions preserved per provider).
     prov = parsed.groupBy("channel_id").agg(
-        F.first(F.when((F.col("provider") == "openai") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("openai_label"),
-        F.first(F.when((F.col("provider") == "anthropic") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("anthropic_label"),
-        F.first(F.when((F.col("provider") == "gemini") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("gemini_label"),
-        F.first(F.when((F.col("provider") == "deepseek") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("primary_language_label")), ignorenulls=True).alias("deepseek_label"),
+        F.first(F.when((F.col("provider") == "openai") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("calibrated_language_label")), ignorenulls=True).alias("openai_label"),
+        F.first(F.when((F.col("provider") == "anthropic") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("calibrated_language_label")), ignorenulls=True).alias("anthropic_label"),
+        F.first(F.when((F.col("provider") == "gemini") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("calibrated_language_label")), ignorenulls=True).alias("gemini_label"),
+        F.first(F.when((F.col("provider") == "deepseek") & (F.col("is_valid_panel_vote") == F.lit(True)), F.col("calibrated_language_label")), ignorenulls=True).alias("deepseek_label"),
         F.sum(F.when(F.col("is_valid_panel_vote") == F.lit(True), 1).otherwise(0)).alias("n_reached"),
         F.collect_set(F.when(F.col("is_valid_panel_vote") == F.lit(True), F.col("model"))).alias("panel_models"),
     )
