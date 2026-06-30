@@ -1,0 +1,20 @@
+{
+  "run_name": "estimate-deepseek-flash-full-fallback-live-20260630",
+  "tasks": [
+    {
+      "task_key": "estimate_live",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_channel_crawl_full_20260623/estimate_deepseek_flash_full_fallback_live_20260630",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "run_id": "channel_crawl_full_20260623_deepseek_flash_full_fallback_20260630",
+          "output_prefix": "yt_lid_v3_channel_crawl_full_20260623_deepseek_flash_full_fallback_20260630",
+          "full_channels": "645865"
+        }
+      }
+    }
+  ]
+}
