@@ -175,6 +175,7 @@ _create_text_widget("deepseek_request_timeout_seconds", "60")
 _create_text_widget("deepseek_max_retries", "1")
 _create_text_widget("deepseek_direct_streaming", "false")
 _create_text_widget("deepseek_delete_request_jsonl_after_submit", "false")
+_create_text_widget("deepseek_direct_submit_from_requests_table", "false")
 
 # Batch I/O.
 _create_text_widget("batch_output_dir", "/dbfs/FileStore/youtube_lid_panel_batches")
@@ -258,6 +259,7 @@ DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _get_float_widget("deepseek_request_timeout_s
 DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 1)
 DEEPSEEK_DIRECT_STREAMING = _get_bool_widget("deepseek_direct_streaming", False)
 DEEPSEEK_DELETE_REQUEST_JSONL_AFTER_SUBMIT = _get_bool_widget("deepseek_delete_request_jsonl_after_submit", False)
+DEEPSEEK_DIRECT_SUBMIT_FROM_REQUESTS_TABLE = _get_bool_widget("deepseek_direct_submit_from_requests_table", False)
 
 BATCH_OUTPUT_DIR = _get_widget("batch_output_dir", "/dbfs/FileStore/youtube_lid_panel_batches")
 MAX_REQUESTS_PER_FILE = _get_int_widget("max_requests_per_file", 10000)
@@ -2419,7 +2421,7 @@ run_dir = os.path.join(BATCH_OUTPUT_DIR, RUN_ID)
 streaming_deepseek_records = []
 
 
-def write_request_chunk_jsonl(provider: str, model: str, chunk_id: int, local_path: str):
+def load_request_chunk_lines(provider: str, model: str, chunk_id: int) -> Tuple[List[str], int, int]:
     subset = (
         spark.table(panel_requests_full)
         .where(
@@ -2428,17 +2430,27 @@ def write_request_chunk_jsonl(provider: str, model: str, chunk_id: int, local_pa
             & (F.col("model") == F.lit(model))
             & (F.col("chunk_id") == F.lit(int(chunk_id)))
         )
-        .select("batch_line")
+        .select("request_id", "batch_line")
+        .orderBy("request_id")
     )
+    lines = []
     n = 0
     n_bytes = 0
-    os.makedirs(os.path.dirname(local_path), exist_ok=True)
-    with open(local_path, "w", encoding="utf-8") as f:
-        for row in subset.toLocalIterator():
-            line = row["batch_line"]
-            f.write(line + "\n")
+    for row in subset.toLocalIterator():
+        line = row["batch_line"]
+        if line:
+            lines.append(line)
             n += 1
             n_bytes += len(line.encode("utf-8")) + 1
+    return lines, n, n_bytes
+
+
+def write_request_chunk_jsonl(provider: str, model: str, chunk_id: int, local_path: str):
+    lines, n, n_bytes = load_request_chunk_lines(provider, model, chunk_id)
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    with open(local_path, "w", encoding="utf-8") as f:
+        for line in lines:
+            f.write(line + "\n")
     print(f"Wrote {n:,} requests: {local_path} ({n_bytes:,} bytes)")
     record_panel_progress(
         "batch_jsonl_chunk_written",
@@ -2533,7 +2545,7 @@ def submit_gemini_batch(path: str, model: str) -> Dict[str, Any]:
     }
 
 
-def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
+def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[str]] = None) -> Dict[str, Any]:
     import threading
     import time
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -2682,8 +2694,11 @@ def submit_deepseek_direct(path: str, model: str) -> Dict[str, Any]:
             return None, None
         return None, None
 
-    with open(path, "r", encoding="utf-8") as src:
-        lines = [line for line in src if line.strip()]
+    if request_lines is None:
+        with open(path, "r", encoding="utf-8") as src:
+            lines = [line for line in src if line.strip()]
+    else:
+        lines = [line if line.endswith("\n") else line + "\n" for line in request_lines if line.strip()]
 
     completed_ids = set()
     existing_success_lines = []
@@ -2800,9 +2815,24 @@ batch_job_schema = StructType([
 
 def persist_batch_job_records(records):
     if records:
-        batch_jobs_df = spark.createDataFrame(records, batch_job_schema)
-        write_run_scoped(batch_jobs_df, panel_batch_jobs_full)
-        print(f"Wrote {len(records):,} batch-job records to", panel_batch_jobs_full)
+        last_exc = None
+        for attempt in range(3):
+            try:
+                batch_jobs_df = spark.createDataFrame(records, batch_job_schema)
+                write_run_scoped(batch_jobs_df, panel_batch_jobs_full)
+                print(f"Wrote {len(records):,} batch-job records to", panel_batch_jobs_full)
+                return
+            except Exception as exc:  # noqa: BLE001 - retry transient Delta/driver write failures
+                last_exc = exc
+                if attempt >= 2:
+                    break
+                sleep_seconds = 2 ** attempt
+                print(
+                    f"WARNING: batch-job checkpoint write failed on attempt {attempt + 1}/3; "
+                    f"retrying in {sleep_seconds}s: {exc}"
+                )
+                time.sleep(sleep_seconds)
+        raise last_exc
 
 
 def existing_batch_job_records():
@@ -2886,22 +2916,42 @@ if SUBMIT_BATCHES:
             and str(provider).lower() == "deepseek"
             and (n is None or n_bytes is None)
         )
-        if streaming_deepseek_chunk:
-            n, n_bytes = write_request_chunk_jsonl(str(provider), str(model), int(chunk_id), path)
+        direct_from_requests_table = streaming_deepseek_chunk and DEEPSEEK_DIRECT_SUBMIT_FROM_REQUESTS_TABLE
+        request_lines_for_direct = None
         submitted_at = datetime.utcnow().isoformat()
-        batch_job_records = replace_batch_job_record((
-            RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), None,
-            None, "running", "running", submitted_at, datetime.utcnow().isoformat(), None,
-        ))
-        persist_batch_job_records(batch_job_records)
         try:
+            if direct_from_requests_table:
+                request_lines_for_direct, n, n_bytes = load_request_chunk_lines(str(provider), str(model), int(chunk_id))
+                record_panel_progress(
+                    "deepseek_direct_chunk_loaded",
+                    metrics={
+                        "provider": provider,
+                        "model": model,
+                        "chunk_id": int(chunk_id),
+                        "n_requests": n,
+                        "n_bytes": n_bytes,
+                        "source": "panel_requests_table",
+                    },
+                )
+            elif streaming_deepseek_chunk:
+                n, n_bytes = write_request_chunk_jsonl(str(provider), str(model), int(chunk_id), path)
+            n_for_record = int(n) if n is not None else None
+            n_bytes_for_record = int(n_bytes) if n_bytes is not None else None
+            batch_job_records = replace_batch_job_record((
+                RUN_ID, provider, model, int(chunk_id), path, n_for_record, n_bytes_for_record, None,
+                None, "running", "running", submitted_at, datetime.utcnow().isoformat(), None,
+            ))
+            persist_batch_job_records(batch_job_records)
             submitter = {
                 "openai": submit_openai_batch,
                 "anthropic": submit_anthropic_batch,
                 "gemini": submit_gemini_batch,
                 "deepseek": submit_deepseek_direct,
             }[provider]
-            res = submitter(path, model)
+            if str(provider).lower() == "deepseek":
+                res = submit_deepseek_direct(path, model, request_lines=request_lines_for_direct)
+            else:
+                res = submitter(path, model)
             print(provider, model, chunk_id, "submitted", res)
             batch_job_records = replace_batch_job_record((
                 RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), res.get("provider_file_id"),
@@ -2909,8 +2959,26 @@ if SUBMIT_BATCHES:
                 submitted_at, datetime.utcnow().isoformat(), None,
             ))
             persist_batch_job_records(batch_job_records)
-            already_submitted.add((str(provider), str(model), int(chunk_id)))
-            if streaming_deepseek_chunk and DEEPSEEK_DELETE_REQUEST_JSONL_AFTER_SUBMIT:
+            if provider_status_is_successful(res.get("provider_status")):
+                already_submitted.add((str(provider), str(model), int(chunk_id)))
+            else:
+                record_panel_progress(
+                    "batch_chunk_partial_or_errors",
+                    status="warning",
+                    metrics={
+                        "provider": provider,
+                        "model": model,
+                        "chunk_id": int(chunk_id),
+                        "provider_status": res.get("provider_status"),
+                        "result_path": res.get("provider_file_id"),
+                    },
+                )
+            if (
+                streaming_deepseek_chunk
+                and DEEPSEEK_DELETE_REQUEST_JSONL_AFTER_SUBMIT
+                and not direct_from_requests_table
+                and provider_status_is_successful(res.get("provider_status"))
+            ):
                 try:
                     os.remove(local_fs_path(path))
                     print(f"Deleted streamed DeepSeek request JSONL after successful submit: {path}")
@@ -2931,10 +2999,27 @@ if SUBMIT_BATCHES:
             err = repr(e)[:500]
             print(provider, model, chunk_id, "ERROR", err)
             batch_job_records = replace_batch_job_record((
-                RUN_ID, provider, model, int(chunk_id), path, int(n), int(n_bytes), None,
+                RUN_ID, provider, model, int(chunk_id), path,
+                int(n) if n is not None else None,
+                int(n_bytes) if n_bytes is not None else None,
+                None,
                 None, None, "error", submitted_at, datetime.utcnow().isoformat(), err,
             ))
-            persist_batch_job_records(batch_job_records)
+            try:
+                persist_batch_job_records(batch_job_records)
+            except Exception as persist_exc:  # noqa: BLE001 - preserve the original chunk error in progress
+                print(f"WARNING: could not persist failed batch-job record for chunk {chunk_id}: {persist_exc}")
+            record_panel_progress(
+                "batch_chunk_failed",
+                status="error",
+                metrics={
+                    "provider": provider,
+                    "model": model,
+                    "chunk_id": int(chunk_id),
+                    "local_jsonl_path": path,
+                    "error": err,
+                },
+            )
 else:
     print("submit_batches=false — JSONL files written for external/colleague submission.")
 

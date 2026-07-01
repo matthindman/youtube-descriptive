@@ -31,7 +31,8 @@
           "deepseek_request_timeout_seconds": "60",
           "deepseek_max_retries": "1",
           "deepseek_direct_streaming": "true",
-          "deepseek_delete_request_jsonl_after_submit": "true"
+          "deepseek_delete_request_jsonl_after_submit": "true",
+          "deepseek_direct_submit_from_requests_table": "true"
         }
       }
     }

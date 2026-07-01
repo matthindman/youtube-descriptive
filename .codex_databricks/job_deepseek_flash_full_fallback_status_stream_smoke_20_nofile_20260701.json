@@ -1,0 +1,22 @@
+{
+  "run_name": "deepseek-flash-full-fallback-status-stream-smoke-20-nofile-20260701",
+  "tasks": [
+    {
+      "task_key": "status_stream_smoke_20_nofile",
+      "existing_cluster_id": "0601-203643-bkxsqffg",
+      "timeout_seconds": 1800,
+      "notebook_task": {
+        "notebook_path": "/Users/matt.hindman@researchaccelerator.org/lid_v3_channel_crawl_full_20260623/check_deepseek_flash_full_fallback_status_20260630",
+        "base_parameters": {
+          "catalog": "dev_sean",
+          "schema": "matt",
+          "base_run_id": "channel_crawl_full_20260623_deepseek_flash_full_fallback_stream_smoke_20_nofile_20260701",
+          "base_output_prefix": "yt_lid_v3_channel_crawl_full_20260623_deepseek_flash_full_fallback_stream_smoke_20_nofile_20260701",
+          "run_id": "channel_crawl_full_20260623_deepseek_flash_full_fallback_stream_smoke_20_nofile_20260701",
+          "output_prefix": "yt_lid_v3_channel_crawl_full_20260623_deepseek_flash_full_fallback_stream_smoke_20_nofile_20260701",
+          "phase": "smoke_5k"
+        }
+      }
+    }
+  ]
+}
