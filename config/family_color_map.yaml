@@ -1,0 +1,40 @@
+# Treemap v3 palette. Color encodes FAMILY (Okabe-Ito colorblind-safe hues).
+# Low-chroma neutrals are reserved for residual buckets; Society is a HUE.
+# Within a family, child leaves are a deterministic lightness ramp of the family
+# hue ("[Family] - unspecified" is blended toward white); named
+# channels inherit their leaf hue, slightly lightened. No new hues below family.
+
+family_colors:
+  Entertainment: "#D55E00"
+  Lifestyle: "#56B4E9"
+  Music: "#CC79A7"
+  Gaming: "#009E73"
+  Society: "#0072B2"   # a HUE, never a residual neutral
+  Sports: "#E69F00"
+  Knowledge: "#E6C700"
+
+# Residual "families" use warm, low-chroma neutrals rather than mid-gray boxes.
+residual_family_colors:
+  "Other / Unmapped YouTube topic": "#E3DDD4"
+  "Unlabeled": "#F0EDE7"
+
+# Family-only "(main)" cells blend toward white, preserving the family's hue
+# instead of creating large muddy gray-brown regions.
+unspecified_gray_anchor: "#FFFFFF"
+unspecified_blend: 0.48          # 0 = pure family hue, 1 = white
+
+# Leaves are FLAT family color (max_leaf_lighten = 0): leaf identity comes from
+# the label + white borders, not from a shade ramp (the ramp conveyed no info and
+# washed the figure out). Only the pooled catch-all and named-channel boxes get a
+# slight lift so they read as distinct from the solid leaf tiles.
+max_leaf_lighten: 0.0
+other_leaves_lighten: 0.16       # pooled "[Family] - other leaves" cell
+channel_lighten: 0.16            # named channel box vs. its leaf hue
+
+# Container / structural colors
+language_fill: "#FFFFFF"
+language_edge: "#FFFFFF"
+other_languages_fill: "#FFFFFF"
+tile_border_color: "white"
+tile_border_width: 0
+tiling_pad: 2

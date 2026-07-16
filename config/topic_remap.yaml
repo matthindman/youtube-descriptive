@@ -1,0 +1,17 @@
+# Renderer-level taxonomy patch (v3).
+#
+# These canonical YouTube topic slugs were left under "Other / Unmapped YouTube
+# topic" by the Spark hierarchy map, but they are real topics that belong to a
+# family. Remapping them here corrects the family/leaf composition without
+# rerunning the Spark pipeline. The raw yt_family / yt_leaf are preserved in
+# yt_family_raw / yt_leaf_raw; this only changes the in-memory display columns.
+#
+# TODO (pipeline): fold these into config/youtube_topic_hierarchy_v2.yaml and
+# re-run youtube_topic_treemap_v2.py so the Delta outputs agree.
+#
+# Keyed on the existing yt_leaf string ("Unmapped: <slug>").
+unmapped_remap:
+  "Unmapped: sport":         {family: "Sports",    leaf: "[Sports] - unspecified"}
+  "Unmapped: pet":           {family: "Lifestyle", leaf: "Pets"}
+  "Unmapped: vehicle":       {family: "Lifestyle", leaf: "Vehicles"}
+  "Unmapped: country_music": {family: "Music",     leaf: "Country music"}
