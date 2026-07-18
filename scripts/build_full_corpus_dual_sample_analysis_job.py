@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 
-STAGES = ("allocate", "estimate", "qa")
+STAGES = ("allocate", "estimate", "qa", "publish_treemap")
 
 
 def parse_args() -> argparse.Namespace:

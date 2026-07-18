@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 import yaml
 from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
+from pyspark.sql import Window
 
 
 def _widget(name: str, default: str) -> None:
@@ -69,9 +70,13 @@ TABLES = {
     "language": f"{PREFIX}_channel_language_current",
     "model_calibrated": f"{PREFIX}_topic_model_calibrated",
     "allocations": f"{PREFIX}_allocations",
+    "platform_margins": f"{PREFIX}_platform_topic_margins",
     "estimates": f"{PREFIX}_estimates",
     "differences": f"{PREFIX}_weighting_differences",
     "qa": f"{PREFIX}_qa",
+    "publication": f"{PREFIX}_publication_estimates",
+    "treemap_cells": f"{PREFIX}_treemap_cells",
+    "treemap_qa": f"{PREFIX}_treemap_qa",
 }
 
 UNLABELED_FAMILY = "Unlabeled"
@@ -283,8 +288,40 @@ def model_completed_allocations(base: DataFrame, platform: DataFrame) -> DataFra
     return result
 
 
+def exact_platform_topic_margins(frame: DataFrame) -> DataFrame:
+    """Known platform-topic margins used only to calibrate display geometry."""
+    allocated = platform_allocations(
+        frame.select("channel_id", "raw_topic_categories")
+    ).join(
+        frame.select("channel_id", "subscriber_status", "accepted_positive_view_mass"),
+        "channel_id",
+        "inner",
+    )
+    is_tail = F.col("subscriber_status") == "sample_frame_lt10k"
+    return (
+        allocated.groupBy("family", "leaf")
+        .agg(
+            F.sum(F.when(is_tail, F.col("allocation_weight")).otherwise(0.0)).alias(
+                "tail_channel_total"
+            ),
+            F.sum(
+                F.when(
+                    is_tail,
+                    F.col("accepted_positive_view_mass") * F.col("allocation_weight"),
+                ).otherwise(0.0)
+            ).alias("tail_view_total"),
+            F.sum("allocation_weight").alias("all_frame_channel_total"),
+            F.sum(F.col("accepted_positive_view_mass") * F.col("allocation_weight")).alias(
+                "all_frame_view_total"
+            ),
+        )
+        .withColumn("design_version", F.lit(DESIGN_VERSION))
+        .withColumn("frame_version", F.lit(FRAME_VERSION))
+    )
+
+
 def allocate() -> dict[str, int]:
-    for name in ("analysis_union", "language"):
+    for name in ("analysis_union", "language", "frame"):
         require_table(TABLES[name])
     base = spark.table(TABLES["analysis_union"])
     language = spark.table(TABLES["language"]).select(
@@ -321,12 +358,19 @@ def allocate() -> dict[str, int]:
         TABLES["allocations"],
         "Conservative platform-topic and gated calibrated-model language/family/leaf allocations.",
     )
+    margins = exact_platform_topic_margins(spark.table(TABLES["frame"]))
+    write_table(
+        margins,
+        TABLES["platform_margins"],
+        "Exact frozen-frame platform-topic margins for post-estimation display calibration.",
+    )
     counts = {
         row["allocation_variant"]: int(row["channels"])
         for row in allocations.groupBy("allocation_variant")
         .agg(F.countDistinct("channel_id").alias("channels"))
         .collect()
     }
+    counts["platform_margin_cells"] = margins.count()
     print("CHANNEL ALLOCATION CONSERVATION: PASS")
     print(json.dumps(counts, sort_keys=True))
     return counts
@@ -618,14 +662,26 @@ def estimate() -> dict[str, float | int]:
         *keys,
         F.col("raw_share").alias("channel_share"),
         F.col("standard_error").alias("channel_share_se"),
+        F.lit(True).alias("channel_cell_observed"),
     )
     attention = estimates.where(F.col("estimator") == "attention_pps").select(
         *keys,
         F.col("raw_share").alias("view_share"),
         F.col("standard_error").alias("view_share_se"),
+        F.lit(True).alias("view_cell_observed"),
     )
     difference = (
-        equal.join(attention, keys, "inner")
+        equal.join(attention, keys, "full")
+        .fillna(
+            {
+                "channel_share": 0.0,
+                "channel_share_se": 0.0,
+                "view_share": 0.0,
+                "view_share_se": 0.0,
+                "channel_cell_observed": False,
+                "view_cell_observed": False,
+            }
+        )
         .withColumn("view_minus_channel_share", F.col("view_share") - F.col("channel_share"))
         .withColumn(
             "difference_standard_error",
@@ -718,7 +774,428 @@ def qa() -> dict[str, float | int]:
     return metrics
 
 
-STAGES = {"allocate": allocate, "estimate": estimate, "qa": qa}
+PUBLICATION_KEYS = [
+    "allocation_variant",
+    "population_scope",
+    "taxonomy_level",
+    "cell_key",
+    "language",
+    "family",
+    "leaf",
+]
+
+
+def paired_publication_estimates(estimates: DataFrame, differences: DataFrame) -> DataFrame:
+    metric_columns = [
+        "head_total",
+        "tail_total",
+        "tail_variance",
+        "tail_known_total",
+        "tail_calibration_factor",
+        "denominator",
+        "raw_total",
+        "raw_share",
+        "standard_error",
+        "ci95_lower",
+        "ci95_upper",
+        "display_total",
+        "display_share",
+        "coefficient_of_variation",
+        "largest_weighted_contribution",
+        "contributing_n",
+        "effective_contributing_n",
+        "max_weighted_value",
+        "headline_reliable",
+    ]
+
+    def one_estimator(estimator: str, prefix: str) -> DataFrame:
+        return estimates.where(F.col("estimator") == estimator).select(
+            *PUBLICATION_KEYS,
+            *(F.col(column).alias(f"{prefix}_{column}") for column in metric_columns),
+            F.lit(True).alias(f"{prefix}_cell_observed"),
+        )
+
+    paired = one_estimator("attention_pps", "view").join(
+        one_estimator("equal_channel_srs", "channel"), PUBLICATION_KEYS, "full"
+    )
+    domain_keys = ["allocation_variant", "population_scope"]
+    for estimator, prefix in (("attention_pps", "view"), ("equal_channel_srs", "channel")):
+        constants = (
+            estimates.where(F.col("estimator") == estimator)
+            .select(
+                *domain_keys,
+                F.col("denominator").alias(f"_{prefix}_denominator"),
+                F.col("tail_known_total").alias(f"_{prefix}_tail_known_total"),
+                F.col("tail_calibration_factor").alias(f"_{prefix}_tail_calibration_factor"),
+            )
+            .dropDuplicates(domain_keys)
+        )
+        paired = (
+            paired.join(constants, domain_keys, "left")
+            .withColumn(
+                f"{prefix}_denominator",
+                F.coalesce(f"{prefix}_denominator", f"_{prefix}_denominator"),
+            )
+            .withColumn(
+                f"{prefix}_tail_known_total",
+                F.coalesce(f"{prefix}_tail_known_total", f"_{prefix}_tail_known_total"),
+            )
+            .withColumn(
+                f"{prefix}_tail_calibration_factor",
+                F.coalesce(
+                    f"{prefix}_tail_calibration_factor", f"_{prefix}_tail_calibration_factor"
+                ),
+            )
+            .drop(
+                f"_{prefix}_denominator",
+                f"_{prefix}_tail_known_total",
+                f"_{prefix}_tail_calibration_factor",
+            )
+        )
+    zero_columns = {}
+    for prefix in ("view", "channel"):
+        for column in (
+            "head_total",
+            "tail_total",
+            "tail_variance",
+            "raw_total",
+            "raw_share",
+            "standard_error",
+            "ci95_lower",
+            "ci95_upper",
+            "display_total",
+            "display_share",
+            "contributing_n",
+            "effective_contributing_n",
+            "max_weighted_value",
+        ):
+            zero_columns[f"{prefix}_{column}"] = 0.0
+    paired = paired.fillna(zero_columns).fillna(
+        {
+            "view_headline_reliable": False,
+            "channel_headline_reliable": False,
+            "view_cell_observed": False,
+            "channel_cell_observed": False,
+        }
+    )
+    difference_columns = [
+        "view_minus_channel_share",
+        "difference_standard_error",
+        "difference_ci95_lower",
+        "difference_ci95_upper",
+        "view_to_channel_ratio",
+        "sampling_covariance_assumption",
+    ]
+    return (
+        paired.join(
+            differences.select(*PUBLICATION_KEYS, *difference_columns),
+            PUBLICATION_KEYS,
+            "left",
+        )
+        .withColumn("design_version", F.lit(DESIGN_VERSION))
+        .withColumn("frame_version", F.lit(FRAME_VERSION))
+    )
+
+
+def calibrated_treemap_cells(publication: DataFrame, margins: DataFrame) -> DataFrame:
+    cells = publication.where(F.col("taxonomy_level") == "language_family_leaf").join(
+        margins.select("family", "leaf", "tail_channel_total", "tail_view_total"),
+        ["family", "leaf"],
+        "left",
+    )
+    topic_window = Window.partitionBy(
+        "allocation_variant", "population_scope", "family", "leaf"
+    )
+    cells = (
+        cells.withColumn("sampled_topic_tail_view_total", F.sum("view_tail_total").over(topic_window))
+        .withColumn(
+            "sampled_topic_tail_channel_total", F.sum("channel_tail_total").over(topic_window)
+        )
+        .withColumn(
+            "view_geometry_tail_factor",
+            F.when(
+                F.col("allocation_variant") == "platform_only",
+                F.when(
+                    F.col("sampled_topic_tail_view_total") > 0,
+                    F.col("tail_view_total") / F.col("sampled_topic_tail_view_total"),
+                ).when(F.coalesce(F.col("tail_view_total"), F.lit(0.0)) == 0, F.lit(1.0)),
+            ).otherwise(F.col("view_tail_calibration_factor")),
+        )
+        .withColumn(
+            "channel_geometry_tail_factor",
+            F.when(
+                F.col("allocation_variant") == "platform_only",
+                F.when(
+                    F.col("sampled_topic_tail_channel_total") > 0,
+                    F.col("tail_channel_total") / F.col("sampled_topic_tail_channel_total"),
+                ).when(F.coalesce(F.col("tail_channel_total"), F.lit(0.0)) == 0, F.lit(1.0)),
+            ).otherwise(F.col("channel_tail_calibration_factor")),
+        )
+        .withColumn(
+            "view_geometry_calibration_basis",
+            F.when(
+                F.col("allocation_variant") == "platform_only",
+                F.lit("exact frozen-frame platform family/leaf tail view margin"),
+            ).otherwise(F.lit("known global tail view total")),
+        )
+        .withColumn(
+            "channel_geometry_calibration_basis",
+            F.when(
+                F.col("allocation_variant") == "platform_only",
+                F.lit("exact frozen-frame platform family/leaf tail channel margin"),
+            ).otherwise(F.lit("known global tail channel total")),
+        )
+        .withColumn(
+            "view_geometry_tail_total",
+            F.col("view_tail_total") * F.col("view_geometry_tail_factor"),
+        )
+        .withColumn(
+            "channel_geometry_tail_total",
+            F.col("channel_tail_total") * F.col("channel_geometry_tail_factor"),
+        )
+        .withColumn(
+            "view_geometry_total", F.col("view_head_total") + F.col("view_geometry_tail_total")
+        )
+        .withColumn(
+            "channel_geometry_total",
+            F.col("channel_head_total") + F.col("channel_geometry_tail_total"),
+        )
+        .withColumn("view_geometry_global_share", F.col("view_geometry_total") / F.col("view_denominator"))
+        .withColumn(
+            "channel_geometry_global_share",
+            F.col("channel_geometry_total") / F.col("channel_denominator"),
+        )
+    )
+    language_window = Window.partitionBy("allocation_variant", "population_scope", "language")
+    language_family_window = Window.partitionBy(
+        "allocation_variant", "population_scope", "language", "family"
+    )
+    cells = (
+        cells.withColumn("view_language_total", F.sum("view_geometry_total").over(language_window))
+        .withColumn(
+            "channel_language_total", F.sum("channel_geometry_total").over(language_window)
+        )
+        .withColumn(
+            "view_language_family_total", F.sum("view_geometry_total").over(language_family_window)
+        )
+        .withColumn(
+            "channel_language_family_total",
+            F.sum("channel_geometry_total").over(language_family_window),
+        )
+        .withColumn(
+            "view_within_language_share", F.col("view_geometry_total") / F.col("view_language_total")
+        )
+        .withColumn(
+            "channel_within_language_share",
+            F.col("channel_geometry_total") / F.col("channel_language_total"),
+        )
+        .withColumn(
+            "view_within_language_family_share",
+            F.col("view_geometry_total") / F.col("view_language_family_total"),
+        )
+        .withColumn(
+            "channel_within_language_family_share",
+            F.col("channel_geometry_total") / F.col("channel_language_family_total"),
+        )
+        .withColumn(
+            "conditional_share_uncertainty_status",
+            F.lit("not reported: requires replicate or linearized numerator-denominator covariance"),
+        )
+        .withColumn(
+            "cell_id", F.concat_ws("\x1f", "allocation_variant", "population_scope", "language", "family", "leaf")
+        )
+    )
+    return cells
+
+
+def treemap_acceptance_metrics(cells: DataFrame, margins: DataFrame) -> dict[str, float | int]:
+    key_columns = ["allocation_variant", "population_scope", "language", "family", "leaf"]
+    row_count = cells.count()
+    distinct_count = cells.select(*key_columns).distinct().count()
+    unsampled_margin_rows = cells.where(
+        F.col("view_geometry_tail_factor").isNull()
+        | F.col("channel_geometry_tail_factor").isNull()
+    ).count()
+    negative_geometry_rows = cells.where(
+        (F.col("view_geometry_total") < 0) | (F.col("channel_geometry_total") < 0)
+    ).count()
+    observed_platform_topics = (
+        cells.where(F.col("allocation_variant") == "platform_only")
+        .select("family", "leaf")
+        .distinct()
+    )
+    missing_positive_topic_margins = (
+        margins.where((F.col("tail_view_total") > 0) | (F.col("tail_channel_total") > 0))
+        .select("family", "leaf")
+        .join(observed_platform_topics, ["family", "leaf"], "left_anti")
+        .count()
+    )
+    calibrated_platform_margins = (
+        cells.where(F.col("allocation_variant") == "platform_only")
+        .groupBy("population_scope", "family", "leaf")
+        .agg(
+            F.sum("view_geometry_tail_total").alias("calibrated_tail_view_total"),
+            F.sum("channel_geometry_tail_total").alias("calibrated_tail_channel_total"),
+        )
+        .join(
+            margins.select("family", "leaf", "tail_view_total", "tail_channel_total"),
+            ["family", "leaf"],
+            "inner",
+        )
+        .withColumn(
+            "view_relative_error",
+            F.abs(F.col("calibrated_tail_view_total") - F.col("tail_view_total"))
+            / F.greatest(F.abs(F.col("tail_view_total")), F.lit(1.0)),
+        )
+        .withColumn(
+            "channel_relative_error",
+            F.abs(F.col("calibrated_tail_channel_total") - F.col("tail_channel_total"))
+            / F.greatest(F.abs(F.col("tail_channel_total")), F.lit(1.0)),
+        )
+    )
+    max_topic_margin_error = float(
+        calibrated_platform_margins.agg(
+            F.max(F.greatest("view_relative_error", "channel_relative_error")).alias("value")
+        ).first()["value"]
+        or 0.0
+    )
+    global_checks = cells.groupBy("allocation_variant", "population_scope").agg(
+        F.sum("view_geometry_global_share").alias("view_sum"),
+        F.sum("channel_geometry_global_share").alias("channel_sum"),
+    )
+    max_global_error = float(
+        global_checks.select(
+            F.greatest(F.abs(F.col("view_sum") - 1.0), F.abs(F.col("channel_sum") - 1.0)).alias(
+                "error"
+            )
+        ).agg(F.max("error").alias("value")).first()["value"]
+        or 0.0
+    )
+    language_checks = cells.groupBy("allocation_variant", "population_scope", "language").agg(
+        F.sum("view_within_language_share").alias("view_sum"),
+        F.sum("channel_within_language_share").alias("channel_sum"),
+    )
+    max_language_error = float(
+        language_checks.select(
+            F.greatest(F.abs(F.col("view_sum") - 1.0), F.abs(F.col("channel_sum") - 1.0)).alias(
+                "error"
+            )
+        ).agg(F.max("error").alias("value")).first()["value"]
+        or 0.0
+    )
+    family_checks = cells.groupBy(
+        "allocation_variant", "population_scope", "language", "family"
+    ).agg(
+        F.sum("view_within_language_family_share").alias("view_sum"),
+        F.sum("channel_within_language_family_share").alias("channel_sum"),
+    )
+    max_family_error = float(
+        family_checks.select(
+            F.greatest(F.abs(F.col("view_sum") - 1.0), F.abs(F.col("channel_sum") - 1.0)).alias(
+                "error"
+            )
+        ).agg(F.max("error").alias("value")).first()["value"]
+        or 0.0
+    )
+    metrics = {
+        "treemap_cell_rows": int(row_count),
+        "treemap_distinct_cell_keys": int(distinct_count),
+        "unsampled_positive_topic_margin_rows": int(unsampled_margin_rows),
+        "positive_topic_margins_without_sample_support": int(missing_positive_topic_margins),
+        "negative_geometry_rows": int(negative_geometry_rows),
+        "max_platform_topic_margin_relative_error": max_topic_margin_error,
+        "max_global_share_conservation_error": max_global_error,
+        "max_within_language_conservation_error": max_language_error,
+        "max_within_language_family_conservation_error": max_family_error,
+    }
+    if row_count != distinct_count:
+        raise AssertionError(f"Treemap cell keys are not unique: {metrics}")
+    if unsampled_margin_rows or missing_positive_topic_margins or negative_geometry_rows:
+        raise AssertionError(f"Treemap geometry contains invalid rows: {metrics}")
+    if max(max_topic_margin_error, max_global_error, max_language_error, max_family_error) > 1e-6:
+        raise AssertionError(f"Treemap share conservation failed: {metrics}")
+    return metrics
+
+
+def publish_treemap() -> dict[str, float | int | str]:
+    for name in ("estimates", "differences", "platform_margins"):
+        require_table(TABLES[name])
+    publication = paired_publication_estimates(
+        spark.table(TABLES["estimates"]), spark.table(TABLES["differences"])
+    )
+    margins = spark.table(TABLES["platform_margins"])
+    cells = calibrated_treemap_cells(publication, margins)
+    metrics = treemap_acceptance_metrics(cells, margins)
+    write_table(
+        publication,
+        TABLES["publication"],
+        "Paired channel- and view-weighted rollup estimates with raw design-based uncertainty.",
+    )
+    write_table(
+        cells,
+        TABLES["treemap_cells"],
+        "Additive language/family/leaf cells; calibrated totals are geometry only and raw HT/SRS fields remain inferential.",
+    )
+    qa_rows = [
+        (DESIGN_VERSION, key, json.dumps(value), datetime.now(timezone.utc))
+        for key, value in metrics.items()
+    ]
+    write_table(
+        spark.createDataFrame(
+            qa_rows, "design_version string, metric string, value_json string, recorded_at timestamp"
+        ),
+        TABLES["treemap_qa"],
+        "Treemap publication-cell uniqueness, nonnegativity, and additive-conservation checks.",
+    )
+
+    export_root = CONFIG["treemap"]["dbfs_export_root"].rstrip("/")
+    cells_path = f"{export_root}/treemap_cells"
+    publication_path = f"{export_root}/publication_estimates"
+    cells.coalesce(1).write.mode("overwrite").parquet(cells_path)
+    publication.coalesce(1).write.mode("overwrite").parquet(publication_path)
+    manifest = {
+        "design_version": DESIGN_VERSION,
+        "frame_version": FRAME_VERSION,
+        "tables": {
+            "treemap_cells": TABLES["treemap_cells"],
+            "publication_estimates": TABLES["publication"],
+            "platform_topic_margins": TABLES["platform_margins"],
+        },
+        "exports": {
+            "treemap_cells": cells_path,
+            "publication_estimates": publication_path,
+        },
+        "primary_allocation_variant": CONFIG["treemap"]["primary_allocation_variant"],
+        "primary_population_scope": CONFIG["treemap"]["primary_population_scope"],
+        "geometry": {
+            "attention": "view_geometry_total",
+            "channel": "channel_geometry_total",
+            "platform_only_calibration": "exact family/leaf tail margins",
+            "model_completed_calibration": "known global tail total",
+        },
+        "uncertainty": "raw design-based shares and standard errors; calibrated geometry is descriptive",
+        "qa": metrics,
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+    }
+    manifest_path = f"{export_root}/run_manifest.json"
+    dbutils.fs.put(manifest_path, json.dumps(manifest, indent=2, sort_keys=True), True)
+    print("TREEMAP PUBLICATION: PASS")
+    print("TREEMAP CONSERVATION: PASS")
+    print(f"TREEMAP CELLS EXPORT: {cells_path}")
+    print(f"PUBLICATION ESTIMATES EXPORT: {publication_path}")
+    print(f"TREEMAP MANIFEST: {manifest_path}")
+    result: dict[str, float | int | str] = dict(metrics)
+    result.update(
+        {
+            "treemap_cells_export": cells_path,
+            "publication_estimates_export": publication_path,
+            "manifest_path": manifest_path,
+        }
+    )
+    return result
+
+
+STAGES = {"allocate": allocate, "estimate": estimate, "qa": qa, "publish_treemap": publish_treemap}
 if STAGE not in STAGES:
     raise ValueError(f"Unknown analysis stage {STAGE!r}; expected one of {sorted(STAGES)}")
 print(f"RUNNING FULL-CORPUS ANALYSIS STAGE: {STAGE}")

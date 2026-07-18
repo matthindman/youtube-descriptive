@@ -27,6 +27,8 @@ class FullCorpusDualSampleDesignTests(unittest.TestCase):
         validate_design_config(config)
         self.assertEqual(config["samples"]["selected_alpha"], 0.1)
         self.assertEqual(config["execution"]["existing_cluster_id"], "0601-203643-bkxsqffg")
+        self.assertEqual(config["treemap"]["packing"], "squarify")
+        self.assertEqual(config["treemap"]["static_cell_cap"], 200)
 
     def test_config_rejects_wrong_databricks_profile(self) -> None:
         path = ROOT / "config" / "full_corpus_dual_sample_20260717_v1.json"

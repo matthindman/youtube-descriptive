@@ -46,6 +46,7 @@ def validate_design_config(config: Mapping[str, Any]) -> None:
         "topic_model",
         "topic_calibration",
         "analysis",
+        "treemap",
         "execution",
     }
     missing = sorted(required - set(config))
@@ -123,6 +124,20 @@ def validate_design_config(config: Mapping[str, Any]) -> None:
     upper = float(analysis["tail_total_ratio_upper_bound"])
     if not 0.0 < lower <= 1.0 <= upper:
         raise ValueError("Tail total-ratio bounds must contain one and remain positive")
+
+    treemap = config["treemap"]
+    if treemap.get("primary_allocation_variant") != "platform_only":
+        raise ValueError("The primary treemap allocation must remain platform_only")
+    if treemap.get("primary_population_scope") not in {"known_subscriber", "all_retrievable"}:
+        raise ValueError("Unsupported primary treemap population scope")
+    if treemap.get("packing") != "squarify":
+        raise ValueError("Treemap packing must remain squarify")
+    if not 1 <= int(treemap["static_top_languages"]) <= 20:
+        raise ValueError("Treemap static_top_languages must lie in [1, 20]")
+    if not 1 <= int(treemap["static_cell_cap"]) <= 200:
+        raise ValueError("Treemap static_cell_cap must lie in [1, 200]")
+    if int(treemap["interactive_initial_maxdepth"]) != 2:
+        raise ValueError("The interactive treemap must open at maxdepth=2")
 
     execution = config["execution"]
     expected_execution = {

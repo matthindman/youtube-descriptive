@@ -91,6 +91,17 @@
     "headline_max_relative_half_width": 0.15,
     "headline_max_channel_contribution": 0.1
   },
+  "treemap": {
+    "primary_allocation_variant": "platform_only",
+    "primary_population_scope": "all_retrievable",
+    "attention_estimator": "attention_pps",
+    "channel_estimator": "equal_channel_srs",
+    "static_top_languages": 12,
+    "static_cell_cap": 200,
+    "interactive_initial_maxdepth": 2,
+    "packing": "squarify",
+    "dbfs_export_root": "dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication"
+  },
   "execution": {
     "databricks_profile": "matt.hindman@researchaccelerator.org",
     "host": "https://adb-1335559103600339.19.azuredatabricks.net",

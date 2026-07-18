@@ -59,21 +59,23 @@ compute. Jobs in this runbook contain `existing_cluster_id` and no
 | `youtube_descriptive/src/11_full_corpus_dual_sample_databricks.py` | Frame, simulation, sample selection, and enrichment staging |
 | `youtube_descriptive/src/12_full_corpus_dual_sample_language_databricks.py` | Language preflight, base-ISO routing, and final label publication |
 | `youtube_descriptive/src/13_full_corpus_dual_sample_topic_model_databricks.py` | Missing-topic requests, DeepSeek probabilities, strict parse validation |
-| `youtube_descriptive/src/14_full_corpus_dual_sample_analysis_databricks.py` | Topic allocations, SRS/PPS estimates and SEs, weighting differences, and conservation QA |
+| `youtube_descriptive/src/14_full_corpus_dual_sample_analysis_databricks.py` | Topic allocations, SRS/PPS estimates and SEs, exact platform-topic calibration margins, publication cells, and conservation QA |
 | `youtube_descriptive/src/15_full_corpus_dual_sample_repeated_simulation_databricks.py` | Frozen head/tail pseudo-populations and 5,000-replicate empirical design checks |
 | `youtube_descriptive/src/16_full_corpus_dual_sample_collection_databricks.py` | Resumable YouTube Data API description/recent-video collection with complete dispositions |
 | `youtube_descriptive/src/17_full_corpus_dual_sample_topic_calibration_databricks.py` | Human-validation-gated weighted temperature calibration and QA |
 | `scripts/run_full_corpus_dual_sample.sh` | Upload and run phase-one/sample stages |
 | `scripts/run_full_corpus_dual_sample_language.sh` | Upload and run gated dual-LID/DeepSeek stages |
 | `scripts/run_full_corpus_dual_sample_topic.sh` | Upload and run model-completed topic stages |
-| `scripts/run_full_corpus_dual_sample_analysis.sh` | Upload and run the post-enrichment allocation/estimation stages |
+| `scripts/run_full_corpus_dual_sample_analysis.sh` | Upload and run post-enrichment allocation, estimation, QA, and treemap publication stages |
+| `scripts/render_full_corpus_weighted_treemaps.py` | Render weighted attention/channel treemaps, explorers, and coefficient plots from compact publication cells |
+| `scripts/run_full_corpus_weighted_treemaps.sh` | Download compact publication inputs and render all local artifacts |
 | `scripts/run_full_corpus_dual_sample_simulation.sh` | Upload and run the registered repeated-sample design evaluation |
 | `scripts/run_full_corpus_dual_sample_collection.sh` | Upload and run the source-text collector after secret names are supplied |
 | `scripts/run_full_corpus_dual_sample_calibration.sh` | Fit and publish validated model-topic probabilities |
 | `scripts/build_full_corpus_dual_sample_job.py` | Deterministic four-task Jobs payload |
 | `scripts/build_full_corpus_dual_sample_language_job.py` | Deterministic five-task language Jobs payload |
 | `scripts/build_full_corpus_dual_sample_topic_job.py` | Deterministic three-task topic Jobs payload |
-| `scripts/build_full_corpus_dual_sample_analysis_job.py` | Deterministic three-task analysis Jobs payload |
+| `scripts/build_full_corpus_dual_sample_analysis_job.py` | Deterministic four-task analysis Jobs payload |
 | `scripts/build_full_corpus_dual_sample_simulation_job.py` | Existing-cluster Jobs payload for the 5,000-replicate evaluation |
 | `scripts/build_full_corpus_dual_sample_collection_job.py` | Deterministic three-task source-collection Jobs payload |
 | `scripts/build_full_corpus_dual_sample_calibration_job.py` | Existing-cluster Jobs payload for topic calibration |
@@ -349,7 +351,7 @@ bash scripts/run_full_corpus_dual_sample_analysis.sh
 Tasks are ordered:
 
 ```text
-allocate -> estimate -> qa
+allocate -> estimate -> qa -> publish_treemap
 ```
 
 The primary `platform_only` allocation suppresses a parent when a child in the
@@ -358,10 +360,16 @@ retains `Unlabeled` and unmapped mass. The optional `model_completed` allocation
 is added only when the calibrated-table gate passes.
 
 The estimate stage writes raw Horvitz-Thompson shares and design-based standard
-errors. The coherent display share applies only a registered tail-total ratio:
-the SRS channel factor is exactly one, while the PPS view factor reconciles the
-realized tail HT view total to the known phase-one tail view total. Raw estimates
-remain the inferential benchmark. The weighting-difference table reports
+errors. Its general coherent display share applies the registered tail-total
+ratio: the SRS channel factor is exactly one, while the PPS view factor
+reconciles the realized tail HT view total to the known phase-one tail view
+total. The publication stage further calibrates the primary `platform_only`
+language-topic geometry to exact frozen-frame family/leaf channel and view
+margins. Raw estimates and uncertainty remain unchanged. See
+`docs/FULL_CORPUS_WEIGHTED_TREEMAP_RUNBOOK_20260718.md` for the equations,
+published schema, artifact commands, and acceptance gates.
+Raw estimates remain the inferential benchmark. The weighting-difference table
+reports
 `view_share - channel_share`; its initial SE uses the independent-design
 approximation and explicitly flags that joint measurement-error replication is
 still required for final inference.
@@ -401,7 +409,8 @@ PYTHONPATH=. python3 -m unittest \
   youtube_descriptive.tests.test_full_corpus_dual_sample_analysis_job \
   youtube_descriptive.tests.test_full_corpus_dual_sample_simulation_job \
   youtube_descriptive.tests.test_full_corpus_dual_sample_collection_job \
-  youtube_descriptive.tests.test_full_corpus_dual_sample_calibration_job -v
+  youtube_descriptive.tests.test_full_corpus_dual_sample_calibration_job \
+  youtube_descriptive.tests.test_full_corpus_weighted_treemap_renderer -v
 
 youtube_descriptive/.venv/bin/ruff check \
   youtube_descriptive/src/full_corpus_dual_sample_design.py \
@@ -418,7 +427,9 @@ youtube_descriptive/.venv/bin/ruff check \
   scripts/build_full_corpus_dual_sample_analysis_job.py \
   scripts/build_full_corpus_dual_sample_simulation_job.py \
   scripts/build_full_corpus_dual_sample_collection_job.py \
-  scripts/build_full_corpus_dual_sample_calibration_job.py
+  scripts/build_full_corpus_dual_sample_calibration_job.py \
+  scripts/render_full_corpus_weighted_treemaps.py \
+  scripts/render_treemap_v3.py
 ```
 
 ## 13. Acceptance Rules

@@ -31,6 +31,9 @@ class FullCorpusDualSampleAnalysisJobTests(unittest.TestCase):
         self.assertTrue(all(task["existing_cluster_id"] == args.cluster_id for task in tasks))
         self.assertNotIn("new_cluster", json.dumps(payload))
         self.assertEqual(tasks[1]["depends_on"], [{"task_key": "analysis_allocate"}])
+        self.assertEqual(
+            tasks[-1]["depends_on"], [{"task_key": "analysis_qa"}]
+        )
 
 
 if __name__ == "__main__":

@@ -86,6 +86,16 @@ COMPACT_INPUT = False
 ARTIFACT_TAG = "v3_13"
 COHORT_CHANNELS = 103_046
 SOURCE_DESCRIPTION = "YouTube TOO topic allocations + yt_channel_stats"
+STATIC_TITLE = "Recent YouTube viewing, by language and topic"
+STATIC_SUBTITLE = (
+    "Four-week view growth among {cohort_channels:,} channels with at least 10,000 subscribers, "
+    "18 May-15 June 2026. Area = views; color = content family; lighter tiles = family-only classifications."
+)
+STATIC_FOOTER = (
+    "Source: {source}. 'Main' = family tag without a subtopic "
+    "({parent_only_share:.0f}% of views); 'Movies' = YouTube's broad Film topic."
+)
+INTERACTIVE_TITLE = "YouTube Topic Treemap Explorer (v3): language -> family -> leaf -> channel"
 
 # --------------------------------------------------------------------------- #
 # Constants
@@ -111,6 +121,7 @@ MAX_PRIORITY_ASPECT_RATIO = 5.0
 MAX_COVERAGE_ASPECT_RATIO = 5.0
 STRUCT_MIN = 0.003          # min rendered structural cell area (0.3%)
 STATIC_CELL_CAP = 200       # comparison ceiling; geometry may stop below it
+STATIC_INCLUDE_SUBTOPICS = True
 TOP_FAMILY_COUNT = 5
 MIN_TOP_FAMILY_COVERAGE = 4
 EXTRA_FIFTH_FAMILY_BUDGET = 6
@@ -804,6 +815,9 @@ def build_family(sub: pd.DataFrame, family: str, family_value: float, total: flo
         coverage_rescued=coverage_rescued,
         detail_rescued=detail_rescued,
     )
+
+    if not STATIC_INCLUDE_SUBTOPICS:
+        return fam_cell
 
     # Coverage-rescued families are intentionally terminal. Subdividing them
     # would spend additional cells and turn a small exact family total into a
@@ -1588,20 +1602,20 @@ def draw_static(language_cells: list[Cell], total: float, parent_only_share: flo
                bbox_to_anchor=(0.5, 0.058), columnspacing=1.15, handlelength=1.05, handleheight=1.0)
 
     fig.suptitle(
-        "Recent YouTube viewing, by language and topic",
+        STATIC_TITLE,
         x=0.010, y=0.978, ha="left", fontsize=13.0, fontweight="bold", color="#1a1a1a",
     )
     fig.text(
         0.010, 0.945,
-        f"Four-week view growth among {COHORT_CHANNELS:,} channels with at least 10,000 subscribers, "
-        "18 May-15 June 2026. "
-        "Area = views; color = content family; lighter tiles = family-only classifications.",
+        STATIC_SUBTITLE.format(cohort_channels=COHORT_CHANNELS),
         ha="left", va="top", fontsize=7.2, color="#3E4347",
     )
     fig.text(
         0.010, 0.012,
-        f"Source: {SOURCE_DESCRIPTION}. 'Main' = family tag without a subtopic "
-        f"({parent_only_share:.0f}% of views); 'Movies' = YouTube's broad Film topic.",
+        STATIC_FOOTER.format(
+            source=SOURCE_DESCRIPTION,
+            parent_only_share=parent_only_share,
+        ),
         ha="left", va="bottom", fontsize=6.0, color="#555555",
     )
     fig.subplots_adjust(left=MARGIN_LEFT, right=MARGIN_RIGHT, top=MARGIN_TOP, bottom=MARGIN_BOTTOM)
@@ -1829,7 +1843,7 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
         )
     )
     fig.update_layout(
-        title="YouTube Topic Treemap Explorer (v3): language -> family -> leaf -> channel",
+        title=INTERACTIVE_TITLE,
         width=1500,
         height=950,
         margin={"l": 10, "r": 10, "t": 55, "b": 10},
