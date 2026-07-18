@@ -33,6 +33,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 import json
+import gc
 import os
 import re
 import sys
@@ -74,6 +75,13 @@ def _get_bool_widget(name: str, default: bool) -> bool:
 def _get_int_widget(name: str, default: int) -> int:
     raw = _get_widget(name, str(default)).strip()
     return int(raw) if raw else default
+
+
+def _get_optional_int_widget(name: str, default: Optional[int] = None) -> Optional[int]:
+    raw = _get_widget(name, "" if default is None else str(default)).strip()
+    if raw == "" or raw.lower() in {"none", "null", "omit", "default"}:
+        return None
+    return int(raw)
 
 
 def _get_float_widget(name: str, default: float) -> float:
@@ -173,6 +181,7 @@ _create_text_widget("deepseek_max_output_tokens", "600")
 _create_text_widget("deepseek_max_workers", "16")
 _create_text_widget("deepseek_request_timeout_seconds", "60")
 _create_text_widget("deepseek_max_retries", "1")
+_create_text_widget("deepseek_pending_batch_size", "500")
 _create_text_widget("deepseek_direct_streaming", "false")
 _create_text_widget("deepseek_delete_request_jsonl_after_submit", "false")
 _create_text_widget("deepseek_direct_submit_from_requests_table", "false")
@@ -183,6 +192,9 @@ _create_text_widget("max_requests_per_file", "10000")
 _create_text_widget("submit_batches", "false")
 _create_text_widget("submit_provider_filter", "")  # blank = all; comma-separated provider names
 _create_text_widget("submit_model_filter", "")  # blank = all; comma-separated model names
+_create_text_widget("submit_chunk_id_filter", "")  # blank = all; comma-separated chunk ids
+_create_text_widget("submit_chunk_min", "")  # blank = no lower bound; inclusive
+_create_text_widget("submit_chunk_max", "")  # blank = no upper bound; inclusive
 _create_text_widget("skip_existing_submitted_batches", "true")
 _create_text_widget("import_results", "false")
 _create_text_widget("reuse_existing_requests_on_import", "true")
@@ -257,6 +269,10 @@ DEEPSEEK_MAX_OUTPUT_TOKENS = _get_int_widget("deepseek_max_output_tokens", 600)
 DEEPSEEK_MAX_WORKERS = _get_int_widget("deepseek_max_workers", 16)
 DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _get_float_widget("deepseek_request_timeout_seconds", 60.0)
 DEEPSEEK_MAX_RETRIES = _get_int_widget("deepseek_max_retries", 1)
+DEEPSEEK_PENDING_BATCH_SIZE = max(
+    DEEPSEEK_MAX_WORKERS,
+    _get_int_widget("deepseek_pending_batch_size", 500),
+)
 DEEPSEEK_DIRECT_STREAMING = _get_bool_widget("deepseek_direct_streaming", False)
 DEEPSEEK_DELETE_REQUEST_JSONL_AFTER_SUBMIT = _get_bool_widget("deepseek_delete_request_jsonl_after_submit", False)
 DEEPSEEK_DIRECT_SUBMIT_FROM_REQUESTS_TABLE = _get_bool_widget("deepseek_direct_submit_from_requests_table", False)
@@ -268,6 +284,12 @@ SUBMIT_PROVIDER_FILTER_RAW = _get_widget("submit_provider_filter", "").strip().l
 SUBMIT_PROVIDER_FILTER = {p.strip() for p in SUBMIT_PROVIDER_FILTER_RAW.split(",") if p.strip()}
 SUBMIT_MODEL_FILTER_RAW = _get_widget("submit_model_filter", "").strip()
 SUBMIT_MODEL_FILTER = {p.strip() for p in SUBMIT_MODEL_FILTER_RAW.split(",") if p.strip()}
+SUBMIT_CHUNK_ID_FILTER_RAW = _get_widget("submit_chunk_id_filter", "").strip()
+SUBMIT_CHUNK_ID_FILTER = {
+    int(p.strip()) for p in SUBMIT_CHUNK_ID_FILTER_RAW.split(",") if p.strip()
+}
+SUBMIT_CHUNK_MIN = _get_optional_int_widget("submit_chunk_min", None)
+SUBMIT_CHUNK_MAX = _get_optional_int_widget("submit_chunk_max", None)
 SKIP_EXISTING_SUBMITTED_BATCHES = _get_bool_widget("skip_existing_submitted_batches", True)
 IMPORT_RESULTS = _get_bool_widget("import_results", False)
 REUSE_EXISTING_REQUESTS_ON_IMPORT = _get_bool_widget("reuse_existing_requests_on_import", True)
@@ -2723,6 +2745,15 @@ def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[s
             pending_lines.append(line)
 
     total = len(lines)
+    rewrite_existing_result = bool(existing_success_lines and pending_lines)
+    write_path = result_path
+    if rewrite_existing_result:
+        ts = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
+        write_path = f"{result_path}.rewrite_{ts}.tmp"
+        print(
+            f"DeepSeek direct {model}: rewriting existing result file via temp path "
+            f"to avoid DBFS append on {result_path}"
+        )
     print(
         f"DeepSeek direct {model}: {len(pending_lines):,}/{total:,} pending requests "
         f"with {DEEPSEEK_MAX_WORKERS} workers; preserved_success={len(existing_success_lines):,}"
@@ -2733,26 +2764,59 @@ def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[s
             "model": model,
             "chunk_file": path,
             "result_path": result_path,
+            "write_path": write_path,
             "total_requests": total,
             "pending_requests": len(pending_lines),
             "preserved_success": len(existing_success_lines),
+            "rewrite_existing_result": rewrite_existing_result,
         },
     )
     if not pending_lines:
         print(f"DeepSeek direct {model}: all {total:,} requests already have successful results.")
-    with open(result_path, "a", encoding="utf-8", buffering=1) as dst:
+    write_mode = "w" if rewrite_existing_result else "a"
+    with open(write_path, write_mode, encoding="utf-8", buffering=1) as dst:
+        if rewrite_existing_result:
+            for success_line in existing_success_lines:
+                dst.write(success_line)
         with ThreadPoolExecutor(max_workers=DEEPSEEK_MAX_WORKERS) as pool:
-            futures = [pool.submit(_call_line, line) for line in pending_lines]
-            for i, fut in enumerate(as_completed(futures), start=1):
-                out, ok = fut.result()
-                if ok:
-                    n_ok += 1
-                else:
-                    n_error += 1
-                dst.write(json.dumps(out, ensure_ascii=False) + "\n")
-                if i % 100 == 0 or i == len(pending_lines):
-                    dst.flush()
-                    print(f"DeepSeek direct {model}: {i:,}/{len(pending_lines):,} pending done; ok={n_ok:,}; error={n_error:,}")
+            completed_pending = 0
+            for batch_start in range(0, len(pending_lines), DEEPSEEK_PENDING_BATCH_SIZE):
+                pending_batch = pending_lines[batch_start:batch_start + DEEPSEEK_PENDING_BATCH_SIZE]
+                futures = [pool.submit(_call_line, line) for line in pending_batch]
+                for fut in as_completed(futures):
+                    out, ok = fut.result()
+                    completed_pending += 1
+                    if ok:
+                        n_ok += 1
+                    else:
+                        n_error += 1
+                    dst.write(json.dumps(out, ensure_ascii=False) + "\n")
+                    if completed_pending % 100 == 0 or completed_pending == len(pending_lines):
+                        dst.flush()
+                        print(
+                            f"DeepSeek direct {model}: {completed_pending:,}/{len(pending_lines):,} "
+                            f"pending done; ok={n_ok:,}; error={n_error:,}"
+                        )
+                del futures
+                del pending_batch
+                gc.collect()
+
+    if rewrite_existing_result:
+        try:
+            os.replace(local_fs_path(write_path), local_fs_path(result_path))
+        except OSError:
+            dbutils.fs.mv(spark_path(write_path), spark_path(result_path), True)
+        record_panel_progress(
+            "deepseek_direct_result_rewritten",
+            metrics={
+                "model": model,
+                "result_path": result_path,
+                "temp_path": write_path,
+                "preserved_success": len(existing_success_lines),
+                "new_ok": n_ok,
+                "new_error": n_error,
+            },
+        )
 
     success_ids = set()
     seen_ids = set()
@@ -2789,11 +2853,19 @@ def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[s
             "malformed_result_rows": malformed_rows,
         },
     )
-    return {
+    result = {
         "provider_file_id": result_path,
         "provider_batch_id": f"deepseek-direct:{RUN_ID}:{safe_model_dir(model)}:{os.path.basename(path)}",
         "provider_status": f"{status}; ok={n_success}; error={n_missing_success}; malformed_rows={malformed_rows}",
     }
+    del lines
+    del pending_lines
+    del existing_success_lines
+    del completed_ids
+    del success_ids
+    del seen_ids
+    gc.collect()
+    return result
 
 
 batch_job_schema = StructType([
@@ -2859,6 +2931,17 @@ def provider_status_is_successful(provider_status: str) -> bool:
     return True
 
 
+def submit_chunk_is_selected(chunk_id: int) -> bool:
+    chunk_id = int(chunk_id)
+    if SUBMIT_CHUNK_ID_FILTER and chunk_id not in SUBMIT_CHUNK_ID_FILTER:
+        return False
+    if SUBMIT_CHUNK_MIN is not None and chunk_id < SUBMIT_CHUNK_MIN:
+        return False
+    if SUBMIT_CHUNK_MAX is not None and chunk_id > SUBMIT_CHUNK_MAX:
+        return False
+    return True
+
+
 if SUBMIT_BATCHES:
     batch_job_records = existing_batch_job_records()
     already_submitted = set()
@@ -2907,6 +2990,9 @@ if SUBMIT_BATCHES:
             continue
         if SUBMIT_MODEL_FILTER and str(model) not in SUBMIT_MODEL_FILTER:
             print(provider, model, chunk_id, "not in submit_model_filter; skipping")
+            continue
+        if not submit_chunk_is_selected(int(chunk_id)):
+            print(provider, model, chunk_id, "not in submit chunk selection; skipping")
             continue
         if (str(provider), str(model), int(chunk_id)) in already_submitted:
             print(provider, model, chunk_id, "already submitted; skipping")
@@ -3020,6 +3106,10 @@ if SUBMIT_BATCHES:
                     "error": err,
                 },
             )
+        finally:
+            if request_lines_for_direct is not None:
+                del request_lines_for_direct
+            gc.collect()
 else:
     print("submit_batches=false — JSONL files written for external/colleague submission.")
 

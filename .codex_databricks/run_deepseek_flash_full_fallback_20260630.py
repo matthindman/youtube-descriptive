@@ -56,9 +56,13 @@ IMPORT_RESULTS = _widget("import_results", "true").strip().lower() == "true"
 DEEPSEEK_MAX_WORKERS = _widget("deepseek_max_workers", "16")
 DEEPSEEK_REQUEST_TIMEOUT_SECONDS = _widget("deepseek_request_timeout_seconds", "60")
 DEEPSEEK_MAX_RETRIES = _widget("deepseek_max_retries", "1")
+DEEPSEEK_PENDING_BATCH_SIZE = _widget("deepseek_pending_batch_size", "500")
 DEEPSEEK_DIRECT_STREAMING = _widget("deepseek_direct_streaming", "true")
 DEEPSEEK_DELETE_REQUEST_JSONL_AFTER_SUBMIT = _widget("deepseek_delete_request_jsonl_after_submit", "true")
 DEEPSEEK_DIRECT_SUBMIT_FROM_REQUESTS_TABLE = _widget("deepseek_direct_submit_from_requests_table", "true")
+SUBMIT_CHUNK_ID_FILTER = _widget("submit_chunk_id_filter", "")
+SUBMIT_CHUNK_MIN = _widget("submit_chunk_min", "")
+SUBMIT_CHUNK_MAX = _widget("submit_chunk_max", "")
 
 DEFAULT_PHASE_LIMITS = {
     "preflight_only": 0,
@@ -352,12 +356,16 @@ llm_args: Dict[str, str] = {
     "deepseek_max_workers": DEEPSEEK_MAX_WORKERS,
     "deepseek_request_timeout_seconds": DEEPSEEK_REQUEST_TIMEOUT_SECONDS,
     "deepseek_max_retries": DEEPSEEK_MAX_RETRIES,
+    "deepseek_pending_batch_size": DEEPSEEK_PENDING_BATCH_SIZE,
     "deepseek_direct_streaming": DEEPSEEK_DIRECT_STREAMING,
     "deepseek_delete_request_jsonl_after_submit": DEEPSEEK_DELETE_REQUEST_JSONL_AFTER_SUBMIT,
     "deepseek_direct_submit_from_requests_table": DEEPSEEK_DIRECT_SUBMIT_FROM_REQUESTS_TABLE,
     "submit_batches": str(SUBMIT_BATCHES).lower(),
     "submit_provider_filter": "deepseek",
     "submit_model_filter": "deepseek-v4-flash",
+    "submit_chunk_id_filter": SUBMIT_CHUNK_ID_FILTER,
+    "submit_chunk_min": SUBMIT_CHUNK_MIN,
+    "submit_chunk_max": SUBMIT_CHUNK_MAX,
     "skip_existing_submitted_batches": "true",
     "import_results": str(IMPORT_RESULTS).lower(),
     "reuse_existing_requests_on_submit": "true",
