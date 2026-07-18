@@ -23,10 +23,13 @@ Outputs -> outputs/youtube_topic_treemap_20260715_v3_13/:
 
 from __future__ import annotations
 
+# ruff: noqa: E402
+
+import argparse
 import html as _html
+import json
 import math
 import re
-import sys
 import textwrap
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -74,6 +77,15 @@ INTERACTIVE_HTML = OUT_DIR / "treemap_interactive_explorer_v3_13.html"
 CELLS_CSV = OUT_DIR / "treemap_static_cells_v3_13.csv"
 LOG_TXT = OUT_DIR / "render_log_v3_13.txt"
 README_MD = OUT_DIR / "README.md"
+
+RENDERER_ROWS_PATH: Path | None = None
+INTERACTIVE_ROWS_PATH: Path | None = None
+RUN_MANIFEST_PATH: Path | None = None
+RUN_MANIFEST: dict[str, object] = {}
+COMPACT_INPUT = False
+ARTIFACT_TAG = "v3_13"
+COHORT_CHANNELS = 103_046
+SOURCE_DESCRIPTION = "YouTube TOO topic allocations + yt_channel_stats"
 
 # --------------------------------------------------------------------------- #
 # Constants
@@ -193,6 +205,56 @@ _LOG_LINES: list[str] = []
 def log(message: str = "") -> None:
     print(message)
     _LOG_LINES.append(message)
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Render the v3 YouTube topic treemap.")
+    parser.add_argument(
+        "--renderer-rows",
+        type=Path,
+        help="Compact Spark renderer_rows.parquet directory from the full-corpus materializer.",
+    )
+    parser.add_argument(
+        "--run-manifest",
+        type=Path,
+        help="run_manifest.json written beside the compact Spark export.",
+    )
+    parser.add_argument(
+        "--interactive-rows",
+        type=Path,
+        help="Full-language top-15-plus-Other Parquet input for the interactive explorer.",
+    )
+    parser.add_argument("--output-dir", type=Path, help="Artifact output directory.")
+    parser.add_argument("--artifact-tag", default="v3_13", help="Filename suffix for rendered artifacts.")
+    return parser.parse_args()
+
+
+def configure_run(args: argparse.Namespace) -> None:
+    global OUT_DIR, STATIC_PNG, STATIC_SVG, INTERACTIVE_HTML, CELLS_CSV, LOG_TXT, README_MD
+    global RENDERER_ROWS_PATH, INTERACTIVE_ROWS_PATH, RUN_MANIFEST_PATH, RUN_MANIFEST
+    global COMPACT_INPUT, ARTIFACT_TAG
+    global COHORT_CHANNELS, SOURCE_DESCRIPTION
+
+    ARTIFACT_TAG = safe_id_part(args.artifact_tag)
+    if args.output_dir:
+        OUT_DIR = args.output_dir.resolve()
+    RENDERER_ROWS_PATH = args.renderer_rows.resolve() if args.renderer_rows else None
+    INTERACTIVE_ROWS_PATH = args.interactive_rows.resolve() if args.interactive_rows else None
+    RUN_MANIFEST_PATH = args.run_manifest.resolve() if args.run_manifest else None
+    COMPACT_INPUT = RENDERER_ROWS_PATH is not None
+    if RUN_MANIFEST_PATH:
+        RUN_MANIFEST = json.loads(RUN_MANIFEST_PATH.read_text())
+        qa = RUN_MANIFEST.get("qa", {})
+        if isinstance(qa, dict) and qa.get("channels_in_subscriber_cohort") is not None:
+            COHORT_CHANNELS = int(float(str(qa["channels_in_subscriber_cohort"])))
+        SOURCE_DESCRIPTION = "YouTube topicCategories, LID v3 language labels, and yt_channel_stats"
+
+    STATIC_PNG = OUT_DIR / f"treemap_static_master_{ARTIFACT_TAG}.png"
+    STATIC_SVG = OUT_DIR / f"treemap_static_master_{ARTIFACT_TAG}.svg"
+    INTERACTIVE_HTML = OUT_DIR / f"treemap_interactive_explorer_{ARTIFACT_TAG}.html"
+    CELLS_CSV = OUT_DIR / f"treemap_static_cells_{ARTIFACT_TAG}.csv"
+    LOG_TXT = OUT_DIR / f"render_log_{ARTIFACT_TAG}.txt"
+    README_MD = OUT_DIR / "README.md"
 
 
 # --------------------------------------------------------------------------- #
@@ -369,7 +431,75 @@ def load_traffic() -> tuple[pd.DataFrame, dict[str, object]]:
     return traffic, summary
 
 
+def load_compact_allocations(path: Path | None = None) -> pd.DataFrame:
+    input_path = path or RENDERER_ROWS_PATH
+    if input_path is None:
+        raise RuntimeError("Compact renderer path is not configured")
+    if input_path.is_dir():
+        parquet_parts = sorted(input_path.glob("part-*.parquet"))
+        if len(parquet_parts) != 1:
+            raise RuntimeError(
+                f"Compact Spark export must contain exactly one coalesced part file; "
+                f"found {len(parquet_parts)} in {input_path}. Replace the local export directory "
+                "instead of downloading over a prior Spark output."
+            )
+    df = pd.read_parquet(input_path)
+    required = {
+        "language_display",
+        "yt_family",
+        "yt_leaf",
+        "channel_id",
+        "channel_name",
+        "allocated_views_4wk",
+        "view_count_4wk",
+        "allocation_weight",
+        "raw_topic_categories",
+        "is_placement_override",
+        "needs_manual_review",
+        "is_other_channel_pool",
+        "pooled_channel_count",
+    }
+    missing = sorted(required - set(df.columns))
+    if missing:
+        raise RuntimeError(f"Compact renderer rows are missing columns: {missing}")
+
+    df = df.copy()
+    pool_mask = df["is_other_channel_pool"].fillna(False).astype(bool)
+    synthetic = pd.Series(
+        [f"__pool_{i}" for i in range(len(df))],
+        index=df.index,
+        dtype="object",
+    )
+    df["channel_id"] = df["channel_id"].where(~pool_mask, synthetic)
+    df["channel_id"] = df["channel_id"].fillna(synthetic)
+    df["channel_title"] = df["channel_name"].fillna(df["channel_id"])
+    df["language_code"] = df[DISPLAY_COL].astype(str)
+    df[RAW_WEIGHT_COL] = df["allocation_weight"]
+    df[WEIGHT_COL] = df["allocation_weight"]
+    df[VALUE_COL] = pd.to_numeric(df["allocated_views_4wk"], errors="coerce").fillna(0.0)
+    df[CHANNEL_VIEW_COL] = pd.to_numeric(df[CHANNEL_VIEW_COL], errors="coerce")
+    df["current_lifetime_views"] = np.nan
+    df["needs_review"] = df["needs_manual_review"].fillna(False).astype(bool)
+    df["allocation_method"] = "family_balanced_display_v3"
+
+    qa = RUN_MANIFEST.get("qa", {}) if isinstance(RUN_MANIFEST, dict) else {}
+    summary = {
+        "traffic_rows": COHORT_CHANNELS,
+        "traffic_unique_channels": COHORT_CHANNELS,
+        "traffic_duplicate_rows": 0,
+        "current_snapshot": RUN_MANIFEST.get("current_snapshot", "2026-06-15"),
+        "prior_snapshot": RUN_MANIFEST.get("prior_snapshot", "2026-05-18"),
+        "negative_raw_deltas": int(float(str(qa.get("cohort_invalid_negative_delta", 0)))) if isinstance(qa, dict) else 0,
+        "channels_with_valid_4wk": int(float(str(qa.get("cohort_valid_4wk_delta", 0)))) if isinstance(qa, dict) else 0,
+        "total_4wk_views": float(str(qa.get("display_allocated_view_total", df[VALUE_COL].sum()))) if isinstance(qa, dict) else float(df[VALUE_COL].sum()),
+    }
+    df.attrs["traffic_summary"] = summary
+    return df
+
+
 def load_allocations() -> pd.DataFrame:
+    if COMPACT_INPUT:
+        return load_compact_allocations()
     columns = [
         "channel_id",
         "channel_title",
@@ -503,6 +633,31 @@ def assert_conservation(full: pd.DataFrame) -> float:
     return total_alloc
 
 
+def assert_compact_conservation(full: pd.DataFrame) -> float:
+    total_alloc = float(full[VALUE_COL].sum())
+    qa = RUN_MANIFEST.get("qa", {}) if isinstance(RUN_MANIFEST, dict) else {}
+    if not isinstance(qa, dict) or qa.get("display_allocated_view_total") is None:
+        raise RuntimeError("Compact renderer requires display_allocated_view_total in run_manifest.json")
+    expected = float(str(qa["display_allocated_view_total"]))
+    tolerance = max(1.0, expected * 1e-12)
+    if not math.isclose(total_alloc, expected, rel_tol=1e-12, abs_tol=tolerance):
+        raise RuntimeError(
+            "CONSERVATION: FAIL compact renderer total does not match Spark QA "
+            f"renderer={total_alloc:.6f} expected={expected:.6f} delta={abs(total_alloc - expected):.6f}"
+        )
+    if (full[VALUE_COL] < 0).any():
+        raise RuntimeError("CONSERVATION: FAIL compact renderer contains negative allocated views")
+    checks = RUN_MANIFEST.get("checks", {}) if isinstance(RUN_MANIFEST, dict) else {}
+    if not isinstance(checks, dict) or not checks:
+        raise RuntimeError("CONSERVATION: FAIL Spark acceptance checks are absent")
+    failed_checks = sorted(name for name, ok in checks.items() if ok is not True)
+    if failed_checks:
+        raise RuntimeError("CONSERVATION: FAIL Spark acceptance gates failed: " + ", ".join(failed_checks))
+    log("CONSERVATION: PASS")
+    log(f"CONSERVATION TOTAL 4WK VIEWS: {total_alloc:,.0f}")
+    return total_alloc
+
+
 # --------------------------------------------------------------------------- #
 # Static tree
 # --------------------------------------------------------------------------- #
@@ -616,7 +771,12 @@ def build_leaf_channels(sub: pd.DataFrame, family: str, leaf: str, leaf_value: f
         (sub["yt_family"] == family) & (sub["yt_leaf"] == leaf) & (~sub["is_placement_override"])
     ]
     pooled_value += float(nonnamed[VALUE_COL].sum())
-    pooled_count += int(nonnamed["channel_id"].nunique())
+    if "is_other_channel_pool" in nonnamed.columns:
+        pool_rows = nonnamed["is_other_channel_pool"].fillna(False).astype(bool)
+        pooled_count += int(nonnamed.loc[~pool_rows, "channel_id"].nunique())
+        pooled_count += int(nonnamed.loc[pool_rows, "pooled_channel_count"].fillna(0).sum())
+    else:
+        pooled_count += int(nonnamed["channel_id"].nunique())
     if pooled_value > 0:
         chans.append(
             Cell(
@@ -764,11 +924,15 @@ def build_static_tree(full: pd.DataFrame, force_ids: set, suppressed: set = froz
         raise RuntimeError("No positive 4-week allocated views for static treemap")
     total = float(pos[VALUE_COL].sum())
 
-    real = pos.loc[pos[DISPLAY_COL] != OTHER_LANG]
-    lang_real = real.groupby(DISPLAY_COL, observed=True)[VALUE_COL].sum().sort_values(ascending=False)
+    classified = pos.loc[~pos[DISPLAY_COL].isin([OTHER_LANG, UNDETERMINED])]
+    lang_real = classified.groupby(DISPLAY_COL, observed=True)[VALUE_COL].sum().sort_values(ascending=False)
     top_languages = list(lang_real.head(TOP_K_LANGUAGES).index)
 
-    pos["static_language"] = np.where(pos[DISPLAY_COL].isin(top_languages), pos[DISPLAY_COL], OTHER_LANG)
+    pos["static_language"] = np.select(
+        [pos[DISPLAY_COL] == UNDETERMINED, pos[DISPLAY_COL].isin(top_languages)],
+        [UNDETERMINED, pos[DISPLAY_COL]],
+        default=OTHER_LANG,
+    )
     lang_order = pos.groupby("static_language", observed=True)[VALUE_COL].sum().sort_values(ascending=False)
 
     # First guarantee four of each language's true top five. Then rank the
@@ -1023,6 +1187,7 @@ class RenderStats:
     rows: list[dict] = field(default_factory=list)
     pill_boxes: list[tuple] = field(default_factory=list)
     category_labeled_languages: set[str] = field(default_factory=set)
+    language_labeled_names: set[str] = field(default_factory=set)
     labeled_cell_ids: set[int] = field(default_factory=set)
     priority_topics_labeled: int = 0
 
@@ -1063,33 +1228,45 @@ def _language_header(ax, cell: Cell, rect: dict, stats: RenderStats) -> None:
     name = display_label("language", cell.label)
     val = fmt_views(cell.value)
     avail_w = (rect["dx"] - 1.0) * PT_PER_UNIT_X
+    min_header_pt = 5.0 if cell.label == UNDETERMINED else MIN_LABEL_PT
 
     font = None
     with_val = False
-    for half in range(int(round(LANG_BAND_PT * 2)), int(round(MIN_LABEL_PT * 2)) - 1, -1):
+    for half in range(int(round(LANG_BAND_PT * 2)), int(round(min_header_pt * 2)) - 1, -1):
         f = half / 2.0
-        vf = max(MIN_LABEL_PT, f * 0.88)
+        vf = max(min_header_pt, f * 0.88)
         if len(name) * f * HEADER_CHAR_W + f * 1.1 + len(val) * vf * 0.57 <= avail_w:
             font, with_val = f, True
             break
     if font is None:
-        for half in range(int(round(LANG_BAND_PT * 2)), int(round(MIN_LABEL_PT * 2)) - 1, -1):
+        for half in range(int(round(LANG_BAND_PT * 2)), int(round(min_header_pt * 2)) - 1, -1):
             f = half / 2.0
             if len(name) * f * HEADER_CHAR_W <= avail_w:
                 font = f
                 break
 
+    multiline_name = None
+    if font is None and cell.label == UNDETERMINED:
+        candidate = "Undeter-\nmined"
+        candidate_width = max(len(line) for line in candidate.splitlines()) * min_header_pt * HEADER_CHAR_W
+        candidate_height = 2 * min_header_pt * 1.05
+        band_height_pt = band_h * PT_PER_UNIT_Y
+        if candidate_width <= avail_w and candidate_height <= band_height_pt:
+            font = min_header_pt
+            multiline_name = candidate
+
     if font is None:
         return
     y_mid = rect["y"] + band_h / 2.0
-    ax.text(rect["x"] + 0.25, y_mid, name, ha="left", va="center", fontsize=font,
-            fontweight="bold", color=HEADER_NAME_COLOR, zorder=6)
+    ax.text(rect["x"] + 0.25, y_mid, multiline_name or name, ha="left", va="center", fontsize=font,
+            fontweight="bold", color=HEADER_NAME_COLOR, linespacing=0.95, zorder=6)
     if with_val:
-        vf = max(MIN_LABEL_PT, font * 0.88)
+        vf = max(min_header_pt, font * 0.88)
         x_val = rect["x"] + 0.25 + (len(name) * font * HEADER_CHAR_W + font * 1.1) / PT_PER_UNIT_X
         ax.text(x_val, y_mid, val, ha="left", va="center", fontsize=vf,
                 color=HEADER_VALUE_COLOR, zorder=6)
     stats.labeled_cells += 1
+    stats.language_labeled_names.add(cell.label)
 
 
 def _block_label(ax, cell: Cell, rect: dict, total: float, stats: RenderStats,
@@ -1416,13 +1593,14 @@ def draw_static(language_cells: list[Cell], total: float, parent_only_share: flo
     )
     fig.text(
         0.010, 0.945,
-        "Four-week view growth among 103,046 channels, 18 May-15 June 2026. "
+        f"Four-week view growth among {COHORT_CHANNELS:,} channels with at least 10,000 subscribers, "
+        "18 May-15 June 2026. "
         "Area = views; color = content family; lighter tiles = family-only classifications.",
         ha="left", va="top", fontsize=7.2, color="#3E4347",
     )
     fig.text(
         0.010, 0.012,
-        f"Source: YouTube TOO topic allocations + yt_channel_stats. 'Main' = family tag without a subtopic "
+        f"Source: {SOURCE_DESCRIPTION}. 'Main' = family tag without a subtopic "
         f"({parent_only_share:.0f}% of views); 'Movies' = YouTube's broad Film topic.",
         ha="left", va="bottom", fontsize=6.0, color="#555555",
     )
@@ -1467,7 +1645,6 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
         colors.append(color)
         customdata.append(data)
 
-    total = float(pos[VALUE_COL].sum())
     # NO synthetic single root: languages are the top-level sectors (parent="").
     # With maxdepth=2 this makes the OPENING view show colored family tiles inside
     # the neutral language containers, instead of root+languages (both near-white).
@@ -1476,7 +1653,7 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
         lid = f"lang::{safe_id_part(lang)}"
         fill = OTHER_LANGUAGES_FILL if lang == OTHER_LANG else LANGUAGE_FILL
         add(lid, str(lang), "", lval, fill,
-            ["language", str(lang), "", "", "", fmt_views(lval), "", "", ""])
+            ["language", str(lang), "", "", "", fmt_views(lval), "", "", "", "", ""])
 
     fam_totals = (
         pos.groupby([DISPLAY_COL, "yt_family"], observed=True)[VALUE_COL].sum().reset_index()
@@ -1487,7 +1664,7 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
         add(fid, display_label("family", str(row.yt_family)), lid, getattr(row, VALUE_COL),
             family_base_color(str(row.yt_family)),
             ["family", str(getattr(row, DISPLAY_COL)), display_label("family", str(row.yt_family)), "", "",
-             fmt_views(float(getattr(row, VALUE_COL))), "", "", ""])
+             fmt_views(float(getattr(row, VALUE_COL))), "", "", "", "", ""])
 
     leaf_totals = (
         pos.groupby([DISPLAY_COL, "yt_family", "yt_leaf"], observed=True)[VALUE_COL].sum().reset_index()
@@ -1496,9 +1673,14 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
     leaf_color_map: dict[tuple, str] = {}
     for (lang, fam), grp in leaf_totals.groupby([DISPLAY_COL, "yt_family"], observed=True):
         ordered = grp.sort_values(VALUE_COL, ascending=False)
-        real = [l for l in ordered["yt_leaf"] if not is_unspecified_leaf(str(l)) and "other leaves" not in str(l).lower()]
+        real = [
+            leaf_name
+            for leaf_name in ordered["yt_leaf"]
+            if not is_unspecified_leaf(str(leaf_name))
+            and "other leaves" not in str(leaf_name).lower()
+        ]
         ramp_n = len(real)
-        rank = {l: i for i, l in enumerate(real)}
+        rank = {leaf_name: index for index, leaf_name in enumerate(real)}
         for leaf in ordered["yt_leaf"]:
             leaf_color_map[(lang, fam, leaf)] = leaf_color(str(fam), str(leaf), rank.get(leaf, 0), ramp_n)
 
@@ -1510,7 +1692,12 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
         add(leaf_id, display_label("leaf", str(row.yt_leaf)), fid, getattr(row, VALUE_COL), lcolor,
             ["leaf", str(lang), display_label("family", str(row.yt_family)),
              display_label("leaf", str(row.yt_leaf)), "",
-             fmt_views(float(getattr(row, VALUE_COL))), "", "", ""])
+             fmt_views(float(getattr(row, VALUE_COL))), "", "", "", "", ""])
+
+    if "is_other_channel_pool" not in pos.columns:
+        pos["is_other_channel_pool"] = False
+    if "pooled_channel_count" not in pos.columns:
+        pos["pooled_channel_count"] = np.nan
 
     channel_groups = (
         pos.groupby([DISPLAY_COL, "yt_family", "yt_leaf", "channel_id"], observed=True)
@@ -1518,7 +1705,10 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
             channel_title=("channel_title", "first"),
             allocated_views=(VALUE_COL, "sum"),
             channel_views=(CHANNEL_VIEW_COL, "first"),
+            allocation_weight=(WEIGHT_COL, "sum"),
             is_override=("is_placement_override", "max"),
+            is_other_pool=("is_other_channel_pool", "max"),
+            pooled_channel_count=("pooled_channel_count", "max"),
             raw_topic_categories=("raw_topic_categories", "first"),
         )
         .reset_index()
@@ -1529,10 +1719,17 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
         lang, fam, leaf = leaf_key
         leaf_id = f"leaf::{safe_id_part(lang)}::{safe_id_part(fam)}::{safe_id_part(leaf)}"
         lcolor = leaf_color_map.get((lang, fam, leaf), family_base_color(str(fam)))
-        # named placements first, then by views
-        leaf_df = leaf_df.sort_values(["is_override", "allocated_views"], ascending=[False, False])
-        top = leaf_df.head(TOP_CHANNELS_PER_LEAF_INTERACTIVE)
-        rest = leaf_df.iloc[TOP_CHANNELS_PER_LEAF_INTERACTIVE:]
+        # Compact Spark inputs already contain exactly top-15 + Other per leaf.
+        # Legacy raw inputs are pruned here using the same contract.
+        if COMPACT_INPUT:
+            top = leaf_df.loc[~leaf_df["is_other_pool"].fillna(False).astype(bool)].sort_values(
+                ["is_override", "allocated_views"], ascending=[False, False]
+            )
+            rest = leaf_df.loc[leaf_df["is_other_pool"].fillna(False).astype(bool)]
+        else:
+            leaf_df = leaf_df.sort_values(["is_override", "allocated_views"], ascending=[False, False])
+            top = leaf_df.head(TOP_CHANNELS_PER_LEAF_INTERACTIVE)
+            rest = leaf_df.iloc[TOP_CHANNELS_PER_LEAF_INTERACTIVE:]
 
         for r in top.itertuples(index=False):
             cid = f"ch::{safe_id_part(lang)}::{safe_id_part(fam)}::{safe_id_part(leaf)}::{safe_id_part(r.channel_id)}"
@@ -1541,25 +1738,64 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
                 primary_path, nonprimary, review = meta
                 ccolor = lighten(lcolor, CHANNEL_LIGHTEN)
             else:
-                primary_path, nonprimary, review = "", raw_topic_slugs(r.raw_topic_categories), False
+                primary_path, nonprimary, review = "", "", False
                 ccolor = lcolor
+            raw_topics = raw_topic_slugs(r.raw_topic_categories)
+            placement_paths = (
+                f"primary: {primary_path} | non-primary: {nonprimary}" if meta else ""
+            )
             fam_disp = display_label("family", str(fam))
             leaf_disp = display_label("leaf", str(leaf))
             add(cid, str(r.channel_title), leaf_id, float(r.allocated_views), ccolor,
                 ["channel" + (" (named/placed)" if meta else ""), str(lang), fam_disp, leaf_disp,
                  str(r.channel_title), fmt_views(float(r.allocated_views)), fmt_views(float(r.channel_views)),
-                 ("REVIEW" if review else ""),
-                 (f"primary: {primary_path} | non-primary: {nonprimary}" if meta else nonprimary)])
+                 f"{float(r.allocation_weight):.6f}" if pd.notna(r.allocation_weight) else "",
+                 ("REVIEW" if review else ""), raw_topics, placement_paths])
             channel_node_count += 1
 
         if len(rest) > 0:
             other_id = f"chother::{safe_id_part(lang)}::{safe_id_part(fam)}::{safe_id_part(leaf)}"
-            n = int(rest["channel_id"].nunique())
+            if COMPACT_INPUT:
+                n = int(rest["pooled_channel_count"].fillna(0).sum())
+            else:
+                n = int(rest["channel_id"].nunique())
             add(other_id, f"Other ({n} channels)", leaf_id, float(rest["allocated_views"].sum()), lcolor,
                 ["pooled channels", str(lang), display_label("family", str(fam)),
                  display_label("leaf", str(leaf)), f"Other ({n} channels)",
-                 fmt_views(float(rest["allocated_views"].sum())), "", "", ""])
+                 fmt_views(float(rest["allocated_views"].sum())), "", "", "", "", ""])
             channel_node_count += 1
+
+    seen_ids: set[str] = set()
+    duplicate_ids: set[str] = set()
+    for node_id in ids:
+        if node_id in seen_ids:
+            duplicate_ids.add(node_id)
+        seen_ids.add(node_id)
+    if duplicate_ids:
+        preview = ", ".join(sorted(duplicate_ids)[:10])
+        raise RuntimeError(f"Interactive treemap has duplicate sanitized node IDs: {preview}")
+
+    missing_parents = sorted({parent for parent in parents if parent and parent not in seen_ids})
+    if missing_parents:
+        raise RuntimeError("Interactive treemap has missing parent IDs: " + ", ".join(missing_parents[:10]))
+
+    value_by_id = dict(zip(ids, values))
+    child_totals: dict[str, float] = {}
+    for parent, value in zip(parents, values):
+        if parent:
+            child_totals[parent] = child_totals.get(parent, 0.0) + value
+    overfull = []
+    for parent, child_total in child_totals.items():
+        parent_value = value_by_id[parent]
+        tolerance = max(1.0, abs(parent_value) * 1e-12)
+        if child_total > parent_value + tolerance:
+            overfull.append((parent, parent_value, child_total))
+    if overfull:
+        parent, parent_value, child_total = overfull[0]
+        raise RuntimeError(
+            f"Interactive branchvalues=total violation at {parent}: "
+            f"parent={parent_value:.6f}, children={child_total:.6f}"
+        )
 
     hovertemplate = (
         "<b>%{label}</b><br>"
@@ -1570,8 +1806,10 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
         "Channel: %{customdata[4]}<br>"
         "Allocated 4-week views: %{customdata[5]}<br>"
         "Raw channel 4-week views: %{customdata[6]}<br>"
-        "Needs manual review: %{customdata[7]}<br>"
-        "Paths: %{customdata[8]}"
+        "Allocation weight: %{customdata[7]}<br>"
+        "Needs manual review: %{customdata[8]}<br>"
+        "Raw topic slugs: %{customdata[9]}<br>"
+        "Placement paths: %{customdata[10]}"
         "<extra></extra>"
     )
     fig = go.Figure(
@@ -1605,6 +1843,7 @@ def build_interactive(full: pd.DataFrame, placements: pd.DataFrame) -> int:
 # Main
 # --------------------------------------------------------------------------- #
 def main() -> None:
+    configure_run(parse_args())
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     placements = pd.read_csv(PLACEMENT_CSV_PATH)
 
@@ -1613,7 +1852,11 @@ def main() -> None:
 
     # ---- (1) LANGUAGE MERGE map ----
     log("=" * 78)
-    log("LANGUAGE NORMALIZATION MAP (raw language_code -> language_display)")
+    log(
+        "LANGUAGE NORMALIZATION MAP (raw language_code -> language_display)"
+        if not COMPACT_INPUT
+        else "COMPACT SPARK LANGUAGE BLOCKS (full ISO normalization audited upstream)"
+    )
     log("=" * 78)
     code_to_display = (
         df[["language_code", DISPLAY_COL]].drop_duplicates().sort_values("language_code")
@@ -1635,14 +1878,33 @@ def main() -> None:
     else:
         log("ENGLISH IS ONE BLOCK: FAIL")
 
-    log("\nREVIEW-CLUSTER / NON-ISO CODES POOLED INTO 'Other languages' (with view mass):")
-    other_codes = df.loc[df[DISPLAY_COL] == OTHER_LANG, "language_code"].unique()
-    for code in sorted(other_codes, key=lambda c: -code_views.get(c, 0.0)):
-        log(f"  {code:<42s} {code_views.get(code, 0.0):>18,.0f}")
-    log(f"  -> total 'Other languages' (pre-top12) mass: {code_views.reindex(other_codes).fillna(0).sum():,.0f}")
+    if COMPACT_INPUT:
+        qa = RUN_MANIFEST.get("qa", {}) if isinstance(RUN_MANIFEST, dict) else {}
+        log(
+            "\nUPSTREAM ISO AUDIT: "
+            f"classified_codes={qa.get('language_source_classified_codes', 'unknown')}; "
+            f"unregistered_codes_retained={qa.get('unregistered_language_codes', 'unknown')}; "
+            f"unregistered_channels_retained={qa.get('unregistered_language_channels', 'unknown')}"
+        )
+    else:
+        log("\nREVIEW-CLUSTER / NON-ISO CODES POOLED INTO 'Other languages' (with view mass):")
+        other_codes = df.loc[df[DISPLAY_COL] == OTHER_LANG, "language_code"].unique()
+        for code in sorted(other_codes, key=lambda c: -code_views.get(c, 0.0)):
+            log(f"  {code:<42s} {code_views.get(code, 0.0):>18,.0f}")
+        log(f"  -> total 'Other languages' (pre-top12) mass: {code_views.reindex(other_codes).fillna(0).sum():,.0f}")
 
     # ---- hard placement ----
-    full, place_info = apply_hard_placement(df, placements)
+    if COMPACT_INPUT:
+        full = df.copy()
+        placed_ids = set(full.loc[full["is_placement_override"], "channel_id"])
+        place_info = {"placed": len(placed_ids), "fallback_views": 0}
+    else:
+        full, place_info = apply_hard_placement(df, placements)
+    interactive_full = (
+        load_compact_allocations(INTERACTIVE_ROWS_PATH)
+        if COMPACT_INPUT and INTERACTIVE_ROWS_PATH is not None
+        else full
+    )
     log(f"\nNAMED CHANNELS HARD-PLACED (weight=1): {place_info['placed']} / {len(placements)}")
     if place_info["fallback_views"]:
         log(f"  (fell back to CSV view_count_4wk for {place_info['fallback_views']} channels)")
@@ -1658,7 +1920,7 @@ def main() -> None:
         f"(kept only if the full name fits legibly)")
 
     # ---- topic remap: re-home real topics the Spark hierarchy left "Unmapped" ----
-    moved = apply_topic_remap(full)
+    moved = [] if COMPACT_INPUT else apply_topic_remap(full)
     if moved:
         log("\nTOPIC REMAP (canonical slugs re-homed out of 'Other / Unmapped'):")
         for m in moved:
@@ -1666,7 +1928,10 @@ def main() -> None:
 
     # ---- (5) conservation ----
     log("\n" + "=" * 78)
-    total_alloc = assert_conservation(full)
+    if COMPACT_INPUT:
+        assert_compact_conservation(full)
+    else:
+        assert_conservation(full)
 
     # ---- (2) palette ----
     missing = [f for f in REAL_FAMILIES if f not in FAMILY_COLORS]
@@ -1700,6 +1965,26 @@ def main() -> None:
         if bad_channels:
             suppressed |= bad_channels
             force_ids = force_ids - bad_channels
+            continue
+
+        # Spend the comparison budget on the largest optional detail families.
+        # Required top-five rescues are never removed by this cap gate.
+        if len(placed) > STATIC_CELL_CAP:
+            optional_detail = sorted(
+                (
+                    (cell.value, cell.language, cell.family)
+                    for cell, _rect, _path in placed
+                    if cell.detail_rescued and (cell.language, cell.family) not in detail_suppressed
+                ),
+                key=lambda item: (item[0], item[1], item[2]),
+            )
+            if not optional_detail:
+                raise RuntimeError(
+                    f"Static tree has {len(placed)} cells, above cap {STATIC_CELL_CAP}, "
+                    "with no optional detail families left to pool"
+                )
+            _, language, family = optional_detail[0]
+            detail_suppressed.add((language, family))
             continue
 
         bad_geometry = [
@@ -1751,9 +2036,14 @@ def main() -> None:
     for i, lang in enumerate(top_languages, 1):
         v = float(lang_real[lang])
         log(f"  {i:2d}. {lang:<16s} {v:>18,.0f}  {v / total * 100:5.2f}%")
-    other_lang_mass = total - float(lang_real.reindex(top_languages).sum())
+    language_cell_values = {cell.label: float(cell.value) for cell in language_cells}
+    other_lang_mass = language_cell_values.get(OTHER_LANG, 0.0)
     log(f"  +   {OTHER_LANG:<16s} {other_lang_mass:>18,.0f}  {other_lang_mass / total * 100:5.2f}%  "
-        f"(non-top12 languages + clusters)")
+        f"(classified non-top-{TOP_K_LANGUAGES} languages)")
+    undetermined_mass = language_cell_values.get(UNDETERMINED, 0.0)
+    if undetermined_mass > 0:
+        log(f"  +   {UNDETERMINED:<16s} {undetermined_mass:>18,.0f}  "
+            f"{undetermined_mass / total * 100:5.2f}%  (unresolved language)")
 
     # parent-only share: views tagged with only a family ("(main)" leaves)
     pos_all = full.loc[full[VALUE_COL] > 0]
@@ -1856,7 +2146,10 @@ def main() -> None:
     log(f"STATIC CELLS CSV: {CELLS_CSV.resolve()}")
 
     # ---- (6) interactive ----
-    channel_nodes = build_interactive(full, placements)
+    if interactive_full is not full:
+        assert_compact_conservation(interactive_full)
+    channel_nodes = build_interactive(interactive_full, placements)
+    interactive_languages = int(interactive_full[DISPLAY_COL].nunique())
     html_text = INTERACTIVE_HTML.read_text(errors="ignore")
     external_scripts = len(re.findall(r"<script[^>]+src=", html_text))
     log("\n" + "=" * 78)
@@ -1866,10 +2159,17 @@ def main() -> None:
     log(f"INTERACTIVE EXTERNAL <script src> TAGS: {external_scripts} (self-contained if 0)")
     log(f"INTERACTIVE CHANNEL/OTHER NODES: {channel_nodes:,} "
         f"(top {TOP_CHANNELS_PER_LEAF_INTERACTIVE} + Other per leaf; named placed first)")
+    log(f"INTERACTIVE DISPLAY LANGUAGES: {interactive_languages:,} (unpooled full-language input)")
+    log("INTERACTIVE NODE INTEGRITY: unique IDs, complete parents, branch totals valid")
 
     log("\nSTATIC MASTER PNG: " + str(STATIC_PNG.resolve()))
     log("STATIC MASTER SVG: " + str(STATIC_SVG.resolve()))
-    log(f"TRAFFIC SOURCE TABLE: {TRAFFIC_SOURCE_TABLE}; TOO UNIVERSE: {TOO_CHANNEL_TABLE}")
+    if COMPACT_INPUT:
+        sources = RUN_MANIFEST.get("source_tables", {}) if isinstance(RUN_MANIFEST, dict) else {}
+        log(f"SOURCE TABLES: {sources}")
+        log(f"SUBSCRIBER COHORT: >= {RUN_MANIFEST.get('minimum_subscribers', 10000):,}")
+    else:
+        log(f"TRAFFIC SOURCE TABLE: {TRAFFIC_SOURCE_TABLE}; TOO UNIVERSE: {TOO_CHANNEL_TABLE}")
     log(f"TRAFFIC SNAPSHOTS: current={traffic_summary.get('current_snapshot')} "
         f"prior={traffic_summary.get('prior_snapshot')}")
 
@@ -1882,14 +2182,31 @@ def main() -> None:
         if r["area_frac"] < STRUCT_MIN and not r.get("forced") and not r.get("priority_topic")
     )
     missing_category_labels = sorted(
-        {cell.label for cell in language_cells} - stats.category_labeled_languages
+        ({cell.label for cell in language_cells} - {UNDETERMINED})
+        - stats.category_labeled_languages
     )
-    log(f"LANGUAGES WITH NO CATEGORY LABEL: {len(missing_category_labels)}"
+    missing_language_headers = sorted(
+        {cell.label for cell in language_cells} - stats.language_labeled_names
+    )
+    optional_category_missing = sorted(
+        ({cell.label for cell in language_cells} & {UNDETERMINED})
+        - stats.category_labeled_languages
+    )
+    log(f"CLASSIFIED LANGUAGE BLOCKS WITH NO CATEGORY LABEL: {len(missing_category_labels)}"
         + (f" ({', '.join(missing_category_labels)})" if missing_category_labels else ""))
+    log(f"OPTIONAL UNDETERMINED CATEGORY LABEL MISSING: {len(optional_category_missing)}")
+    log(f"LANGUAGE BLOCKS WITH NO HEADER: {len(missing_language_headers)}"
+        + (f" ({', '.join(missing_language_headers)})" if missing_language_headers else ""))
     residual_colors_valid = (
         RESIDUAL_FAMILY_COLORS["Other / Unmapped YouTube topic"] not in FAMILY_COLORS.values()
         and RESIDUAL_FAMILY_COLORS["Unlabeled"] not in FAMILY_COLORS.values()
         and FAMILY_COLORS["Society"] == "#0072B2"
+    )
+    qa = RUN_MANIFEST.get("qa", {}) if isinstance(RUN_MANIFEST, dict) else {}
+    expected_interactive_languages = (
+        int(float(str(qa["interactive_display_languages"])))
+        if COMPACT_INPUT and isinstance(qa, dict) and qa.get("interactive_display_languages") is not None
+        else interactive_languages
     )
     gates = {
         "english_single_block": n_english == 1,
@@ -1897,7 +2214,8 @@ def main() -> None:
         "static_cells<=cap": static_cells <= STATIC_CELL_CAP,
         "no_sliver_storm(<6 unforced sub-0.3%% leaves)": sliver_leaves < 6,
         "png>=2000x1200": dimensions[0] >= 2000 and dimensions[1] >= 1200,
-        "every_language_has_category_label": not missing_category_labels,
+        "every_language_has_header": not missing_language_headers,
+        "classified_languages_have_category_label": not missing_category_labels,
         f"priority_topic_min>={min(PRIORITY_TOPIC_MIN, SECOND_PRIORITY_TOPIC_MIN):.3%}": (
             not priority_rows
             or min_priority_area_pct >= min(PRIORITY_TOPIC_MIN, SECOND_PRIORITY_TOPIC_MIN) * 100
@@ -1917,6 +2235,14 @@ def main() -> None:
         ),
         "society_is_hue_residuals_are_neutral": residual_colors_valid,
         "interactive_self_contained": external_scripts == 0,
+        "interactive_full_language_coverage": (
+            not COMPACT_INPUT
+            or (
+                INTERACTIVE_ROWS_PATH is not None
+                and interactive_languages == expected_interactive_languages
+                and OTHER_LANG not in set(interactive_full[DISPLAY_COL])
+            )
+        ),
     }
     for name, ok in gates.items():
         log(f"  [{'PASS' if ok else 'FAIL'}] {name}")

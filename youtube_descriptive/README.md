@@ -21,6 +21,19 @@ Use `src/README_language_lid_v3.md` as the source of truth for the current dual-
 pipeline. The original single-model OpenLID first cut is preserved in git history and should not be used as
 the current runbook.
 
+## Current sampling and treemap docs
+
+Use these versioned records for the full collected-frame analysis:
+
+* `../docs/FULL_CORPUS_DUAL_SAMPLE_DESIGN_20260717.md`: frozen census plus one-million-SRS and target-one-million-PPS design.
+* `../docs/FULL_CORPUS_DUAL_SAMPLE_IMPLEMENTATION_20260717.md`: executable Databricks stages, table contracts, QA gates, and run log.
+* `../docs/TREEMAP_FULL_CORPUS_RUNBOOK.md`: lineage and rendering instructions for the 4.8-million-channel language corpus and `>=10K` census.
+* `../docs/TREEMAP_WEIGHTING_BIAS_20260716.md`: equal-channel versus view-weighted distortion analysis.
+* `../docs/BANDED_LT10K_FULL_CORPUS_SENSITIVITY_20260716.md`: limitations and results from the earlier 2,000-channel banded pilot.
+
+Generated Delta exports and rendered artifacts remain untracked. Commit code,
+configuration, and design/runbook documents only.
+
 
 ## Getting started
 
@@ -46,9 +59,12 @@ If you're developing with an IDE, dependencies for this project should be instal
 The Databricks workspace and IDE extensions provide a graphical interface for working
 with this project. It's also possible to interact with it directly using the CLI:
 
-1. Authenticate to your Databricks workspace, if you have not done so already:
-    ```
-    $ databricks configure
+1. Read `src/AGENT_DATA_CONTEXT.md` before authentication or data access. This
+   project requires the named `matt.hindman@researchaccelerator.org` profile;
+   do not use a default or legacy profile. CLI commands take this form:
+    ```bash
+    env DATABRICKS_AUTH_STORAGE=plaintext databricks \
+      -p matt.hindman@researchaccelerator.org ...
     ```
 
 2. To deploy a development copy of this project, type:
