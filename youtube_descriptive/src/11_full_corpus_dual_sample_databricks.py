@@ -119,6 +119,15 @@ def stable_row_hash(columns: list[str]) -> F.Column:
     return F.sha2(F.concat_ws("\x1e", *values), 256)
 
 
+def source_channel_id(frame: DataFrame) -> F.Column:
+    """Normalize collection tables written by either crawler generation."""
+    if "channel_id" in frame.columns:
+        return F.col("channel_id").cast("string")
+    if "canonical_id" in frame.columns:
+        return F.col("canonical_id").cast("string")
+    raise ValueError("Collection source must contain channel_id or canonical_id")
+
+
 def sample_hash(channel_col: F.Column, seed: str) -> F.Column:
     return F.sha2(F.concat_ws("\x1f", channel_col.cast("string"), F.lit(FRAME_VERSION), F.lit(seed)), 256)
 
@@ -891,28 +900,20 @@ def run_draw_samples() -> dict[str, object]:
 
 
 def latest_description(analysis_ids: DataFrame) -> DataFrame:
-    source_frames = [
-        spark.table(SOURCES["channel_descriptions"])
-        .select(
-            F.col("canonical_id").cast("string").alias("channel_id"),
+    def normalize(table_name: str) -> DataFrame:
+        frame = spark.table(table_name)
+        return frame.select(
+            source_channel_id(frame).alias("channel_id"),
             F.col("channel_name").cast("string").alias("description_channel_name"),
             F.col("channel_description").cast("string").alias("channel_description"),
             F.col("uploads_playlist_id").cast("string").alias("uploads_playlist_id"),
             F.col("collected_at").cast("timestamp").alias("description_collected_at"),
             F.col("collected_date").cast("date").alias("description_collected_date"),
         )
-    ]
+
+    source_frames = [normalize(SOURCES["channel_descriptions"])]
     if table_exists(TABLES["collected_descriptions"]):
-        source_frames.append(
-            spark.table(TABLES["collected_descriptions"]).select(
-                F.col("canonical_id").cast("string").alias("channel_id"),
-                F.col("channel_name").cast("string").alias("description_channel_name"),
-                F.col("channel_description").cast("string").alias("channel_description"),
-                F.col("uploads_playlist_id").cast("string").alias("uploads_playlist_id"),
-                F.col("collected_at").cast("timestamp").alias("description_collected_at"),
-                F.col("collected_date").cast("date").alias("description_collected_date"),
-            )
-        )
+        source_frames.append(normalize(TABLES["collected_descriptions"]))
     raw = source_frames[0]
     for source_frame in source_frames[1:]:
         raw = raw.unionByName(source_frame)
@@ -930,9 +931,10 @@ def latest_description(analysis_ids: DataFrame) -> DataFrame:
 
 
 def available_video_source(analysis_ids: DataFrame) -> DataFrame:
-    source_frames = [
-        spark.table(SOURCES["channel_videos"]).select(
-            F.col("canonical_id").cast("string").alias("channel_id"),
+    def normalize(table_name: str) -> DataFrame:
+        frame = spark.table(table_name)
+        return frame.select(
+            source_channel_id(frame).alias("channel_id"),
             "video_id",
             "video_title",
             "video_description",
@@ -941,20 +943,10 @@ def available_video_source(analysis_ids: DataFrame) -> DataFrame:
             F.col("collected_at").alias("video_collected_at"),
             F.col("collected_date").alias("video_collected_date"),
         )
-    ]
+
+    source_frames = [normalize(SOURCES["channel_videos"])]
     if table_exists(TABLES["collected_videos"]):
-        source_frames.append(
-            spark.table(TABLES["collected_videos"]).select(
-                F.col("canonical_id").cast("string").alias("channel_id"),
-                "video_id",
-                "video_title",
-                "video_description",
-                "published_at",
-                "position",
-                F.col("collected_at").alias("video_collected_at"),
-                F.col("collected_date").alias("video_collected_date"),
-            )
-        )
+        source_frames.append(normalize(TABLES["collected_videos"]))
     result = source_frames[0]
     for source_frame in source_frames[1:]:
         result = result.unionByName(source_frame)
@@ -993,11 +985,28 @@ def run_stage_enrichment() -> dict[str, object]:
     language = language.where(F.col("label_version") == F.lit(expected_label_version))
     descriptions = latest_description(ids.select("channel_id"))
     topics = spark.table(TABLES["platform_topics"])
-    collection_dispositions = None
+    collection_disposition_frames = []
     if table_exists(TABLES["collection_dispositions"]):
-        collection_dispositions = spark.table(TABLES["collection_dispositions"]).select(
-            "channel_id", "collection_disposition"
+        collection_disposition_frames.append(
+            spark.table(TABLES["collection_dispositions"]).select(
+                "channel_id", "collection_disposition"
+            )
         )
+    collection_not_found_table = SOURCES.get("collection_not_found")
+    if collection_not_found_table and table_exists(collection_not_found_table):
+        not_found = spark.table(collection_not_found_table)
+        collection_disposition_frames.append(
+            not_found.select(
+                source_channel_id(not_found).alias("channel_id"),
+                F.lit("not_found_or_unavailable_after_attempt").alias("collection_disposition"),
+            ).dropDuplicates(["channel_id"])
+        )
+    collection_dispositions = None
+    if collection_disposition_frames:
+        collection_dispositions = collection_disposition_frames[0]
+        for disposition_frame in collection_disposition_frames[1:]:
+            collection_dispositions = collection_dispositions.unionByName(disposition_frame)
+        collection_dispositions = collection_dispositions.dropDuplicates(["channel_id"])
 
     unlabeled_ids = ids.join(language.select("channel_id"), "channel_id", "left_anti")
     all_video_source = available_video_source(ids.select("channel_id"))
@@ -1038,10 +1047,24 @@ def run_stage_enrichment() -> dict[str, object]:
         joined = joined.join(collection_dispositions, "channel_id", "left")
     else:
         joined = joined.withColumn("collection_disposition", F.lit(None).cast("string"))
+    completed_without_text = (
+        F.col("description_collected_at").isNotNull()
+        & (~F.col("has_nonempty_channel_description"))
+        & (~F.col("has_recent_video_text"))
+    )
+    joined = joined.withColumn(
+        "collection_disposition",
+        F.when(
+            F.col("collection_disposition").isNull() & completed_without_text,
+            F.lit("channel_retrieved_no_usable_text_after_50_videos"),
+        ).otherwise(F.col("collection_disposition")),
+    )
     terminal_collection = F.col("collection_disposition").isin(
         "not_found_or_terminated",
+        "not_found_or_unavailable_after_attempt",
         "channel_found_without_uploads_playlist",
         "channel_found_no_recent_videos",
+        "channel_retrieved_no_usable_text_after_50_videos",
     )
     joined = joined.withColumn(
         "language_enrichment_disposition",
@@ -1080,7 +1103,9 @@ def run_stage_enrichment() -> dict[str, object]:
         "selection_route",
         "pi_union",
         "base_weight_union",
-        F.lit("collect_channel_description_and_recent_10_videos").alias("requested_collection"),
+        F.lit(
+            f"collect_channel_description_and_recent_{int(CONFIG['collection']['recent_videos_per_channel'])}_videos"
+        ).alias("requested_collection"),
         F.lit(DESIGN_VERSION).alias("design_version"),
     )
     write_table(collection_queue, TABLES["collection_queue"], comment="Probability-sample IDs requiring source-text collection before LID.")

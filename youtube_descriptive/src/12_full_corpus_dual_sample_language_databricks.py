@@ -29,11 +29,15 @@ def _get(name: str, default: str) -> str:
 
 
 _widget("stage", "preflight")
+_widget("sample_phase", "all")
 _widget(
     "design_config_path",
     "dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1.json",
 )
 STAGE = _get("stage", "preflight")
+SAMPLE_PHASE = _get("sample_phase", "all").lower()
+if SAMPLE_PHASE not in {"all", "pps", "remainder"}:
+    raise ValueError("sample_phase must be one of: all, pps, remainder")
 CONFIG_PATH = _get(
     "design_config_path",
     "dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1.json",
@@ -44,29 +48,42 @@ validate_design_config(CONFIG)
 DESIGN_VERSION = CONFIG["design_version"]
 LANGUAGE = CONFIG["language"]
 PREFIX = f"{CONFIG['output_catalog']}.{CONFIG['output_schema']}.{CONFIG['output_prefix']}"
-LID_PREFIX = f"{CONFIG['output_prefix']}_lid"
-LLM_PREFIX = f"{CONFIG['output_prefix']}_deepseek_flash"
+PHASE_SUFFIX = "" if SAMPLE_PHASE == "all" else f"_{SAMPLE_PHASE}"
+LID_PREFIX = f"{CONFIG['output_prefix']}_lid{PHASE_SUFFIX}"
+LLM_PREFIX = f"{CONFIG['output_prefix']}_deepseek_flash{PHASE_SUFFIX}"
 CATALOG = CONFIG["output_catalog"]
 SCHEMA = CONFIG["output_schema"]
 HASH_BUCKETS = int(LANGUAGE["inference_hash_buckets"])
-LID_RUN_ID = LANGUAGE["lid_run_id"]
-LLM_RUN_ID = LANGUAGE["llm_run_id"]
+LID_RUN_ID = f"{LANGUAGE['lid_run_id']}{PHASE_SUFFIX}"
+LLM_RUN_ID = f"{LANGUAGE['llm_run_id']}{PHASE_SUFFIX}"
 
 TABLES = {
     "analysis_union": f"{PREFIX}_analysis_union",
     "collection_queue": f"{PREFIX}_collection_queue",
-    "lid_source_channels": f"{PREFIX}_lid_source_channels",
-    "lid_source_videos": f"{PREFIX}_lid_source_videos",
-    "preflight": f"{PREFIX}_language_preflight",
+    "lid_source_channels_all": f"{PREFIX}_lid_source_channels",
+    "lid_source_videos_all": f"{PREFIX}_lid_source_videos",
+    "lid_source_channels": f"{PREFIX}_lid_source_channels{PHASE_SUFFIX}",
+    "lid_source_videos": f"{PREFIX}_lid_source_videos{PHASE_SUFFIX}",
+    "preflight": f"{PREFIX}_language_preflight{PHASE_SUFFIX}",
     "lid_channels": f"{CATALOG}.{SCHEMA}.{LID_PREFIX}_channels",
     "lid_comparison": f"{CATALOG}.{SCHEMA}.{LID_PREFIX}_channel_model_comparison",
     "lid_segments": f"{CATALOG}.{SCHEMA}.{LID_PREFIX}_segments_input",
     "lid_text_features": f"{CATALOG}.{SCHEMA}.{LID_PREFIX}_channel_text_features",
     "lid_hindi_audit": f"{CATALOG}.{SCHEMA}.{LID_PREFIX}_hindi_indic_audit_candidates",
-    "routing": f"{PREFIX}_language_routing_comparison",
+    "routing": f"{PREFIX}_language_routing_comparison{PHASE_SUFFIX}",
     "llm_verdicts": f"{CATALOG}.{SCHEMA}.{LLM_PREFIX}_llm_verdicts",
-    "current": f"{PREFIX}_channel_language_current",
-    "summary": f"{PREFIX}_channel_language_summary",
+    "current": (
+        f"{PREFIX}_channel_language_current"
+        if SAMPLE_PHASE == "all"
+        else f"{PREFIX}_channel_language_{SAMPLE_PHASE}_current"
+    ),
+    "summary": (
+        f"{PREFIX}_channel_language_summary"
+        if SAMPLE_PHASE == "all"
+        else f"{PREFIX}_channel_language_{SAMPLE_PHASE}_summary"
+    ),
+    "pps_current": f"{PREFIX}_channel_language_pps_current",
+    "remainder_current": f"{PREFIX}_channel_language_remainder_current",
 }
 
 
@@ -99,13 +116,35 @@ def run_scope(frame: DataFrame, run_id: str) -> DataFrame:
     )
 
 
+def phase_filter(frame: DataFrame) -> DataFrame:
+    if SAMPLE_PHASE == "pps":
+        return frame.where(F.col("selection_route").isin("pps_only", "srs_and_pps"))
+    if SAMPLE_PHASE == "remainder":
+        return frame.where(~F.col("selection_route").isin("pps_only", "srs_and_pps"))
+    return frame
+
+
 def preflight() -> dict[str, int]:
-    for name in ("analysis_union", "collection_queue", "lid_source_channels", "lid_source_videos"):
+    for name in ("analysis_union", "collection_queue", "lid_source_channels_all", "lid_source_videos_all"):
         require_table(TABLES[name])
-    analysis = spark.table(TABLES["analysis_union"])
-    queue = spark.table(TABLES["collection_queue"])
-    channels = spark.table(TABLES["lid_source_channels"])
-    videos = spark.table(TABLES["lid_source_videos"])
+    analysis = phase_filter(spark.table(TABLES["analysis_union"]))
+    queue = phase_filter(spark.table(TABLES["collection_queue"]))
+    all_channels = spark.table(TABLES["lid_source_channels_all"])
+    channels = phase_filter(all_channels)
+    videos = spark.table(TABLES["lid_source_videos_all"]).join(
+        channels.select("channel_id"), "channel_id", "inner"
+    )
+    if SAMPLE_PHASE != "all":
+        write_table(
+            channels,
+            TABLES["lid_source_channels"],
+            f"Dual-LID channel source restricted to the nonoverlapping {SAMPLE_PHASE} phase.",
+        )
+        write_table(
+            videos,
+            TABLES["lid_source_videos"],
+            f"Dual-LID video source restricted to the nonoverlapping {SAMPLE_PHASE} phase.",
+        )
     counts = {
         "analysis_union_rows": analysis.count(),
         "analysis_union_distinct": analysis.select("channel_id").distinct().count(),
@@ -144,6 +183,7 @@ def preflight() -> dict[str, int]:
         "Language preflight counts; existence proves text collection and source conservation passed.",
     )
     print("LANGUAGE PREFLIGHT: PASS")
+    print("SAMPLE PHASE:", SAMPLE_PHASE)
     print(json.dumps(counts, sort_keys=True))
     return counts
 
@@ -201,7 +241,7 @@ def prepare_routing() -> dict[str, int]:
 def publish() -> dict[str, int]:
     for name in ("analysis_union", "lid_channels", "llm_verdicts"):
         require_table(TABLES[name])
-    analysis = spark.table(TABLES["analysis_union"])
+    analysis = phase_filter(spark.table(TABLES["analysis_union"]))
     existing = analysis.where(F.col("has_existing_language_label")).select(
         "channel_id",
         F.lower(F.trim(F.col("channel_language"))).alias("channel_language"),
@@ -323,7 +363,7 @@ def publish() -> dict[str, int]:
     published_at = datetime.now(timezone.utc)
     current = (
         existing.unionByName(new)
-        .withColumn("analysis_label_version", F.lit(f"{DESIGN_VERSION}_language_v1"))
+        .withColumn("analysis_label_version", F.lit(f"{DESIGN_VERSION}_language{PHASE_SUFFIX}_v1"))
         .withColumn("lid_run_id", F.lit(LID_RUN_ID))
         .withColumn("llm_run_id", F.lit(LLM_RUN_ID))
         .withColumn("published_at", F.lit(published_at).cast("timestamp"))
@@ -354,13 +394,73 @@ def publish() -> dict[str, int]:
     return {key: int(value) for key, value in counts.items()}
 
 
+def publish_combined() -> dict[str, int]:
+    for name in ("analysis_union", "pps_current", "remainder_current"):
+        require_table(TABLES[name])
+    analysis = spark.table(TABLES["analysis_union"])
+    pps = spark.table(TABLES["pps_current"])
+    remainder = spark.table(TABLES["remainder_current"])
+    combined = pps.unionByName(remainder)
+    counts = {
+        "analysis_rows": analysis.count(),
+        "analysis_distinct": analysis.select("channel_id").distinct().count(),
+        "pps_rows": pps.count(),
+        "remainder_rows": remainder.count(),
+        "combined_rows": combined.count(),
+        "combined_distinct": combined.select("channel_id").distinct().count(),
+        "missing_from_combined": analysis.select("channel_id").join(
+            combined.select("channel_id"), "channel_id", "left_anti"
+        ).count(),
+        "unexpected_in_combined": combined.select("channel_id").join(
+            analysis.select("channel_id"), "channel_id", "left_anti"
+        ).count(),
+    }
+    label_counts = combined.agg(
+        F.sum(F.col("is_language_classified").cast("long")).alias("classified"),
+        F.sum((F.col("channel_language") == "und").cast("long")).alias("und"),
+        F.sum((F.col("analysis_label_source") == "reused_frozen_head_label").cast("long")).alias("reused"),
+        F.sum((F.col("analysis_label_source") == "deepseek_flash_fallback").cast("long")).alias("deepseek_classified"),
+        F.sum((F.col("analysis_label_source") == "deepseek_flash_insufficient_text").cast("long")).alias("deepseek_insufficient"),
+    ).first().asDict()
+    counts.update({key: int(value or 0) for key, value in label_counts.items()})
+    if not (
+        counts["analysis_rows"]
+        == counts["analysis_distinct"]
+        == counts["combined_rows"]
+        == counts["combined_distinct"]
+    ) or counts["missing_from_combined"] or counts["unexpected_in_combined"]:
+        raise AssertionError(f"Phase-union conservation failed: {counts}")
+    write_table(
+        combined,
+        TABLES["current"],
+        "Final analysis language labels formed from nonoverlapping PPS-first and remainder phases.",
+    )
+    summary_rows = [
+        (DESIGN_VERSION, key, int(value), datetime.now(timezone.utc))
+        for key, value in counts.items()
+    ]
+    write_table(
+        spark.createDataFrame(
+            summary_rows,
+            "design_version string, metric string, value long, recorded_at timestamp",
+        ),
+        TABLES["summary"],
+        "Conservation metrics for the nonoverlapping PPS-first and remainder language union.",
+    )
+    print("PHASED LANGUAGE CONSERVATION: PASS")
+    print(json.dumps(counts, sort_keys=True))
+    return counts
+
+
 STAGES = {
     "preflight": preflight,
     "prepare_routing": prepare_routing,
     "publish": publish,
+    "publish_combined": publish_combined,
 }
 if STAGE not in STAGES:
     raise ValueError(f"Unknown language stage {STAGE!r}; expected one of {sorted(STAGES)}")
 print(f"RUNNING LANGUAGE STAGE: {STAGE}")
+print(f"SAMPLE PHASE: {SAMPLE_PHASE}")
 RESULT = STAGES[STAGE]()
 dbutils.notebook.exit(json.dumps({"stage": STAGE, "result": RESULT}, sort_keys=True, default=str))

@@ -29,6 +29,12 @@ class FullCorpusDualSampleDesignTests(unittest.TestCase):
         self.assertEqual(config["execution"]["existing_cluster_id"], "0601-203643-bkxsqffg")
         self.assertEqual(config["treemap"]["packing"], "squarify")
         self.assertEqual(config["treemap"]["static_cell_cap"], 200)
+        self.assertEqual(
+            config["source_tables"]["channel_videos"],
+            "dev_sean.matt.yt_dual_sample_20260717_v1_channel_videos",
+        )
+        self.assertEqual(config["language"]["video_cutoff_absolute_gain_threshold"], 0.003)
+        self.assertEqual(config["collection"]["recent_videos_per_channel"], 50)
 
     def test_config_rejects_wrong_databricks_profile(self) -> None:
         path = ROOT / "config" / "full_corpus_dual_sample_20260717_v1.json"

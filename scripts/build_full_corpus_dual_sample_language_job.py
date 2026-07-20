@@ -17,6 +17,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lid-path", required=True)
     parser.add_argument("--llm-path", required=True)
     parser.add_argument("--dbfs-config-path", required=True)
+    parser.add_argument("--sample-phase", choices=("all", "pps", "remainder", "combine"), default="all")
     return parser.parse_args()
 
 
@@ -28,11 +29,36 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
     schema = config["output_schema"]
     prefix = config["output_prefix"]
     language = config["language"]
+    recent_videos = int(config["collection"]["recent_videos_per_channel"])
+    sample_phase = getattr(args, "sample_phase", "all")
+    if sample_phase == "combine":
+        return {
+            "run_name": f"{config['design_version']}_language_combine",
+            "tasks": [
+                {
+                    "task_key": "publish_combined_language",
+                    "existing_cluster_id": args.cluster_id,
+                    "timeout_seconds": 0,
+                    "notebook_task": {
+                        "notebook_path": args.orchestrator_path,
+                        "base_parameters": {
+                            "design_config_path": args.dbfs_config_path,
+                            "sample_phase": "all",
+                            "stage": "publish_combined",
+                        },
+                    },
+                }
+            ],
+        }
+    phase_suffix = "" if sample_phase == "all" else f"_{sample_phase}"
     buckets = str(language["inference_hash_buckets"])
-    lid_prefix = f"{prefix}_lid"
-    llm_prefix = f"{prefix}_deepseek_flash"
-    lid_run_id = language["lid_run_id"]
-    llm_run_id = language["llm_run_id"]
+    lid_prefix = f"{prefix}_lid{phase_suffix}"
+    llm_prefix = f"{prefix}_deepseek_flash{phase_suffix}"
+    lid_run_id = f"{language['lid_run_id']}{phase_suffix}"
+    llm_run_id = f"{language['llm_run_id']}{phase_suffix}"
+    source_channels = f"{prefix}_lid_source_channels{phase_suffix}"
+    source_videos = f"{prefix}_lid_source_videos{phase_suffix}"
+    routing_table = f"{prefix}_language_routing_comparison{phase_suffix}"
 
     output_suffixes = {
         "segments_input": "segments_input",
@@ -66,8 +92,8 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
     lid_parameters = {
         "catalog": catalog,
         "schema": schema,
-        "channels_table": f"{prefix}_lid_source_channels",
-        "videos_table": f"{prefix}_lid_source_videos",
+        "channels_table": source_channels,
+        "videos_table": source_videos,
         "output_catalog": catalog,
         "output_schema": schema,
         "run_id": lid_run_id,
@@ -81,7 +107,8 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
         "video_title_column": "video_title",
         "video_description_column": "video_description",
         "video_rank_column": "position",
-        "videos_per_channel": "10",
+        "video_rank_ascending": "true",
+        "videos_per_channel": str(recent_videos),
         "enable_openlid": "true",
         "enable_glotlid": "true",
         "glotlid_mode": "all_valid_segments",
@@ -106,13 +133,13 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
     llm_parameters = {
         "catalog": catalog,
         "schema": schema,
-        "comparison_table": f"{prefix}_language_routing_comparison",
+        "comparison_table": routing_table,
         "segments_input_table": f"{lid_prefix}_segments_input",
         "channels_table": f"{lid_prefix}_channels",
         "channel_text_features_table": f"{lid_prefix}_channel_text_features",
         "hindi_indic_audit_table": f"{lid_prefix}_hindi_indic_audit_candidates",
-        "source_channels_table": f"{prefix}_lid_source_channels",
-        "source_videos_table": f"{prefix}_lid_source_videos",
+        "source_channels_table": source_channels,
+        "source_videos_table": source_videos,
         "run_id": llm_run_id,
         "source_run_id": lid_run_id,
         "inference_hash_buckets": buckets,
@@ -160,9 +187,9 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
         "secret_scope": language["secret_scope"],
         "deepseek_secret_key": language["deepseek_secret_key"],
     }
-    common = {"design_config_path": args.dbfs_config_path}
+    common = {"design_config_path": args.dbfs_config_path, "sample_phase": sample_phase}
     return {
-        "run_name": f"{config['design_version']}_language",
+        "run_name": f"{config['design_version']}_language_{sample_phase}",
         "tasks": [
             {
                 "task_key": "language_preflight",

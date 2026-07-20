@@ -187,8 +187,10 @@ def prepare() -> dict[str, int]:
         )
     )
     request_ids = missing.unionByName(validation).dropDuplicates(["channel_id"])
-    source_videos = spark.table(CONFIG["source_tables"]["channel_videos"]).select(
-        F.col("canonical_id").cast("string").alias("channel_id"),
+    raw_source_videos = spark.table(CONFIG["source_tables"]["channel_videos"])
+    source_channel_id = "channel_id" if "channel_id" in raw_source_videos.columns else "canonical_id"
+    source_videos = raw_source_videos.select(
+        F.col(source_channel_id).cast("string").alias("channel_id"),
         F.col("video_title").cast("string"),
         F.col("video_description").cast("string"),
         F.col("position").cast("int"),

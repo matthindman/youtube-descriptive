@@ -112,6 +112,13 @@ Validation and cohort runs should keep `videos_per_channel` positive. The defaul
 materializing the full video history for sampled channels. Subscriber-cohort driver runs apply the same cap
 before writing cohort video scratch tables and forward the same guard to the child LID notebook.
 
+`video_rank_column` and `video_rank_ascending` must describe the source table's
+ordering semantics together. Timestamp columns normally use descending order.
+YouTube uploads-playlist `position` uses `0` for the newest item, so runs that
+set `video_rank_column=position` must also set
+`video_rank_ascending=true`. The dual-sample builders enforce this explicitly;
+omitting it would select the oldest collected videos when a cap is active.
+
 Every run writes `yt_lid_v3_preflight_estimate` after segment validity is computed and before model
 inference starts. It records the selected channel count, selected video count, total segment rows, expected
 valid segments, and projected compact prediction rows for the enabled model configuration. Check this table

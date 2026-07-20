@@ -223,6 +223,7 @@ _create_text_widget("limit_channels", "0")  # 0 = full corpus
 _create_text_widget("videos_per_channel", "10")  # 0 = unbounded only when allow_unbounded_videos_per_channel=true
 _create_text_widget("allow_unbounded_videos_per_channel", "false")
 _create_text_widget("video_rank_column", "")  # blank = auto-detect
+_create_text_widget("video_rank_ascending", "false")  # true for playlist position (0 = newest)
 _create_text_widget("max_segment_chars", "2000")
 _create_text_widget("score_threshold", "0.0")
 _create_text_widget("checkpoint_dir", "dbfs:/tmp/yt_lid_v3/checkpoints")
@@ -349,6 +350,7 @@ LIMIT_CHANNELS = _get_int_widget("limit_channels", 0)
 VIDEOS_PER_CHANNEL = _get_int_widget("videos_per_channel", 10)
 ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL = _get_bool_widget("allow_unbounded_videos_per_channel", False)
 VIDEO_RANK_COLUMN = _get_widget("video_rank_column", "").strip()
+VIDEO_RANK_ASCENDING = _get_bool_widget("video_rank_ascending", False)
 MAX_SEGMENT_CHARS = _get_int_widget("max_segment_chars", 2000)
 SCORE_THRESHOLD = _get_float_widget("score_threshold", 0.0)
 CHECKPOINT_DIR = _get_widget("checkpoint_dir", "dbfs:/tmp/yt_lid_v3/checkpoints")
@@ -563,6 +565,7 @@ print("min_clean_chars:", MIN_CLEAN_CHARS, "| min_clean_chars_non_latin:", MIN_C
 print("production_mode:", PRODUCTION_MODE, "| prediction_output_mode:", PREDICTION_OUTPUT_MODE,
       "| run_id:", RUN_ID, "| bucket range:", f"{BUCKET_START}-{BUCKET_END}/{INFERENCE_HASH_BUCKETS}")
 print("videos_per_channel:", VIDEOS_PER_CHANNEL, "| allow_unbounded_videos_per_channel:", ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL)
+print("video_rank_column:", VIDEO_RANK_COLUMN or "<auto>", "| ascending:", VIDEO_RANK_ASCENDING)
 
 try:
     spark.conf.set("spark.databricks.delta.replaceWhere.dataColumns.enabled", "true")
@@ -1224,7 +1227,8 @@ if VIDEOS_PER_CHANNEL > 0:
     video_row_hash_tiebreak = F.col("_lid_video_row_hash").asc()
     if rank_col:
         print(f"Restricting to {VIDEOS_PER_CHANNEL} videos/channel using rank column `{rank_col}`.")
-        order_cols = [F.col(rank_col).desc_nulls_last()]
+        rank_order = F.col(rank_col).asc_nulls_last() if VIDEO_RANK_ASCENDING else F.col(rank_col).desc_nulls_last()
+        order_cols = [rank_order]
         if video_id_col:
             order_cols.append(F.col(video_id_col).asc_nulls_last())
         order_cols.append(video_row_hash_tiebreak)
@@ -1271,6 +1275,7 @@ record_progress(
     metrics={
         "videos_per_channel": VIDEOS_PER_CHANNEL,
         "rank_column": rank_col or "<none>",
+        "rank_ascending": VIDEO_RANK_ASCENDING,
         "retained_columns": ",".join(video_lid_cols),
     },
 )
@@ -1615,6 +1620,7 @@ preflight_rows = [
     ("selected_videos_after_dedup_and_cap", n_videos_selected_for_segments, "post-dedup videos selected for segment fanout"),
     ("videos_per_channel", VIDEOS_PER_CHANNEL, "0 means unbounded, guarded by allow_unbounded_videos_per_channel"),
     ("allow_unbounded_videos_per_channel", int(ALLOW_UNBOUNDED_VIDEOS_PER_CHANNEL), "must be true to allow videos_per_channel=0"),
+    ("video_rank_ascending", int(VIDEO_RANK_ASCENDING), f"rank_column={rank_col or '<none>'}; true means smallest values are newest"),
     ("segment_input_rows", n_segment_input_rows, "non-empty text segments after channel/video selection"),
     ("expected_valid_segments", n_valid_segments, "segments where is_valid_text_for_lid=true"),
     ("projected_openlid_compact_rows", projected_openlid_compact_rows, "one compact row per valid segment when OpenLID is enabled"),

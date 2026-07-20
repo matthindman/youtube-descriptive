@@ -5,7 +5,7 @@
 **Design specification:** [FULL_CORPUS_DUAL_SAMPLE_DESIGN_20260717.md](FULL_CORPUS_DUAL_SAMPLE_DESIGN_20260717.md)
 **Target population:** channels in the frozen 2026-06-15 collected frame
 **Traffic endpoint:** 2026-07-13, 28 elapsed days
-**Status:** frame, design screen, samples, and initial enrichment staging complete; source collection pending
+**Status:** source collection, enrichment restage, and cutoff selection complete; PPS production dual LID running
 
 ## 1. Scope
 
@@ -62,9 +62,11 @@ compute. Jobs in this runbook contain `existing_cluster_id` and no
 | `youtube_descriptive/src/14_full_corpus_dual_sample_analysis_databricks.py` | Topic allocations, SRS/PPS estimates and SEs, exact platform-topic calibration margins, publication cells, and conservation QA |
 | `youtube_descriptive/src/15_full_corpus_dual_sample_repeated_simulation_databricks.py` | Frozen head/tail pseudo-populations and 5,000-replicate empirical design checks |
 | `youtube_descriptive/src/16_full_corpus_dual_sample_collection_databricks.py` | Resumable YouTube Data API description/recent-video collection with complete dispositions |
+| `youtube_descriptive/src/17_full_corpus_dual_sample_lid_cutoff_experiment_databricks.py` | Paired 100,000-PPS-channel experiment selecting the recent-video LID cap |
 | `youtube_descriptive/src/17_full_corpus_dual_sample_topic_calibration_databricks.py` | Human-validation-gated weighted temperature calibration and QA |
 | `scripts/run_full_corpus_dual_sample.sh` | Upload and run phase-one/sample stages |
 | `scripts/run_full_corpus_dual_sample_language.sh` | Upload and run gated dual-LID/DeepSeek stages |
+| `scripts/run_full_corpus_dual_sample_lid_cutoff.sh` | Upload and run the paired recent-video cutoff experiment |
 | `scripts/run_full_corpus_dual_sample_topic.sh` | Upload and run model-completed topic stages |
 | `scripts/run_full_corpus_dual_sample_analysis.sh` | Upload and run post-enrichment allocation, estimation, QA, and treemap publication stages |
 | `scripts/render_full_corpus_weighted_treemaps.py` | Render weighted attention/channel treemaps, explorers, and coefficient plots from compact publication cells |
@@ -74,6 +76,7 @@ compute. Jobs in this runbook contain `existing_cluster_id` and no
 | `scripts/run_full_corpus_dual_sample_calibration.sh` | Fit and publish validated model-topic probabilities |
 | `scripts/build_full_corpus_dual_sample_job.py` | Deterministic four-task Jobs payload |
 | `scripts/build_full_corpus_dual_sample_language_job.py` | Deterministic five-task language Jobs payload |
+| `scripts/build_full_corpus_dual_sample_lid_cutoff_job.py` | Existing-cluster cutoff-experiment Jobs payload |
 | `scripts/build_full_corpus_dual_sample_topic_job.py` | Deterministic three-task topic Jobs payload |
 | `scripts/build_full_corpus_dual_sample_analysis_job.py` | Deterministic four-task analysis Jobs payload |
 | `scripts/build_full_corpus_dual_sample_simulation_job.py` | Existing-cluster Jobs payload for the 5,000-replicate evaluation |
@@ -96,8 +99,9 @@ cohort, registered parameters, gates, and publication join.
 | Hidden-subscriber audit | `dev_sean.default.channels` |
 | Discovery stopping record | `dev_sean.default.pub_subs_full_pass_batches` |
 | Discovery channel detail | `dev_sean.default.new_channels` |
-| Existing source descriptions | `dev_sean.matt.yt_channel_descriptions` |
-| Existing recent-video text | `dev_sean.matt.yt_channel_videos` |
+| Dual-sample channel descriptions | `dev_sean.matt.yt_dual_sample_20260717_v1_channel_descriptions` |
+| Dual-sample recent-video text | `dev_sean.matt.yt_dual_sample_20260717_v1_channel_videos` |
+| Attempted channels not found | `dev_sean.matt.yt_dual_sample_20260717_v1_cd_not_found` |
 | Existing final language labels | `dev_sean.matt.yt_lid_v3_channel_crawl_full_20260623_channel_language_silver_current` |
 | Tail stress-test pilot | `dev_sean.matt.yt_lid_v3_banded_lt10k_20260716_treemap_pilot_channel_base` |
 
@@ -257,13 +261,81 @@ The language preflight enforces these conditions. Terminal not-found/no-text
 channels remain selected and publish as `und`; only retryable request failures
 remain in `_collection_queue`.
 
+### 7.1 Completed 2026-07-20 backfill
+
+The completed external backfill wrote directly to the three authoritative
+tables listed in section 4. It requested up to 50 playlist items per channel;
+playlist `position=0` is the newest item. Exact SQL QA against the selected
+SRS/PPS union (`statement_id=01f1847d-1aac-1108-8131-947cf060173d`) found:
+
+```text
+selected union                         1,991,644
+retrieved selected channels           1,987,518
+missing after attempted collection        4,126
+nonempty channel descriptions         1,291,799
+empty channel descriptions              695,719
+channels with video text              1,760,633
+channels with >=10 / >=50 videos      1,371,699 / 955,711
+playlist position range               0..49
+invalid/null playlist positions       0
+PPS retrieved / with usable text      998,124 / 972,809
+SRS retrieved / with usable text      997,872 / 861,643
+```
+
+The backfill audit table contains attempted IDs outside the tail sample union
+because the complete analysis union also contains certainty-stratum channels.
+The enrichment stage joins by `channel_id`, deduplicates repeated attempts,
+uses retrieved descriptions/videos when present, and treats an audited
+not-found result with no usable text as terminal `und`. It does not infer that
+every not-found channel is permanently deleted; the stored disposition is
+`not_found_or_unavailable_after_attempt`. A successfully retrieved channel with
+an empty description and no usable text in any collected video is separately
+recorded as `channel_retrieved_no_usable_text_after_50_videos` and also remains
+in the analysis as `und`; repeating the same collection is not required.
+
 ## 8. Language Run
 
-After collection and a successful enrichment restage:
+After collection and a successful enrichment restage, first select the evidence
+cap from the paired PPS experiment:
 
 ```bash
-bash scripts/run_full_corpus_dual_sample_language.sh
+bash scripts/run_full_corpus_dual_sample_lid_cutoff.sh
 ```
+
+The deterministic experiment uses 100,000 PPS-selected, dual-LID-ready
+channels. OpenLID-v3 and GlotLID run once on the newest 50 videos, after which
+the stored segment predictions are reaggregated at cutoffs
+`1, 2, 3, 5, 8, 10, 15, 20, 30, 40, 50` using the production segment weights,
+top-two admission rules, and channel-level tie breakers. The primary outcome
+is the unconditional share of sampled channels for which both models return
+the same base ISO code. All cutoffs use the same channels, so the report gives
+paired standard errors and p-values, model coverage, exact-label agreement,
+and primary-label stability against the 50-video result.
+
+The report evaluates both all experiment channels and the fixed subset with all
+50 videos available. The cutoff is the smallest candidate whose best later
+dual-resolution rate is less than **0.003 higher in both populations**, meaning
+less than 0.3 percentage points of possible remaining improvement. This avoids
+diluting the marginal-video signal with channels that have no later uploads.
+The stricter materiality rule controls selection; paired significance and
+relative gain remain diagnostics. Set
+`collection.recent_videos_per_channel` to the recorded recommendation before
+the production run. YouTube playlist position is ordered ascending throughout
+because `position=0` is newest.
+
+Run production language inference in nonoverlapping phases, starting with PPS:
+
+```bash
+SAMPLE_PHASE=pps bash scripts/run_full_corpus_dual_sample_language.sh
+SAMPLE_PHASE=remainder bash scripts/run_full_corpus_dual_sample_language.sh
+SAMPLE_PHASE=combine bash scripts/run_full_corpus_dual_sample_language.sh
+```
+
+`pps` includes both `pps_only` and `srs_and_pps` channels. `remainder` excludes
+those IDs and therefore covers SRS-only plus non-PPS certainty-stratum rows.
+`combine` runs no inference; it unions the two phase publications and fails
+unless row count, distinct channel count, missing IDs, and unexpected IDs all
+match `_analysis_union` exactly.
 
 Tasks:
 
@@ -405,6 +477,7 @@ PYTHONPATH=. python3 -m unittest \
   youtube_descriptive.tests.test_full_corpus_dual_sample_design \
   youtube_descriptive.tests.test_full_corpus_dual_sample_job \
   youtube_descriptive.tests.test_full_corpus_dual_sample_language_job \
+  youtube_descriptive.tests.test_full_corpus_dual_sample_lid_cutoff_job \
   youtube_descriptive.tests.test_full_corpus_dual_sample_topic_job \
   youtube_descriptive.tests.test_full_corpus_dual_sample_analysis_job \
   youtube_descriptive.tests.test_full_corpus_dual_sample_simulation_job \
@@ -420,9 +493,11 @@ youtube_descriptive/.venv/bin/ruff check \
   youtube_descriptive/src/14_full_corpus_dual_sample_analysis_databricks.py \
   youtube_descriptive/src/15_full_corpus_dual_sample_repeated_simulation_databricks.py \
   youtube_descriptive/src/16_full_corpus_dual_sample_collection_databricks.py \
+  youtube_descriptive/src/17_full_corpus_dual_sample_lid_cutoff_experiment_databricks.py \
   youtube_descriptive/src/17_full_corpus_dual_sample_topic_calibration_databricks.py \
   scripts/build_full_corpus_dual_sample_job.py \
   scripts/build_full_corpus_dual_sample_language_job.py \
+  scripts/build_full_corpus_dual_sample_lid_cutoff_job.py \
   scripts/build_full_corpus_dual_sample_topic_job.py \
   scripts/build_full_corpus_dual_sample_analysis_job.py \
   scripts/build_full_corpus_dual_sample_simulation_job.py \
@@ -480,6 +555,10 @@ DISPLAY SHARE CONSERVATION: PASS
 | 2026-07-17 | `35159108968698` | Repair from `draw_samples` | SUCCESS; draw and initial enrichment staging passed |
 | 2026-07-17 | `896176326148446` | 5,000-replicate design evaluation | SUCCESS; 20 outcome/design/domain rows written |
 | 2026-07-17 | `99262517647565` | Simulation schema repair rerun | SUCCESS; explicit `wald_normal` and variance-ratio fields written |
+| 2026-07-20 | `771680734300337` | First post-collection enrichment refresh | CANCELED by this agent after QA showed retrieved empty-text channels needed an explicit terminal disposition |
+| 2026-07-20 | `845387019641338` | Repaired post-collection enrichment refresh | SUCCESS; collection queue zero and language source conservation passed |
+| 2026-07-20 | `98930401179212` | 100,000-PPS-channel recent-video cutoff experiment | SUCCESS; 50 videos selected under the 0.3-point rule |
+| 2026-07-20 | `288009785189569` | Production PPS language phase | RUNNING; preflight passed and dual LID started |
 
 Successful results from the first two stages of `644840643258205`:
 
@@ -515,6 +594,58 @@ TOPIC ROWS / NONEMPTY: 6,880,708 / 6,227,663
 REQUIRES MODEL-TOPIC ROBUSTNESS: 654,537
 SAMPLE CONSERVATION: PASS
 ENRICHMENT STAGING: PASS
+```
+
+Post-collection enrichment results from `845387019641338`:
+
+```text
+ANALYSIS UNION ROWS / DISTINCT: 6,882,200 / 6,882,200
+CERTAINTY ROWS: 4,890,556
+EXISTING LANGUAGE LABELS: 4,787,320
+READY FOR DUAL LID: 1,926,208
+TERMINAL NO-TEXT ASSIGN UND: 168,672
+REQUIRES SOURCE-TEXT COLLECTION: 0
+TOPIC ROWS / NONEMPTY: 6,880,708 / 6,227,663
+REQUIRES MODEL-TOPIC ROBUSTNESS: 654,537
+ENRICHMENT STAGING: PASS
+```
+
+Recent-video cutoff results from `98930401179212`:
+
+```text
+SAMPLE CHANNELS / DISTINCT: 100,000 / 100,000
+SAMPLE VIDEO ROWS / CHANNELS: 4,155,729 / 98,877
+FIXED 50-VIDEO COHORT: 73,198
+VALID SEGMENTS PER MODEL: 4,249,034
+COMPACT OPENLID / GLOTLID ROWS: 4,249,034 / 4,249,034
+DUAL RESOLUTION AT 10 / 30 / 40 / 50: 75.877% / 78.880% / 79.499% / 79.860%
+PAIRED 40-TO-50 GAIN: 0.361 percentage points (SE 0.0469; p=1.39e-14)
+FIXED-50 COHORT 40-TO-50 GAIN: 0.481 percentage points (SE 0.0631; p=2.62e-14)
+OPENLID / GLOTLID / BOTH COVERAGE AT 50: 94.168% / 94.359% / 94.089%
+EXACT-LABEL AGREEMENT AT 50: 79.033%
+RECOMMENDED RECENT VIDEOS PER CHANNEL: 50
+CUTOFF EXPERIMENT CONSERVATION: PASS
+```
+
+The 40-to-50 improvement exceeds the registered 0.3-percentage-point stopping
+threshold in both the complete experiment sample and the fixed 50-video cohort.
+The config therefore freezes `recent_videos_per_channel=50`. These are
+dual-model resolution/agreement diagnostics, not ground-truth language
+accuracy estimates. Summary query statement ID:
+`01f18485-5b2c-1e9f-a2c7-2dd2c401bcd8`.
+
+Production PPS preflight from run `288009785189569`:
+
+```text
+PPS ANALYSIS ROWS / DISTINCT: 1,000,144 / 1,000,144
+EXISTING LABELS: 276
+MISSING LABELS: 999,868
+DUAL-LID SOURCE CHANNELS / DISTINCT: 972,809 / 972,809
+TERMINAL NO-TEXT UND: 27,059
+COLLECTION QUEUE: 0
+LID VIDEO ROWS / CHANNELS: 40,480,704 / 962,059
+276 + 972,809 + 27,059 = 1,000,144: PASS
+LANGUAGE PREFLIGHT: PASS
 ```
 
 Repeated-sample highlights from `896176326148446`:
