@@ -35,6 +35,13 @@ class FullCorpusDualSampleAnalysisJobTests(unittest.TestCase):
             tasks[-1]["depends_on"], [{"task_key": "analysis_qa"}]
         )
 
+    def test_analysis_launcher_uses_portable_mktemp_template(self) -> None:
+        launcher = (ROOT / "scripts" / "run_full_corpus_dual_sample_analysis.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("full_corpus_dual_sample_analysis.XXXXXX\")", launcher)
+        self.assertNotIn("full_corpus_dual_sample_analysis.XXXXXX.json", launcher)
+
 
 if __name__ == "__main__":
     unittest.main()

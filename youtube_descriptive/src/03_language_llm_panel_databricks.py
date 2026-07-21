@@ -2256,14 +2256,45 @@ requests = (
     routed_prompts.crossJoin(models_df)
     # D4: run-scope the request identity so results from other runs can't collide on import.
     .withColumn("run_id", F.lit(RUN_ID))
-    .withColumn(
-        "request_id",
-        F.concat(F.lit("yl_"), F.substring(F.sha2(F.concat_ws("||", F.col("run_id"), F.col("provider"), F.col("model"), F.col("channel_id")), 256), 1, 61)),
-    )
     .withColumn("system_prompt", F.lit(SYSTEM_PROMPT))
     .withColumn("temperature", F.lit(TEMPERATURE).cast("double") if TEMPERATURE is not None else F.lit(None).cast("double"))
     .withColumn("max_output_tokens", F.lit(MAX_OUTPUT_TOKENS))
     .withColumn("prompt_version", F.lit(PROMPT_VERSION))
+    .withColumn(
+        "prompt_fingerprint",
+        F.sha2(
+            F.concat_ws(
+                "||",
+                F.col("prompt_version"),
+                F.col("system_prompt"),
+                F.col("prompt_user"),
+                F.coalesce(F.col("temperature").cast("string"), F.lit("provider_default")),
+                F.col("max_output_tokens").cast("string"),
+            ),
+            256,
+        ),
+    )
+    .withColumn(
+        "request_id",
+        F.concat(
+            F.lit("yl_"),
+            F.substring(
+                F.sha2(
+                    F.concat_ws(
+                        "||",
+                        F.col("run_id"),
+                        F.col("provider"),
+                        F.col("model"),
+                        F.col("channel_id"),
+                        F.col("prompt_fingerprint"),
+                    ),
+                    256,
+                ),
+                1,
+                61,
+            ),
+        ),
+    )
 )
 
 # COMMAND ----------
@@ -2383,26 +2414,44 @@ if _reuse_existing_requests_reason and _table_exists_full(panel_requests_full):
     existing_run_requests = spark.table(panel_requests_full).where(F.col("run_id") == F.lit(RUN_ID))
     if existing_run_requests.limit(1).count() > 0:
         existing_request_cols = set(existing_run_requests.columns)
-        prompt_version_ok_for_submit = True
-        if _reuse_existing_requests_reason == "submit_batches=true":
-            if "prompt_version" not in existing_request_cols:
-                prompt_version_ok_for_submit = False
-            else:
-                prompt_version_ok_for_submit = (
-                    existing_run_requests
-                    .where(F.coalesce(F.col("prompt_version"), F.lit("")) != F.lit(PROMPT_VERSION))
-                    .limit(1)
-                    .count()
-                    == 0
-                )
-            if not prompt_version_ok_for_submit:
-                print(
-                    "Existing request table prompt_version does not match current prompt_version; "
-                    "regenerating request rows for submit:",
-                    panel_requests_full,
-                )
+        request_cache_matches = {
+            "prompt_version",
+            "prompt_fingerprint",
+            "request_id",
+        }.issubset(existing_request_cols)
+        if request_cache_matches:
+            request_cache_matches = (
+                existing_run_requests
+                .where(F.coalesce(F.col("prompt_version"), F.lit("")) != F.lit(PROMPT_VERSION))
+                .limit(1)
+                .count()
+                == 0
+            )
+        if request_cache_matches:
+            current_identity = requests.select("request_id", "prompt_fingerprint")
+            existing_identity = existing_run_requests.select("request_id", "prompt_fingerprint")
+            request_cache_matches = (
+                current_identity.join(
+                    existing_identity,
+                    ["request_id", "prompt_fingerprint"],
+                    "left_anti",
+                ).limit(1).count()
+                == 0
+                and existing_identity.join(
+                    current_identity,
+                    ["request_id", "prompt_fingerprint"],
+                    "left_anti",
+                ).limit(1).count()
+                == 0
+            )
+        if not request_cache_matches:
+            print(
+                "Existing request cache does not match the current prompt payload; "
+                "regenerating request rows:",
+                panel_requests_full,
+            )
 
-        if prompt_version_ok_for_submit and REFRESH_REQUEST_PROVIDER_FILTER:
+        if request_cache_matches and REFRESH_REQUEST_PROVIDER_FILTER:
             refresh_filter = F.col("provider").isin(*sorted(REFRESH_REQUEST_PROVIDER_FILTER))
             if REFRESH_REQUEST_MODEL_FILTER:
                 refresh_filter = refresh_filter & F.col("model").isin(*sorted(REFRESH_REQUEST_MODEL_FILTER))
@@ -2427,7 +2476,7 @@ if _reuse_existing_requests_reason and _table_exists_full(panel_requests_full):
                 sorted(REFRESH_REQUEST_MODEL_FILTER) if REFRESH_REQUEST_MODEL_FILTER else "ALL",
                 "while preserving stored prompts.",
             )
-        elif prompt_version_ok_for_submit:
+        elif request_cache_matches:
             requests = existing_run_requests
             _using_existing_requests = True
             print(f"Reusing existing request table for {_reuse_existing_requests_reason}:", panel_requests_full)
@@ -2565,6 +2614,10 @@ def submit_gemini_batch(path: str, model: str) -> Dict[str, Any]:
         "provider_batch_id": getattr(batch, "name", None),
         "provider_status": getattr(batch_state, "name", None) or (str(batch_state) if batch_state is not None else None),
     }
+
+
+class DeepSeekFatalProviderError(RuntimeError):
+    """Non-retryable account/auth failure that must stop all remaining chunks."""
 
 
 def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -2745,7 +2798,10 @@ def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[s
             pending_lines.append(line)
 
     total = len(lines)
-    rewrite_existing_result = bool(existing_success_lines and pending_lines)
+    # A retry must discard stale failures/malformed rows while preserving any successful
+    # responses. Otherwise an account-level failure followed by a funded retry appends a
+    # second row for every request and needlessly inflates the import surface.
+    rewrite_existing_result = bool(os.path.exists(result_path) and pending_lines)
     write_path = result_path
     if rewrite_existing_result:
         ts = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
@@ -2774,6 +2830,7 @@ def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[s
     if not pending_lines:
         print(f"DeepSeek direct {model}: all {total:,} requests already have successful results.")
     write_mode = "w" if rewrite_existing_result else "a"
+    fatal_status_counts = {401: 0, 402: 0, 403: 0}
     with open(write_path, write_mode, encoding="utf-8", buffering=1) as dst:
         if rewrite_existing_result:
             for success_line in existing_success_lines:
@@ -2790,6 +2847,12 @@ def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[s
                         n_ok += 1
                     else:
                         n_error += 1
+                        try:
+                            status_code = int(out.get("response", {}).get("status_code", 500))
+                        except Exception:
+                            status_code = 500
+                        if status_code in fatal_status_counts:
+                            fatal_status_counts[status_code] += 1
                     dst.write(json.dumps(out, ensure_ascii=False) + "\n")
                     if completed_pending % 100 == 0 or completed_pending == len(pending_lines):
                         dst.flush()
@@ -2800,6 +2863,18 @@ def submit_deepseek_direct(path: str, model: str, request_lines: Optional[List[s
                 del futures
                 del pending_batch
                 gc.collect()
+                fatal_errors = sum(fatal_status_counts.values())
+                if n_ok == 0 and fatal_errors == completed_pending:
+                    fatal_summary = ", ".join(
+                        f"HTTP {code}={count}"
+                        for code, count in fatal_status_counts.items()
+                        if count
+                    )
+                    raise DeepSeekFatalProviderError(
+                        "DeepSeek returned only non-retryable account/auth errors for the "
+                        f"first {completed_pending:,} requests ({fatal_summary}); stopping "
+                        "before subsequent microbatches and chunks."
+                    )
 
     if rewrite_existing_result:
         try:
@@ -3106,6 +3181,8 @@ if SUBMIT_BATCHES:
                     "error": err,
                 },
             )
+            if isinstance(e, DeepSeekFatalProviderError):
+                raise
         finally:
             if request_lines_for_direct is not None:
                 del request_lines_for_direct

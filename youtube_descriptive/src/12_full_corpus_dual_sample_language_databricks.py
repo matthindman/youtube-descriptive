@@ -221,18 +221,70 @@ def prepare_routing() -> dict[str, int]:
         TABLES["routing"],
         "Dual-LID comparison with base-ISO agreements protected from unnecessary LLM routing.",
     )
+    lid_ids = lid.select("channel_id")
+    routing_ids = routed.select("channel_id")
+    missing_comparison = lid.join(routing_ids, "channel_id", "left_anti")
+    unexpected_comparison = routed.join(lid_ids, "channel_id", "left_anti")
+
+    # Channels without a valid aggregation from either detector are deliberately absent
+    # from channel_model_comparison. The LLM notebook recovers these rows from the final
+    # LID channel table when route_unclassified=true, so they must be conserved as
+    # fallback candidates rather than treated as lost comparison rows.
+    lid_cols = set(lid.columns)
+    unclassified_condition = F.lit(False)
+    saw_unclassified_signal = False
+    both_labels_null = None
+    if "language_status" in lid_cols:
+        saw_unclassified_signal = True
+        unclassified_condition = unclassified_condition | (
+            F.col("language_status") == F.lit("insufficient_text_or_unclassified")
+        )
+    if "consensus_status" in lid_cols:
+        saw_unclassified_signal = True
+        unclassified_condition = unclassified_condition | (
+            F.col("consensus_status") == F.lit("insufficient_text")
+        )
+    if {"openlid_primary_language_label", "glotlid_primary_language_label"}.issubset(lid_cols):
+        saw_unclassified_signal = True
+        both_labels_null = (
+            F.col("openlid_primary_language_label").isNull()
+            & F.col("glotlid_primary_language_label").isNull()
+        )
+        unclassified_condition = unclassified_condition | both_labels_null
+    if "valid_language_segment_count" in lid_cols:
+        saw_unclassified_signal = True
+        zero_valid = F.coalesce(F.col("valid_language_segment_count"), F.lit(0)) == F.lit(0)
+        if both_labels_null is not None:
+            zero_valid = zero_valid & both_labels_null
+        unclassified_condition = unclassified_condition | zero_valid
+    if not saw_unclassified_signal:
+        raise AssertionError(
+            "LID channel output lacks the fields needed to prove that comparison omissions "
+            "are unclassified fallback candidates."
+        )
+
     counts = {
         "lid_rows": lid.count(),
         "lid_distinct": lid.select("channel_id").distinct().count(),
         "routing_rows": routed.count(),
         "routing_distinct": routed.select("channel_id").distinct().count(),
+        "missing_comparison_rows": missing_comparison.count(),
+        "missing_comparison_unclassified": missing_comparison.where(unclassified_condition).count(),
+        "unexpected_comparison_rows": unexpected_comparison.count(),
         "base_language_resolved": routed.where(F.col("lid_base_language_resolved")).count(),
-        "deepseek_routes": routed.where(~F.col("lid_base_language_resolved")).count(),
+        "comparison_deepseek_routes": routed.where(~F.col("lid_base_language_resolved")).count(),
     }
+    counts["deepseek_routes"] = (
+        counts["comparison_deepseek_routes"] + counts["missing_comparison_unclassified"]
+    )
     if counts["lid_rows"] != counts["lid_distinct"] or counts["routing_rows"] != counts["routing_distinct"]:
         raise AssertionError(f"LID or routing output is not one row per channel: {counts}")
-    if counts["lid_rows"] != counts["routing_rows"]:
+    if counts["unexpected_comparison_rows"]:
+        raise AssertionError(f"Routing contains channels outside the LID source: {counts}")
+    if counts["lid_rows"] != counts["routing_rows"] + counts["missing_comparison_rows"]:
         raise AssertionError(f"LID and routing rows do not conserve: {counts}")
+    if counts["missing_comparison_rows"] != counts["missing_comparison_unclassified"]:
+        raise AssertionError(f"Comparison omissions are not all unclassified fallback candidates: {counts}")
     print("LANGUAGE ROUTING: PASS")
     print(json.dumps(counts, sort_keys=True))
     return counts

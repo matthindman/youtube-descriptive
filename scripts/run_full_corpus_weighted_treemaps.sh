@@ -33,4 +33,12 @@ python3 "${ROOT_DIR}/scripts/render_full_corpus_weighted_treemaps.py" \
   --artifact-tag "${ARTIFACT_TAG}" \
   --measure both
 
+MPLBACKEND=Agg MPLCONFIGDIR="${TMPDIR:-/tmp}/treemap-mpl" \
+python3 "${ROOT_DIR}/scripts/render_full_corpus_expansion_changes.py" \
+  --cells "${LOCAL_EXPORT_DIR}/treemap_cells" \
+  --publication-estimates "${LOCAL_EXPORT_DIR}/publication_estimates" \
+  --manifest "${LOCAL_EXPORT_DIR}/run_manifest.json" \
+  --output-dir "${OUTPUT_DIR}" \
+  --artifact-tag "${ARTIFACT_TAG}"
+
 echo "Weighted treemap artifacts written under ${OUTPUT_DIR}"

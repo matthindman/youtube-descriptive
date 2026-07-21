@@ -172,6 +172,12 @@ def renderer_rows(cells: pd.DataFrame, measure: str) -> pd.DataFrame:
 
 def configure_static(output_dir: Path, tag: str, measure: str, manifest: dict) -> None:
     spec = MEASURES[measure]
+    population_scope = str(manifest.get("population_scope", "known_subscriber"))
+    baseline = (
+        "Exact >=10k census plus subscriber-unknown certainty rows"
+        if population_scope == "all_retrievable"
+        else "Exact >=10k census"
+    )
     base.OUT_DIR = output_dir
     base.STATIC_PNG = output_dir / f"treemap_static_master_{measure}_{tag}.png"
     base.STATIC_SVG = output_dir / f"treemap_static_master_{measure}_{tag}.svg"
@@ -179,7 +185,7 @@ def configure_static(output_dir: Path, tag: str, measure: str, manifest: dict) -
     base.STATIC_TITLE = spec["title"]
     base.STATIC_SUBTITLE = (
         f"Full frozen channel frame, 15 June-13 July 2026. Area = {spec['area']}; "
-        "color = content family. Exact >=10k census plus design-weighted below-10k sample."
+        f"color = content family. {baseline} plus design-weighted below-10k sample."
     )
     base.STATIC_FOOTER = (
         f"Source: frozen channel panel, final LID labels, and YouTube topicCategories. "

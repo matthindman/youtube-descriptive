@@ -432,6 +432,15 @@ non-Latin-script examples before filling with the highest-priority remaining tex
 the fastText validity threshold are still shown with diagnostics because repeated short titles can be decisive
 evidence for an LLM.
 
+For the 2026 dual-sample production run, detector segment construction is frozen to the newest 50 videos.
+DeepSeek prompt summaries inspect that complete retained segment set, while raw excerpts are bounded to 12
+deduplicated/diverse titles and four descriptions, 350 characters per segment and 6,000 user-prompt
+characters overall. This avoids sending 50 full descriptions verbatim while preserving script, phrase,
+cue, repetition, and evidence-quality signals from the expanded window. Production request IDs include a
+SHA-256 fingerprint of the full system/user prompt and generation settings. A stored request cache is reused
+only when prompt versions and complete request identities match, so changed evidence cannot inherit stale
+model responses under the same channel/run key.
+
 Panel verdicts include the winning vote count plus `panel_second_votes`, `panel_vote_margin`,
 `n_distinct_panel_vote_iso`, and `panel_vote_distribution_json`. Use those columns to route close or genuinely
 mixed channels to review without re-joining the raw model-result table.

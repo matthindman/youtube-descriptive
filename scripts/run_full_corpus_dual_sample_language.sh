@@ -22,12 +22,30 @@ LOCAL_CONFIG="${ROOT_DIR}/config/full_corpus_dual_sample_20260717_v1.json"
 DBFS_CONFIG="${DBFS_CONFIG:-dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1.json}"
 TIMEOUT="${TIMEOUT:-48h}"
 SAMPLE_PHASE="${SAMPLE_PHASE:-all}"
+START_AT="${START_AT:-preflight}"
+RUN_THROUGH="${RUN_THROUGH:-full}"
 if [[ "${SAMPLE_PHASE}" != "all" && "${SAMPLE_PHASE}" != "pps" && "${SAMPLE_PHASE}" != "remainder" && "${SAMPLE_PHASE}" != "combine" ]]; then
   echo "Invalid SAMPLE_PHASE: ${SAMPLE_PHASE}" >&2
   exit 2
 fi
+if [[ "${START_AT}" != "preflight" && "${START_AT}" != "routing" ]]; then
+  echo "Invalid START_AT: ${START_AT}" >&2
+  exit 2
+fi
+if [[ "${RUN_THROUGH}" != "lid" && "${RUN_THROUGH}" != "full" ]]; then
+  echo "Invalid RUN_THROUGH: ${RUN_THROUGH}" >&2
+  exit 2
+fi
+if [[ "${START_AT}" == "routing" && "${RUN_THROUGH}" != "full" ]]; then
+  echo "START_AT=routing requires RUN_THROUGH=full" >&2
+  exit 2
+fi
+if [[ "${SAMPLE_PHASE}" == "combine" && ( "${START_AT}" != "preflight" || "${RUN_THROUGH}" != "full" ) ]]; then
+  echo "SAMPLE_PHASE=combine requires START_AT=preflight and RUN_THROUGH=full" >&2
+  exit 2
+fi
 
-JOB_JSON="$(mktemp "${TMPDIR:-/tmp}/full_corpus_dual_sample_language.XXXXXX.json")"
+JOB_JSON="$(mktemp "${TMPDIR:-/tmp}/full_corpus_dual_sample_language.XXXXXX")"
 cleanup() {
   rm -f "${JOB_JSON}"
 }
@@ -59,7 +77,9 @@ python3 "${ROOT_DIR}/scripts/build_full_corpus_dual_sample_language_job.py" \
   --lid-path "${LID_PATH}" \
   --llm-path "${LLM_PATH}" \
   --dbfs-config-path "${DBFS_CONFIG}" \
-  --sample-phase "${SAMPLE_PHASE}"
+  --sample-phase "${SAMPLE_PHASE}" \
+  --start-at "${START_AT}" \
+  --run-through "${RUN_THROUGH}"
 
-echo "Submitting ${SAMPLE_PHASE} gated dual-LID and DeepSeek job on existing cluster ${CLUSTER_ID}."
+echo "Submitting ${SAMPLE_PHASE} language job from ${START_AT} through ${RUN_THROUGH} on existing cluster ${CLUSTER_ID}."
 "${DATABRICKS_CMD[@]}" jobs submit --json "@${JOB_JSON}" --timeout "${TIMEOUT}" --output json

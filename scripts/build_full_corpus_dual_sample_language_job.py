@@ -17,7 +17,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lid-path", required=True)
     parser.add_argument("--llm-path", required=True)
     parser.add_argument("--dbfs-config-path", required=True)
-    parser.add_argument("--sample-phase", choices=("all", "pps", "remainder", "combine"), default="all")
+    parser.add_argument(
+        "--sample-phase", choices=("all", "pps", "remainder", "combine"), default="all"
+    )
+    parser.add_argument(
+        "--start-at", choices=("preflight", "routing"), default="preflight"
+    )
+    parser.add_argument("--run-through", choices=("lid", "full"), default="full")
     return parser.parse_args()
 
 
@@ -31,7 +37,11 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
     language = config["language"]
     recent_videos = int(config["collection"]["recent_videos_per_channel"])
     sample_phase = getattr(args, "sample_phase", "all")
+    start_at = getattr(args, "start_at", "preflight")
+    run_through = getattr(args, "run_through", "full")
     if sample_phase == "combine":
+        if start_at != "preflight" or run_through != "full":
+            raise ValueError("combine requires --start-at preflight --run-through full")
         return {
             "run_name": f"{config['design_version']}_language_combine",
             "tasks": [
@@ -157,6 +167,13 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
         "route_agreement_audit": "false",
         "exclude_arabic_family_pairs": "false",
         "max_routed_channels": "0",
+        "max_video_titles": "12",
+        "max_video_descriptions": "4",
+        "max_segment_chars": "350",
+        "prompt_max_chars": "6000",
+        "strip_prompt_boilerplate": "true",
+        "dedupe_prompt_segments": "true",
+        "prompt_best_guess_mode": "true",
         "models_json": json.dumps(
             [{"provider": "deepseek", "model": language["llm_model"], "tier": "small"}]
         ),
@@ -188,59 +205,81 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
         "deepseek_secret_key": language["deepseek_secret_key"],
     }
     common = {"design_config_path": args.dbfs_config_path, "sample_phase": sample_phase}
+    tasks = [
+        {
+            "task_key": "language_preflight",
+            "existing_cluster_id": args.cluster_id,
+            "timeout_seconds": 0,
+            "notebook_task": {
+                "notebook_path": args.orchestrator_path,
+                "base_parameters": {**common, "stage": "preflight"},
+            },
+        },
+        {
+            "task_key": "dual_lid",
+            "depends_on": [{"task_key": "language_preflight"}],
+            "existing_cluster_id": args.cluster_id,
+            "timeout_seconds": 0,
+            "notebook_task": {
+                "notebook_path": args.lid_path,
+                "base_parameters": lid_parameters,
+            },
+        },
+        {
+            "task_key": "prepare_routing",
+            "depends_on": [{"task_key": "dual_lid"}],
+            "existing_cluster_id": args.cluster_id,
+            "timeout_seconds": 0,
+            "notebook_task": {
+                "notebook_path": args.orchestrator_path,
+                "base_parameters": {**common, "stage": "prepare_routing"},
+            },
+        },
+        {
+            "task_key": "deepseek_fallback",
+            "depends_on": [{"task_key": "prepare_routing"}],
+            "existing_cluster_id": args.cluster_id,
+            "timeout_seconds": 0,
+            "notebook_task": {
+                "notebook_path": args.llm_path,
+                "base_parameters": llm_parameters,
+            },
+        },
+        {
+            "task_key": "publish_language",
+            "depends_on": [{"task_key": "deepseek_fallback"}],
+            "existing_cluster_id": args.cluster_id,
+            "timeout_seconds": 0,
+            "notebook_task": {
+                "notebook_path": args.orchestrator_path,
+                "base_parameters": {**common, "stage": "publish"},
+            },
+        },
+    ]
+    if run_through == "lid":
+        tasks = tasks[:2]
+    if start_at == "routing":
+        if run_through != "full":
+            raise ValueError("--start-at routing requires --run-through full")
+        tasks = tasks[2:]
+        tasks[0].pop("depends_on", None)
     return {
-        "run_name": f"{config['design_version']}_language_{sample_phase}",
-        "tasks": [
-            {
-                "task_key": "language_preflight",
-                "existing_cluster_id": args.cluster_id,
-                "timeout_seconds": 0,
-                "notebook_task": {
-                    "notebook_path": args.orchestrator_path,
-                    "base_parameters": {**common, "stage": "preflight"},
-                },
-            },
-            {
-                "task_key": "dual_lid",
-                "depends_on": [{"task_key": "language_preflight"}],
-                "existing_cluster_id": args.cluster_id,
-                "timeout_seconds": 0,
-                "notebook_task": {"notebook_path": args.lid_path, "base_parameters": lid_parameters},
-            },
-            {
-                "task_key": "prepare_routing",
-                "depends_on": [{"task_key": "dual_lid"}],
-                "existing_cluster_id": args.cluster_id,
-                "timeout_seconds": 0,
-                "notebook_task": {
-                    "notebook_path": args.orchestrator_path,
-                    "base_parameters": {**common, "stage": "prepare_routing"},
-                },
-            },
-            {
-                "task_key": "deepseek_fallback",
-                "depends_on": [{"task_key": "prepare_routing"}],
-                "existing_cluster_id": args.cluster_id,
-                "timeout_seconds": 0,
-                "notebook_task": {"notebook_path": args.llm_path, "base_parameters": llm_parameters},
-            },
-            {
-                "task_key": "publish_language",
-                "depends_on": [{"task_key": "deepseek_fallback"}],
-                "existing_cluster_id": args.cluster_id,
-                "timeout_seconds": 0,
-                "notebook_task": {
-                    "notebook_path": args.orchestrator_path,
-                    "base_parameters": {**common, "stage": "publish"},
-                },
-            },
-        ],
+        "run_name": (
+            f"{config['design_version']}_language_{sample_phase}_fallback"
+            if start_at == "routing"
+            else f"{config['design_version']}_language_{sample_phase}"
+            if run_through == "full"
+            else f"{config['design_version']}_language_{sample_phase}_lid_only"
+        ),
+        "tasks": tasks,
     }
 
 
 def main() -> None:
     args = parse_args()
-    args.output.write_text(json.dumps(build_payload(args), indent=2) + "\n", encoding="utf-8")
+    args.output.write_text(
+        json.dumps(build_payload(args), indent=2) + "\n", encoding="utf-8"
+    )
 
 
 if __name__ == "__main__":

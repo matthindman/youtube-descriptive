@@ -70,6 +70,7 @@ compute. Jobs in this runbook contain `existing_cluster_id` and no
 | `scripts/run_full_corpus_dual_sample_topic.sh` | Upload and run model-completed topic stages |
 | `scripts/run_full_corpus_dual_sample_analysis.sh` | Upload and run post-enrichment allocation, estimation, QA, and treemap publication stages |
 | `scripts/render_full_corpus_weighted_treemaps.py` | Render weighted attention/channel treemaps, explorers, and coefficient plots from compact publication cells |
+| `scripts/render_full_corpus_expansion_changes.py` | Compare the exact >=10K census with the PPS-expanded view distribution for languages, topics, subtopics, and their intersections |
 | `scripts/run_full_corpus_weighted_treemaps.sh` | Download compact publication inputs and render all local artifacts |
 | `scripts/run_full_corpus_dual_sample_simulation.sh` | Upload and run the registered repeated-sample design evaluation |
 | `scripts/run_full_corpus_dual_sample_collection.sh` | Upload and run the source-text collector after secret names are supplied |
@@ -331,6 +332,23 @@ SAMPLE_PHASE=remainder bash scripts/run_full_corpus_dual_sample_language.sh
 SAMPLE_PHASE=combine bash scripts/run_full_corpus_dual_sample_language.sh
 ```
 
+For a deliberately gated launch, `RUN_THROUGH=lid` submits only preflight and
+dual LID. After those outputs pass, `START_AT=routing RUN_THROUGH=full` resumes
+from routing through DeepSeek and publication without rerunning detector
+inference. This is the approved sequence when PPS fallback must finish before
+SRS fallback:
+
+```bash
+SAMPLE_PHASE=remainder RUN_THROUGH=lid \
+  bash scripts/run_full_corpus_dual_sample_language.sh
+SAMPLE_PHASE=pps START_AT=routing RUN_THROUGH=full \
+  bash scripts/run_full_corpus_dual_sample_language.sh
+# Run only after PPS publication succeeds and remainder dual LID succeeds.
+SAMPLE_PHASE=remainder START_AT=routing RUN_THROUGH=full \
+  bash scripts/run_full_corpus_dual_sample_language.sh
+SAMPLE_PHASE=combine bash scripts/run_full_corpus_dual_sample_language.sh
+```
+
 `pps` includes both `pps_only` and `srs_and_pps` channels. `remainder` excludes
 those IDs and therefore covers SRS-only plus non-PPS certainty-stratum rows.
 `combine` runs no inference; it unions the two phase publications and fails
@@ -353,6 +371,19 @@ ambiguous and separate. Only unresolved base-language cases go to
 `deepseek-v4-flash` with thinking disabled. Insufficient evidence remains
 `und`. The final output is one row per analysis-union channel in
 `_channel_language_current`.
+
+The DeepSeek evidence builder consumes the segment universe produced from the
+newest 50 videos. Script counts, cue counts, repeated-pattern counts, phrase
+summaries, and evidence-quality summaries therefore use all retained segments.
+To prevent context and cost from growing linearly with video count, the raw
+prompt excerpts are deterministically deduplicated and limited to 12 diverse
+titles and four descriptions, each at most 350 characters; the complete user
+prompt is capped at 6,000 characters. The larger source window thus improves
+evidence coverage without sending 50 full descriptions verbatim. Request IDs
+include a SHA-256 fingerprint of the complete system/user prompt and generation
+settings. Existing request rows are reused only when both the prompt version
+and the full request-identity set match, preventing stale responses after a
+prompt or evidence change.
 
 ## 9. Topic Robustness Run
 
@@ -446,6 +477,28 @@ reports
 approximation and explicitly flags that joint measurement-error replication is
 still required for final inference.
 
+After `publish_treemap` succeeds, download and render the complete local suite:
+
+```bash
+bash scripts/run_full_corpus_weighted_treemaps.sh
+```
+
+In addition to the static/interactive treemaps, this writes a census-expansion
+CSV, Markdown summary, and coefficient-style absolute/proportional change plots
+for language, family, leaf, language x family, and language x family x leaf.
+For the registered `all_retrievable` artifact, the comparison baseline is the
+exact view composition of the `>=10K` census plus the 2,201
+subscriber-unknown certainty rows; the expanded point adds the below-10K tail
+using the calibrated PPS platform composition. The `known_subscriber` variant
+uses the `>=10K` census alone. Percentage-point change remains defined for cells
+absent from the baseline and is primary.
+Proportional rankings require a nonzero, non-negligible census baseline and the
+registered reliability gate; zero-baseline cells are reported separately.
+Language and language-by-topic comparisons use raw Horvitz-Thompson share SEs.
+Topic-family and subtopic marginals are exact full-frame topic/view margins, so
+their PPS sampling SE is zero; measurement error is not included. Raw HT fields
+remain in the CSV for audit, while calibrated geometry defines the display.
+
 ## 11. Repeated-Sample Evaluation
 
 Run after the frame exists; semantic enrichment is not required:
@@ -483,6 +536,7 @@ PYTHONPATH=. python3 -m unittest \
   youtube_descriptive.tests.test_full_corpus_dual_sample_simulation_job \
   youtube_descriptive.tests.test_full_corpus_dual_sample_collection_job \
   youtube_descriptive.tests.test_full_corpus_dual_sample_calibration_job \
+  youtube_descriptive.tests.test_full_corpus_expansion_changes \
   youtube_descriptive.tests.test_full_corpus_weighted_treemap_renderer -v
 
 youtube_descriptive/.venv/bin/ruff check \
@@ -504,6 +558,7 @@ youtube_descriptive/.venv/bin/ruff check \
   scripts/build_full_corpus_dual_sample_collection_job.py \
   scripts/build_full_corpus_dual_sample_calibration_job.py \
   scripts/render_full_corpus_weighted_treemaps.py \
+  scripts/render_full_corpus_expansion_changes.py \
   scripts/render_treemap_v3.py
 ```
 
@@ -558,7 +613,10 @@ DISPLAY SHARE CONSERVATION: PASS
 | 2026-07-20 | `771680734300337` | First post-collection enrichment refresh | CANCELED by this agent after QA showed retrieved empty-text channels needed an explicit terminal disposition |
 | 2026-07-20 | `845387019641338` | Repaired post-collection enrichment refresh | SUCCESS; collection queue zero and language source conservation passed |
 | 2026-07-20 | `98930401179212` | 100,000-PPS-channel recent-video cutoff experiment | SUCCESS; 50 videos selected under the 0.3-point rule |
-| 2026-07-20 | `288009785189569` | Production PPS language phase | RUNNING; preflight passed and dual LID started |
+| 2026-07-20 | `288009785189569` | Production PPS language phase | FAILED after dual LID succeeded; obsolete routing assertion treated intentional no-aggregation rows as lost |
+| 2026-07-20 | `873172557781496` | Nonoverlapping SRS/remainder language phase, LID only | SUCCESS; both detectors and final channel outputs conserved |
+| 2026-07-20 | `757710578516111` | PPS routing, DeepSeek fallback, and publication continuation | SUCCESS; all 150,853 routes received verdicts and the 1,000,144-row PPS language table was published |
+| 2026-07-21 | `442856261733489` | First SRS/remainder fallback continuation | CANCELED after two 10,000-request chunks returned HTTP 402 `Insufficient Balance`; no successful SRS fallback responses were lost |
 
 Successful results from the first two stages of `644840643258205`:
 
@@ -647,6 +705,114 @@ LID VIDEO ROWS / CHANNELS: 40,480,704 / 962,059
 276 + 972,809 + 27,059 = 1,000,144: PASS
 LANGUAGE PREFLIGHT: PASS
 ```
+
+The expensive dual-LID task in that run (`694501391955531`) succeeded. The
+following routing task failed only because the first orchestration gate required
+the channel-model comparison table to contain every LID source channel. The LID
+pipeline intentionally omits channels with no valid model aggregation from that
+comparison and retains them in the complete channel table for
+`route_unclassified=true`. The repaired continuation `757710578516111` proved:
+
+```text
+LID ROWS / DISTINCT: 972,809 / 972,809
+COMPARISON ROUTING ROWS / DISTINCT: 920,175 / 920,175
+MISSING COMPARISON ROWS: 52,634
+MISSING COMPARISON ROWS ELIGIBLE AS UNCLASSIFIED: 52,634
+UNEXPECTED COMPARISON ROWS: 0
+BASE-LANGUAGE RESOLVED: 821,956
+COMPARISON DISAGREEMENTS ROUTED TO DEEPSEEK: 98,219
+TOTAL DEEPSEEK ROUTES: 150,853
+LANGUAGE ROUTING: PASS
+```
+
+PPS request-table QA before API submission:
+
+```text
+REQUEST ROWS / DISTINCT CHANNELS: 150,853 / 150,853
+USER PROMPT CHARACTERS MIN / MEAN / MAX: 666 / 4,054.75 / 6,000
+PROMPTS AT THE 6,000-CHARACTER CAP: 25,015
+NULL PROMPT FINGERPRINTS: 0
+DISTINCT PROMPT FINGERPRINTS: 150,851
+SYSTEM PROMPT CHARACTERS: 23,334
+```
+
+Two pairs of channels have identical prompt payloads, which is permitted;
+request IDs remain unique because channel ID is also part of the identity. All
+150,853 DeepSeek requests completed and PPS publication reported:
+
+```text
+PUBLISHED ROWS / DISTINCT CHANNELS: 1,000,144 / 1,000,144
+CLASSIFIED / UND: 951,030 / 49,114
+DEEPSEEK CLASSIFIED / INSUFFICIENT: 128,807 / 22,046
+REUSED EXISTING SILVER LABELS: 276
+PPS LANGUAGE PUBLICATION: SUCCESS
+```
+
+SRS/remainder preflight from run `873172557781496`:
+
+```text
+ANALYSIS ROWS / DISTINCT: 5,882,056 / 5,882,056
+EXISTING LABELS: 4,787,044
+MISSING LABELS: 1,095,012
+DUAL-LID SOURCE CHANNELS / DISTINCT: 953,399 / 953,399
+TERMINAL NO-TEXT UND: 141,613
+COLLECTION QUEUE: 0
+LID VIDEO ROWS / CHANNELS: 23,819,485 / 897,579
+4,787,044 + 953,399 + 141,613 = 5,882,056: PASS
+LANGUAGE PREFLIGHT: PASS
+```
+
+This remainder phase excludes all PPS-selected IDs, including the 8,500
+SRS/PPS overlap. It therefore performs no duplicate inference while completing
+the SRS-only and still-unlabeled census portion needed for the final conserved
+analysis union.
+
+Final SRS/remainder detector QA:
+
+```text
+SEGMENT INPUT ROWS: 37,231,133
+VALID SEGMENTS PER MODEL: 21,431,571
+INFERENCE PARTITIONS: 858
+OPENLID COMPACT ROWS: 21,431,571
+GLOTLID COMPACT ROWS: 21,431,571
+FINAL CHANNEL ROWS / UNIVERSE: 953,399 / 953,399
+DUAL-LID RUN: SUCCESS
+```
+
+SRS/remainder fallback run `442856261733489` resumed from those detector
+outputs without rerunning LID. Routing conservation and request-table QA:
+
+```text
+LID ROWS / DISTINCT: 953,399 / 953,399
+COMPARISON ROUTING ROWS / DISTINCT: 793,558 / 793,558
+MISSING COMPARISON ROWS: 159,841
+MISSING COMPARISON ROWS ELIGIBLE AS UNCLASSIFIED: 159,841
+UNEXPECTED COMPARISON ROWS: 0
+BASE-LANGUAGE RESOLVED: 707,474
+COMPARISON DISAGREEMENTS ROUTED TO DEEPSEEK: 86,084
+TOTAL DEEPSEEK ROUTES: 245,925
+REQUEST ROWS / DISTINCT CHANNELS: 245,925 / 245,925
+USER PROMPT CHARACTERS MIN / MEAN / MAX: 666 / 2,948.67 / 6,000
+PROMPTS AT THE 6,000-CHARACTER CAP: 13,939
+NULL PROMPT FINGERPRINTS: 0
+DISTINCT PROMPT FINGERPRINTS: 245,826
+LANGUAGE ROUTING: PASS
+```
+
+Repeated prompt payloads are allowed, while channel-scoped request IDs remain
+unique. The request table was committed at `2026-07-21T04:33:37Z`; the first
+10,000-request DeepSeek chunk began at `2026-07-21T04:34:11Z`. The first two
+chunks each returned `ok=0; error=10,000` because the account behind
+`youtube-llm-keys/deepseek-api-key` had insufficient balance. Run
+`442856261733489` was canceled before the remaining requests were attempted.
+The failed result rows are retained, but no successful SRS response was lost.
+
+The direct runner now treats uniform HTTP 401/402/403 responses as fatal after
+the first 500-request microbatch, rethrows after recording the failed chunk, and
+halts all later chunks. On deterministic retry it rewrites an existing failed
+result file while retaining only prior successes, rather than appending stale
+failure rows. After the DeepSeek account is funded, rerun the same remainder
+continuation command; the immutable request IDs and prompts will be reused.
 
 Repeated-sample highlights from `896176326148446`:
 

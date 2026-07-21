@@ -25,7 +25,7 @@ DBFS_HIERARCHY="${DBFS_DIR}/youtube_topic_hierarchy_v2.yaml"
 DBFS_REMAP="${DBFS_DIR}/topic_remap.yaml"
 TIMEOUT="${TIMEOUT:-24h}"
 
-JOB_JSON="$(mktemp "${TMPDIR:-/tmp}/full_corpus_dual_sample_analysis.XXXXXX.json")"
+JOB_JSON="$(mktemp "${TMPDIR:-/tmp}/full_corpus_dual_sample_analysis.XXXXXX")"
 cleanup() {
   rm -f "${JOB_JSON}"
 }
