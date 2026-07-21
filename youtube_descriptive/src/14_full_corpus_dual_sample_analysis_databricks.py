@@ -1425,7 +1425,70 @@ def attention_treemap_acceptance_metrics(
     return metrics
 
 
-def treemap_acceptance_metrics(cells: DataFrame, margins: DataFrame) -> dict[str, float | int]:
+def equal_channel_frame_share_metrics(cells: DataFrame, frame: DataFrame) -> dict[str, float | int]:
+    primary_variant = str(CONFIG["treemap"]["primary_allocation_variant"])
+    primary_scope = str(CONFIG["treemap"]["primary_population_scope"])
+    primary = cells.where(
+        (F.col("allocation_variant") == F.lit(primary_variant))
+        & (F.col("population_scope") == F.lit(primary_scope))
+    )
+    geometry = primary.agg(
+        F.sum("channel_head_total").alias("exact_geometry_total"),
+        F.sum("channel_geometry_tail_total").alias("tail_geometry_total"),
+        F.max("channel_denominator").alias("geometry_denominator"),
+    ).first()
+    if geometry is None or geometry["geometry_denominator"] is None:
+        raise AssertionError(
+            "Primary equal-channel treemap cells are absent; cannot verify frame-stratum shares"
+        )
+
+    frame_counts = {
+        str(row["subscriber_status"]): int(row["count"])
+        for row in frame.groupBy("subscriber_status").count().collect()
+    }
+    census_n = frame_counts.get("census_ge10k", 0)
+    tail_n = frame_counts.get("sample_frame_lt10k", 0)
+    unknown_n = frame_counts.get("subscriber_unknown_or_hidden", 0)
+    included_unknown_n = unknown_n if primary_scope == "all_retrievable" else 0
+    expected_exact_n = census_n + included_unknown_n
+    expected_denominator = expected_exact_n + tail_n
+    geometry_denominator = float(geometry["geometry_denominator"])
+    if expected_denominator <= 0 or geometry_denominator <= 0:
+        raise AssertionError("Equal-channel frame denominator must be positive")
+
+    expected_exact_share = expected_exact_n / expected_denominator
+    expected_tail_share = tail_n / expected_denominator
+    observed_exact_share = float(geometry["exact_geometry_total"] or 0.0) / geometry_denominator
+    observed_tail_share = float(geometry["tail_geometry_total"] or 0.0) / geometry_denominator
+    denominator_relative_error = abs(geometry_denominator - expected_denominator) / max(
+        float(expected_denominator), 1.0
+    )
+    return {
+        "primary_equal_channel_frame_denominator": int(expected_denominator),
+        "primary_equal_channel_census_ge10k_n": int(census_n),
+        "primary_equal_channel_tail_lt10k_n": int(tail_n),
+        "primary_equal_channel_unknown_certainty_n": int(included_unknown_n),
+        "primary_equal_channel_census_ge10k_share": float(census_n / expected_denominator),
+        "primary_equal_channel_tail_lt10k_share": float(expected_tail_share),
+        "primary_equal_channel_unknown_certainty_share": float(
+            included_unknown_n / expected_denominator
+        ),
+        "primary_equal_channel_exact_strata_share_expected": float(expected_exact_share),
+        "primary_equal_channel_exact_strata_share_observed": float(observed_exact_share),
+        "primary_equal_channel_tail_share_observed": float(observed_tail_share),
+        "primary_equal_channel_exact_strata_share_error": float(
+            abs(observed_exact_share - expected_exact_share)
+        ),
+        "primary_equal_channel_tail_share_error": float(
+            abs(observed_tail_share - expected_tail_share)
+        ),
+        "primary_equal_channel_denominator_relative_error": float(denominator_relative_error),
+    }
+
+
+def treemap_acceptance_metrics(
+    cells: DataFrame, margins: DataFrame, frame: DataFrame
+) -> dict[str, float | int]:
     key_columns = ["allocation_variant", "population_scope", "language", "family", "leaf"]
     row_count = cells.count()
     distinct_count = cells.select(*key_columns).distinct().count()
@@ -1543,22 +1606,31 @@ def treemap_acceptance_metrics(cells: DataFrame, margins: DataFrame) -> dict[str
         "max_within_language_conservation_error": max_language_error,
         "max_within_language_family_conservation_error": max_family_error,
     }
+    metrics.update(equal_channel_frame_share_metrics(cells, frame))
+    max_stratum_share_error = max(
+        float(metrics["primary_equal_channel_exact_strata_share_error"]),
+        float(metrics["primary_equal_channel_tail_share_error"]),
+        float(metrics["primary_equal_channel_denominator_relative_error"]),
+    )
     if row_count != distinct_count:
         raise AssertionError(f"Treemap cell keys are not unique: {metrics}")
     if unsampled_margin_rows or missing_positive_topic_margins or negative_geometry_rows:
         raise AssertionError(f"Treemap geometry contains invalid rows: {metrics}")
     if max(max_topic_margin_error, max_global_error, max_language_error, max_family_error) > 1e-6:
         raise AssertionError(f"Treemap share conservation failed: {metrics}")
+    if max_stratum_share_error > 1e-8:
+        raise AssertionError(f"Equal-channel frame-stratum calibration failed: {metrics}")
     return metrics
 
 
 def publish_treemap() -> dict[str, float | int | str]:
-    required = ["estimates", "platform_margins"]
+    required = ["estimates", "platform_margins", "frame"]
     if ANALYSIS_MODE == "full":
         required.append("differences")
     for name in required:
         require_table(TABLES[name])
     margins = spark.table(TABLES["platform_margins"])
+    frame = spark.table(TABLES["frame"])
     if ANALYSIS_MODE == "attention_pps":
         publication = attention_publication_estimates(spark.table(TABLES["estimates"]))
         cells = calibrated_attention_treemap_cells(publication, margins)
@@ -1574,7 +1646,7 @@ def publish_treemap() -> dict[str, float | int | str]:
             spark.table(TABLES["estimates"]), spark.table(TABLES["differences"])
         )
         cells = calibrated_treemap_cells(publication, margins)
-        metrics = treemap_acceptance_metrics(cells, margins)
+        metrics = treemap_acceptance_metrics(cells, margins, frame)
         publication_comment = (
             "Paired channel- and view-weighted rollup estimates with raw design-based uncertainty."
         )

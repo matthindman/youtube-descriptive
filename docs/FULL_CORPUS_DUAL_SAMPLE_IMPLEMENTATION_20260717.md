@@ -5,7 +5,9 @@
 **Design specification:** [FULL_CORPUS_DUAL_SAMPLE_DESIGN_20260717.md](FULL_CORPUS_DUAL_SAMPLE_DESIGN_20260717.md)
 **Target population:** channels in the frozen 2026-06-15 collected frame
 **Traffic endpoint:** 2026-07-13, 28 elapsed days
-**Status:** source collection, enrichment restage, and cutoff selection complete; PPS production dual LID running
+**Status (2026-07-21):** complete through PPS and SRS/remainder dual LID,
+DeepSeek fallback, combined language publication, paired analysis, and
+attention/equal-channel treemap publication
 
 ## 1. Scope
 
@@ -618,6 +620,9 @@ DISPLAY SHARE CONSERVATION: PASS
 | 2026-07-20 | `873172557781496` | Nonoverlapping SRS/remainder language phase, LID only | SUCCESS; both detectors and final channel outputs conserved |
 | 2026-07-20 | `757710578516111` | PPS routing, DeepSeek fallback, and publication continuation | SUCCESS; all 150,853 routes received verdicts and the 1,000,144-row PPS language table was published |
 | 2026-07-21 | `442856261733489` | First SRS/remainder fallback continuation | CANCELED after two 10,000-request chunks returned HTTP 402 `Insufficient Balance`; no successful SRS fallback responses were lost |
+| 2026-07-21 | `1053350556385729` | Funded SRS/remainder fallback and publication continuation | SUCCESS; all 245,925 routes received verdicts and the 5,882,056-row remainder language table was published |
+| 2026-07-21 | `851109646466619` | Combined one-row-per-channel language publication | SUCCESS; 6,882,200 unique analysis-union channels, zero missing or unexpected IDs |
+| 2026-07-21 | `1056163018389473` | Final allocation, paired estimation, QA, and treemap publication | SUCCESS; 20,233 unique cells, exact-margin calibration and frame-share QA passed |
 
 Successful results from the first two stages of `644840643258205`:
 
@@ -821,7 +826,47 @@ notebook. It calls DeepSeek's read-only `/user/balance` endpoint using the
 registered secret and requires `is_available=true`; it does not issue a chat
 request or reveal the key. Probe run `733625175663566` on 2026-07-21 returned
 HTTP 200 but `is_available=false` with USD total balance `-0.34`, confirming the
-external account state remained unresolved at that time.
+external account state at that time. After funding, continuation run
+`1053350556385729` reused the immutable request table and completed all 245,925
+requests without rerunning either LID model:
+
+```text
+SUCCESSFUL API RESPONSES: 245,925
+MISSING REQUESTS: 0
+DEEPSEEK CLASSIFIED / INSUFFICIENT: 171,443 / 74,482
+PUBLISHED ROWS / DISTINCT: 5,882,056 / 5,882,056
+CLASSIFIED / UND: 5,511,908 / 370,148
+REUSED EXISTING SILVER LABELS: 4,787,044
+SRS/REMAINDER LANGUAGE PUBLICATION: SUCCESS
+```
+
+Combined publication run `851109646466619` then wrote
+`dev_sean.matt.yt_dual_sample_20260717_v1_channel_language_current`:
+
+```text
+ROWS / DISTINCT: 6,882,200 / 6,882,200
+PPS / REMAINDER: 1,000,144 / 5,882,056
+CLASSIFIED / UND: 6,462,938 / 419,262
+DEEPSEEK CLASSIFIED / INSUFFICIENT: 300,250 / 96,528
+REUSED EXISTING SILVER LABELS: 4,787,320
+MISSING / UNEXPECTED IDS: 0 / 0
+COMBINED LANGUAGE PUBLICATION: SUCCESS
+```
+
+Final paired-analysis run `1056163018389473` completed allocation, estimation,
+QA, and publication on the existing cluster. It retained raw PPS/SRS estimates
+for inference and calibrated only treemap geometry to exact full-frame topic
+margins. Publication reported 20,233 unique cells, zero negative geometry rows,
+zero positive topic margins without sample support, maximum global-share error
+`2.375877272697835e-14`, and maximum topic-margin error
+`3.1771103993192166e-15`.
+
+Equal-channel geometry uses the known 122,126,394-channel frame denominator,
+not the relative row counts of the census and sample extracts. The >=10K census
+therefore contributes 4.0027015% of map area, the SRS-expanded below-10K tail
+95.9954963%, and subscriber-unknown certainty rows 0.0018022%. The observed
+stratum shares match those targets within `2.34e-14`, and denominator error is
+zero.
 
 Repeated-sample highlights from `896176326148446`:
 

@@ -4,9 +4,10 @@
 
 **Design version:** `full_corpus_dual_sample_20260717_v1`
 
-**Status (2026-07-21):** The PPS attention-only expansion is complete. The
-final paired attention/channel execution still waits for SRS DeepSeek
-publication and the combined one-row-per-channel language table.
+**Status (2026-07-21):** Complete. PPS and SRS/remainder language publication,
+the combined one-row-per-channel language table, paired attention/channel
+estimation, static and interactive rendering, conservation QA, and manual
+legibility review all passed.
 
 ## Purpose
 
@@ -43,7 +44,8 @@ and must not be committed.
 
 ## Required Upstream State
 
-The final paired analysis should not run until all of these are complete:
+The final paired analysis requires all of the following. They were complete for
+the production execution recorded below:
 
 - the two registered sample selections and the >=10K census union;
 - channel-description and recent-video text backfill for unresolved sample
@@ -58,8 +60,8 @@ The final paired analysis should not run until all of these are complete:
 The primary paper treemap is `platform_only`. The model-completed variant is a
 robustness analysis and cannot be substituted for it.
 
-The separate `attention_pps` mode is allowed before SRS completion because it
-uses the finalized PPS language publication and does not estimate the
+The separate `attention_pps` mode remains available for historical replication
+because it uses the finalized PPS language publication and does not estimate the
 equal-channel ecology. It writes isolated `_pps_attention` tables and cannot
 overwrite final outputs.
 
@@ -119,6 +121,27 @@ N_hat_lt = sum_(i in exact head) a_ilt
 
 Its variance includes the finite-population correction. The global channel
 share divides by the known frame channel count.
+
+The >=10K census is exact, but it is not allowed to dominate the channel
+ecology merely because it was fully enumerated. Each census channel contributes
+one channel, just as each represented below-10K channel does; the SRS expansion
+supplies the below-10K count mass, and the final denominator is the known full
+frame size. Thus the >=10K census occupies only its actual share of all frame
+channels (roughly 4%), rather than receiving one-half of the map or one-half of
+the total weight. Subscriber-unknown certainty rows are reported separately
+and enter only the registered `all_retrievable` scope.
+
+The frozen `all_retrievable` frame contains 122,126,394 channels:
+4,888,355 in the >=10K census (4.0027%), 117,235,838 in the below-10K
+sampling frame (95.9955%), and 2,201 subscriber-unknown certainty rows
+(0.0018%). These fixed frame shares, not the relative sizes of the realized
+census and SRS files, determine their equal-channel treemap mass.
+
+Publication QA computes the expected frame shares directly from
+`subscriber_status`, compares them with the summed treemap geometry, and fails
+if the exact-stratum, SRS-tail, or denominator discrepancy exceeds `1e-8`.
+The local renderer prints `EQUAL-CHANNEL FRAME MIX` and
+`EQUAL-CHANNEL STRATUM CALIBRATION: PASS` before writing the channel treemap.
 
 ## Calibration For Treemap Geometry
 
@@ -277,8 +300,8 @@ dev_sean.matt.yt_dual_sample_20260717_v1_pps_attention_channel_language_current
 ```
 
 The lookup has 5,890,700 rows and 220,334 `und` rows. That unresolved share is
-a measurement limitation, not PPS sampling attrition. Rerun the final mode
-after the remainder and SRS DeepSeek publications are complete.
+a measurement limitation, not PPS sampling attrition. This provisional run is
+superseded for substantive use by the completed paired execution below.
 
 ### Estimation and calibration
 
@@ -361,6 +384,97 @@ renderer does not create smaller cells merely to exhaust the budget. Manual
 inspection confirmed readable language, family, and subtopic regions with no
 stack of thin slivers.
 
+## Completed Paired Execution (2026-07-21)
+
+The SRS/remainder fallback resumed without rerunning dual LID. Parent run
+`1053350556385729` completed fallback task `1047774091941632` and publication
+task `795902120766011`. All 245,925 routed requests received a successful API
+response: DeepSeek classified 171,443 and returned an insufficient-language
+verdict for 74,482. The published remainder table has 5,882,056 unique
+channels, of which 5,511,908 are classified and 370,148 are `und`.
+
+Combined-language run `851109646466619` published
+`dev_sean.matt.yt_dual_sample_20260717_v1_channel_language_current` with
+6,882,200 rows and distinct channel IDs. It contains 1,000,144 PPS rows and
+5,882,056 nonoverlapping remainder rows; 6,462,938 channels are classified and
+419,262 are `und`. Source-universe QA found zero missing or unexpected IDs.
+
+Final analysis parent run `1056163018389473` completed allocation
+(`388889144014481`), estimation (`494047300881882`), QA
+(`175462060657441`), and treemap publication (`824909984690967`). Recorded
+acceptance values are:
+
+```text
+ANALYSIS / LANGUAGE ROWS: 6,882,200 / 6,882,200
+LANGUAGE JOIN MISSING / NULL: 0 / 0
+SRS REALIZED N: 1,000,000
+PPS REALIZED N: 1,000,144
+PPS HT TAIL VIEWS: 670,248,334,181.7035
+KNOWN TAIL VIEWS: 670,270,625,558
+GLOBAL PPS RATIO DIAGNOSTIC: 1.0000332584
+TREEMAP CELLS / UNIQUE CELLS: 20,233 / 20,233
+NEGATIVE GEOMETRY ROWS: 0
+POSITIVE TOPIC MARGINS WITHOUT SUPPORT: 0
+MAX CHANNEL ALLOCATION ERROR: 2.220446049250313e-16
+MAX DISPLAY SHARE ERROR: 6.661338147750939e-16
+MAX GLOBAL SHARE ERROR: 2.375877272697835e-14
+MAX TOPIC MARGIN ERROR: 3.1771103993192166e-15
+TREEMAP PUBLICATION: PASS
+TREEMAP CONSERVATION: PASS
+```
+
+Equal-channel geometry also passed an explicit stratum calibration. The known
+122,126,394-channel denominator is decomposed as 4,888,355 >=10K census
+channels (4.0027015%), 117,235,838 SRS-represented below-10K channels
+(95.9954963%), and 2,201 subscriber-unknown certainty channels (0.0018022%).
+The maximum observed-versus-expected share discrepancy was `2.34e-14`;
+denominator error was zero. This is the required downweighting of the
+enumerated census relative to the much larger channel tail.
+
+The frozen 0.3% render remains the formal default. It produced 216 attention
+cells (minimum ordinary area 0.309%, pooled view share 0.425%, 82 labels) and
+199 equal-channel cells (minimum ordinary area 0.301%, pooled channel share
+0.223%, 75 labels). Both are 3000x1980 pixels and use squarified packing.
+
+The requested 0.1% minimum-area sensitivity was also rendered, without changing
+the frozen config or estimators. It is the preferred detail comparison:
+
+```text
+ATTENTION STATIC CELLS: 227
+ATTENTION MIN CELL AREA: 0.131%
+ATTENTION POOLED VIEW SHARE: 0.425%
+ATTENTION LABELED CELLS: 84
+CHANNEL STATIC CELLS: 224
+CHANNEL MIN CELL AREA: 0.109%
+CHANNEL POOLED CHANNEL SHARE: 0.223%
+CHANNEL LABELED CELLS: 73
+FIGURE DIMENSIONS: 3000x1980
+PACKING: squarify
+CONSERVATION: PASS
+EQUAL-CHANNEL STRATUM CALIBRATION: PASS
+```
+
+Both 0.1% PNGs were opened and manually inspected. **Legibility verdict:
+PASS.** Language blocks and family/subtopic tiles are individually readable,
+and no region is a stack of thin slivers. The lone family tile with an aspect
+ratio above 8:1 is the isolated `Russian > Sports` tile (0.0436% of total
+area), not a repeated sliver region. The large equal-channel
+`Undetermined/Unlabeled` region is a substantive data result rather than a
+layout failure.
+
+The compact publication export is:
+
+```text
+dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication/
+```
+
+The expansion summary and coefficient-style absolute/proportional change
+figures are written with the paired treemaps under the local output directory.
+The below-10K PPS expansion contributes 10.9257% of final view mass. The
+largest family-level changes relative to the non-tail baseline are Music
+(`+1.035` percentage points), Gaming (`+0.308`), and Entertainment
+(`-1.485`).
+
 ## Rendered Artifacts
 
 The local renderer writes parallel artifacts under
@@ -378,6 +492,12 @@ weighting_difference_coefficients_full_frame_weighted_v1.svg
 weighting_difference_coefficients_full_frame_weighted_v1.csv
 weighting_difference_summary_full_frame_weighted_v1.json
 artifact_manifest_full_frame_weighted_v1.json
+treemap_static_master_attention_full_frame_weighted_min01_v1.png
+treemap_static_master_attention_full_frame_weighted_min01_v1.svg
+treemap_interactive_attention_full_frame_weighted_min01_v1.html
+treemap_static_master_channels_full_frame_weighted_min01_v1.png
+treemap_static_master_channels_full_frame_weighted_min01_v1.svg
+treemap_interactive_channels_full_frame_weighted_min01_v1.html
 ```
 
 The static master is language -> family -> subtopic, matching the accepted

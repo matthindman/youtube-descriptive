@@ -108,6 +108,8 @@ class FullCorpusDualSampleAnalysisJobTests(unittest.TestCase):
         self.assertIn('F.col("weighted_sum2") > 0', notebook)
         self.assertIn('F.col("view_language_total") > 0', notebook)
         self.assertIn('F.col("view_language_family_total") > 0', notebook)
+        self.assertIn("primary_equal_channel_census_ge10k_share", notebook)
+        self.assertIn("Equal-channel frame-stratum calibration failed", notebook)
 
 
 if __name__ == "__main__":

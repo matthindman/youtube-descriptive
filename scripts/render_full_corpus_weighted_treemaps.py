@@ -135,6 +135,38 @@ def validate_inputs(
         )
 
 
+def equal_channel_frame_mix(manifest: dict) -> dict[str, float | int]:
+    qa = manifest.get("qa", {})
+    keys = {
+        "denominator": "primary_equal_channel_frame_denominator",
+        "census_n": "primary_equal_channel_census_ge10k_n",
+        "tail_n": "primary_equal_channel_tail_lt10k_n",
+        "unknown_n": "primary_equal_channel_unknown_certainty_n",
+        "census_share": "primary_equal_channel_census_ge10k_share",
+        "tail_share": "primary_equal_channel_tail_lt10k_share",
+        "unknown_share": "primary_equal_channel_unknown_certainty_share",
+        "exact_observed_share": "primary_equal_channel_exact_strata_share_observed",
+        "tail_observed_share": "primary_equal_channel_tail_share_observed",
+        "exact_error": "primary_equal_channel_exact_strata_share_error",
+        "tail_error": "primary_equal_channel_tail_share_error",
+        "denominator_error": "primary_equal_channel_denominator_relative_error",
+    }
+    missing = sorted(source for source in keys.values() if source not in qa)
+    if missing:
+        raise RuntimeError(
+            "Final equal-channel publication manifest lacks frame-mix QA: "
+            + ", ".join(missing)
+        )
+    result = {target: qa[source] for target, source in keys.items()}
+    if max(
+        float(result["exact_error"]),
+        float(result["tail_error"]),
+        float(result["denominator_error"]),
+    ) > 1e-8:
+        raise RuntimeError(f"Equal-channel frame-mix QA failed: {result}")
+    return result
+
+
 def select_analysis(
     frame: pd.DataFrame, allocation_variant: str, population_scope: str
 ) -> pd.DataFrame:
@@ -211,6 +243,14 @@ def configure_static(
         f"Estimator: {spec['estimator']}. Geometry is calibrated for additivity; raw "
         "design-based estimates and intervals are retained in the explorer and tables."
     )
+    if measure == "channels" and not provisional:
+        frame_mix = manifest.get("equal_channel_frame_mix")
+        if frame_mix is None:
+            frame_mix = equal_channel_frame_mix(manifest)
+        base.STATIC_FOOTER += (
+            f" The >=10k census contributes {float(frame_mix['census_share']) * 100:.2f}% "
+            "of equal-channel mass; the below-10k frame is expanded from the SRS."
+        )
     base.SOURCE_DESCRIPTION = (
         f"frozen channel panel, {label_source}, and YouTube topicCategories"
     )
@@ -580,6 +620,23 @@ def main() -> None:
             raise RuntimeError(f"CONSERVATION: FAIL {measure}={total:.12f}")
     print("CONSERVATION: PASS")
     print(f"ANALYSIS: {allocation_variant}; {population_scope}")
+    channel_frame_mix = None
+    if "channels" in measures:
+        channel_frame_mix = equal_channel_frame_mix(manifest)
+        print(
+            "EQUAL-CHANNEL FRAME MIX: "
+            f">=10k census={float(channel_frame_mix['census_share']) * 100:.3f}% "
+            f"({int(channel_frame_mix['census_n']):,}); "
+            f"below-10k SRS frame={float(channel_frame_mix['tail_share']) * 100:.3f}% "
+            f"({int(channel_frame_mix['tail_n']):,}); "
+            f"subscriber-unknown certainty={float(channel_frame_mix['unknown_share']) * 100:.3f}% "
+            f"({int(channel_frame_mix['unknown_n']):,})"
+        )
+        print(
+            "EQUAL-CHANNEL STRATUM CALIBRATION: PASS "
+            f"(exact observed={float(channel_frame_mix['exact_observed_share']) * 100:.3f}%; "
+            f"tail observed={float(channel_frame_mix['tail_observed_share']) * 100:.3f}%)"
+        )
 
     source_treemap = manifest.get("treemap", {})
     effective_static_cell_cap = int(
@@ -608,6 +665,8 @@ def main() -> None:
         },
         "artifacts": {},
     }
+    if channel_frame_mix is not None:
+        artifact_manifest["equal_channel_frame_mix"] = channel_frame_mix
     for measure in measures:
         static = render_static(
             cells,
