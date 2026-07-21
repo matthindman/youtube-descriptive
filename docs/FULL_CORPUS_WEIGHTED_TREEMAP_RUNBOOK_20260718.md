@@ -4,8 +4,9 @@
 
 **Design version:** `full_corpus_dual_sample_20260717_v1`
 
-**Status:** Code complete; final execution waits for source-text collection,
-dual-LID/DeepSeek language publication, and calibrated topic-model publication.
+**Status (2026-07-21):** The PPS attention-only expansion is complete. The
+final paired attention/channel execution still waits for SRS DeepSeek
+publication and the combined one-row-per-channel language table.
 
 ## Purpose
 
@@ -33,6 +34,7 @@ certainty stratum in the primary `all_retrievable` scope.
 | `scripts/build_full_corpus_dual_sample_analysis_job.py` | Ordered existing-cluster job: allocate -> estimate -> qa -> publish_treemap |
 | `scripts/run_full_corpus_dual_sample_analysis.sh` | Uploads code/config and runs the four analysis stages |
 | `scripts/render_full_corpus_weighted_treemaps.py` | Local static, interactive, and coefficient rendering |
+| `scripts/render_full_corpus_expansion_changes.py` | Text and coefficient-style absolute/proportional comparisons of the non-tail baseline with the PPS-expanded platform estimate |
 | `scripts/render_treemap_v3.py` | Accepted squarified layout, family palette, typography, and label-fit code reused by the aggregate renderer |
 | `scripts/run_full_corpus_weighted_treemaps.sh` | Downloads compact publication exports and renders all artifacts |
 
@@ -41,7 +43,7 @@ and must not be committed.
 
 ## Required Upstream State
 
-Do not run the analysis job until all of these are complete:
+The final paired analysis should not run until all of these are complete:
 
 - the two registered sample selections and the >=10K census union;
 - channel-description and recent-video text backfill for unresolved sample
@@ -55,6 +57,11 @@ Do not run the analysis job until all of these are complete:
 
 The primary paper treemap is `platform_only`. The model-completed variant is a
 robustness analysis and cannot be substituted for it.
+
+The separate `attention_pps` mode is allowed before SRS completion because it
+uses the finalized PPS language publication and does not estimate the
+equal-channel ecology. It writes isolated `_pps_attention` tables and cannot
+overwrite final outputs.
 
 ## Estimands And Weights
 
@@ -240,6 +247,116 @@ The wrapper always invokes the CLI as:
 env DATABRICKS_AUTH_STORAGE=plaintext \
   databricks -p matt.hindman@researchaccelerator.org ...
 ```
+
+## Completed PPS Attention Expansion (2026-07-21)
+
+The provisional attention product combines exact non-tail view mass with the
+registered design-weighted below-10K PPS sample. It does not use SRS records or
+fabricate equal-channel estimates.
+
+### Inputs and label rule
+
+- Frozen frame: `dev_sean.matt.yt_dual_sample_20260717_v1_frame`
+- Frame topic companion: `dev_sean.matt.yt_dual_sample_20260717_v1_platform_topics`
+- Analysis union: `dev_sean.matt.yt_dual_sample_20260717_v1_analysis_union`
+- Final PPS labels:
+  `dev_sean.matt.yt_dual_sample_20260717_v1_channel_language_pps_current`
+- Existing exact-stratum labels:
+  `dev_sean.matt.yt_dual_sample_20260717_v1_channel_language_current`
+- Completed exact-stratum dual-LID agreements, where the existing exact label
+  is absent:
+  `dev_sean.matt.yt_dual_sample_20260717_v1_language_routing_comparison_remainder`
+
+For this provisional product, the exact stratum reuses published labels first,
+then completed OpenLID-v3/GlotLID agreements. Remaining exact-stratum channels
+are explicitly `und`. The PPS tail always uses the finalized PPS publication.
+This lookup is materialized as:
+
+```text
+dev_sean.matt.yt_dual_sample_20260717_v1_pps_attention_channel_language_current
+```
+
+The lookup has 5,890,700 rows and 220,334 `und` rows. That unresolved share is
+a measurement limitation, not PPS sampling attrition. Rerun the final mode
+after the remainder and SRS DeepSeek publications are complete.
+
+### Estimation and calibration
+
+The exact component is the >=10K census plus subscriber-unknown certainty
+rows. The tail component uses `V_i / pi_Pi` for each realized PPS channel.
+Exact full-frame platform-topic view margins then calibrate the PPS
+language-by-topic estimates within each topic leaf. Consequently:
+
+- the tail contributes exactly 670,270,625,558 accepted four-week views;
+- the calibrated tail is 10.9257% of final platform view mass;
+- every family/leaf margin matches its exact frozen-frame view margin; and
+- raw Horvitz-Thompson estimates and design SEs remain unchanged for
+  inference.
+
+The realized PPS sample has 1,000,144 channels. Its raw HT tail total is
+670,248,334,181.7 views, so the global diagnostic ratio is 1.0000333 before
+leaf-level calibration.
+
+### Commands
+
+Run the isolated Databricks mode:
+
+```bash
+ANALYSIS_MODE=attention_pps \
+  bash scripts/run_full_corpus_dual_sample_analysis.sh
+```
+
+The launcher can resume without repeating successful stages:
+
+```bash
+ANALYSIS_MODE=attention_pps START_AT=estimate \
+  bash scripts/run_full_corpus_dual_sample_analysis.sh
+
+ANALYSIS_MODE=attention_pps START_AT=publish_treemap \
+  bash scripts/run_full_corpus_dual_sample_analysis.sh
+```
+
+Download the compact provisional export and render the treemap plus expansion
+comparisons:
+
+```bash
+ANALYSIS_MODE=attention_pps \
+  bash scripts/run_full_corpus_weighted_treemaps.sh
+```
+
+The provisional Databricks outputs have the normal names with the suffix
+`_pps_attention`. Compact renderer inputs are under:
+
+```text
+dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication_pps_attention/
+```
+
+Local artifacts are under:
+
+```text
+outputs/full_corpus_dual_sample_20260717_v1/weighted_treemaps_pps_attention/
+```
+
+### Recorded runs and QA
+
+- Allocation run `349093672850062`, task `901662360163990`: success.
+- Estimation/QA run `73068724267084`, tasks `130518322688976` and
+  `452921582411946`: success.
+- Publication run `125352890555982`, task `744965842703036`: success.
+- Analysis rows: 5,890,700; publication leaf cells: 18,389.
+- Maximum channel-allocation error: `2.220446049250313e-16`.
+- Maximum display-conservation error: `3.3306690738754696e-16`.
+- Maximum topic-margin relative error: `1.0802478003587982e-15`.
+- Maximum global-share error: `4.773959005888173e-15`.
+- Maximum within-language error: `8.881784197001252e-16`.
+- Maximum within-language-family error: `5.551115123125783e-16`.
+- Unsampled positive margins, positive margins without support, and negative
+  geometry rows: all zero.
+
+The accepted static attention master has 121 cells, 0.320% minimum ordinary
+cell area, 0.382% pooled view share, 51 labels, squarified packing, and
+3000x1980-pixel dimensions. Manual inspection confirmed readable language and
+family regions with no stack of thin slivers.
 
 ## Rendered Artifacts
 

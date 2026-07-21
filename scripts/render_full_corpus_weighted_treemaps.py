@@ -87,41 +87,43 @@ def add_language_names(frame: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
-def validate_inputs(cells: pd.DataFrame, publication: pd.DataFrame) -> None:
+def validate_inputs(
+    cells: pd.DataFrame, publication: pd.DataFrame, measures: tuple[str, ...]
+) -> None:
     cell_required = {
         "allocation_variant",
         "population_scope",
         "language",
         "family",
         "leaf",
-        "view_geometry_total",
-        "channel_geometry_total",
-        "view_raw_share",
-        "channel_raw_share",
-        "view_standard_error",
-        "channel_standard_error",
-        "view_ci95_lower",
-        "view_ci95_upper",
-        "channel_ci95_lower",
-        "channel_ci95_upper",
-        "view_effective_contributing_n",
-        "channel_effective_contributing_n",
-        "view_largest_weighted_contribution",
-        "channel_largest_weighted_contribution",
-        "view_headline_reliable",
-        "channel_headline_reliable",
-        "view_geometry_calibration_basis",
-        "channel_geometry_calibration_basis",
     }
-    publication_required = {
-        "taxonomy_level",
-        "view_minus_channel_share",
-        "difference_standard_error",
-        "difference_ci95_lower",
-        "difference_ci95_upper",
-        "view_headline_reliable",
-        "channel_headline_reliable",
-    }
+    for measure in measures:
+        prefix = MEASURES[measure]["prefix"]
+        cell_required.update(
+            {
+                MEASURES[measure]["geometry"],
+                f"{prefix}_raw_share",
+                f"{prefix}_standard_error",
+                f"{prefix}_ci95_lower",
+                f"{prefix}_ci95_upper",
+                f"{prefix}_effective_contributing_n",
+                f"{prefix}_largest_weighted_contribution",
+                f"{prefix}_headline_reliable",
+                f"{prefix}_geometry_calibration_basis",
+            }
+        )
+    publication_required = {"taxonomy_level"}
+    if set(measures) == {"attention", "channels"}:
+        publication_required.update(
+            {
+                "view_minus_channel_share",
+                "difference_standard_error",
+                "difference_ci95_lower",
+                "difference_ci95_upper",
+                "view_headline_reliable",
+                "channel_headline_reliable",
+            }
+        )
     missing_cells = sorted(cell_required - set(cells.columns))
     missing_publication = sorted(publication_required - set(publication.columns))
     if missing_cells or missing_publication:
@@ -183,16 +185,25 @@ def configure_static(output_dir: Path, tag: str, measure: str, manifest: dict) -
     base.STATIC_SVG = output_dir / f"treemap_static_master_{measure}_{tag}.svg"
     base.CELLS_CSV = output_dir / f"treemap_static_cells_{measure}_{tag}.csv"
     base.STATIC_TITLE = spec["title"]
+    provisional = manifest.get("publication_status") == "provisional_pending_remainder_deepseek"
+    status_note = " Provisional PPS expansion; remainder DeepSeek labels pending." if provisional else ""
     base.STATIC_SUBTITLE = (
         f"Full frozen channel frame, 15 June-13 July 2026. Area = {spec['area']}; "
-        f"color = content family. {baseline} plus design-weighted below-10k sample."
+        f"color = content family. {baseline} plus design-weighted below-10k sample.{status_note}"
+    )
+    label_source = (
+        "frozen exact labels, completed exact-stratum dual-LID agreements, and final PPS labels"
+        if provisional
+        else "final LID labels"
     )
     base.STATIC_FOOTER = (
-        f"Source: frozen channel panel, final LID labels, and YouTube topicCategories. "
+        f"Source: frozen channel panel, {label_source}, and YouTube topicCategories. "
         f"Estimator: {spec['estimator']}. Geometry is calibrated for additivity; raw "
         "design-based estimates and intervals are retained in the explorer and tables."
     )
-    base.SOURCE_DESCRIPTION = "frozen channel panel, final LID labels, and YouTube topicCategories"
+    base.SOURCE_DESCRIPTION = (
+        f"frozen channel panel, {label_source}, and YouTube topicCategories"
+    )
     base.STATIC_INCLUDE_SUBTOPICS = False
     treemap_config = manifest.get("treemap", {})
     base.TOP_K_LANGUAGES = int(treemap_config.get("static_top_languages", 12))
@@ -512,27 +523,28 @@ def main() -> None:
     population_scope = args.population_scope or manifest["primary_population_scope"]
     cells_all = read_compact_frame(args.cells)
     publication_all = read_compact_frame(args.publication_estimates)
-    validate_inputs(cells_all, publication_all)
+    measures = ("attention", "channels") if args.measure == "both" else (args.measure,)
+    validate_inputs(cells_all, publication_all, measures)
     cells = select_analysis(cells_all, allocation_variant, population_scope)
     publication = select_analysis(publication_all, allocation_variant, population_scope)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    view_sum = float(cells["view_geometry_global_share"].sum())
-    channel_sum = float(cells["channel_geometry_global_share"].sum())
-    if not math.isclose(view_sum, 1.0, abs_tol=1e-8) or not math.isclose(
-        channel_sum, 1.0, abs_tol=1e-8
-    ):
-        raise RuntimeError(
-            f"CONSERVATION: FAIL view={view_sum:.12f}, channel={channel_sum:.12f}"
-        )
+    conservation = {}
+    for measure in measures:
+        prefix = MEASURES[measure]["prefix"]
+        total = float(cells[f"{prefix}_geometry_global_share"].sum())
+        conservation[measure] = total
+        if not math.isclose(total, 1.0, abs_tol=1e-8):
+            raise RuntimeError(f"CONSERVATION: FAIL {measure}={total:.12f}")
     print("CONSERVATION: PASS")
     print(f"ANALYSIS: {allocation_variant}; {population_scope}")
 
-    measures = ("attention", "channels") if args.measure == "both" else (args.measure,)
     artifact_manifest: dict[str, object] = {
         "source_manifest": str(args.manifest.resolve()),
         "allocation_variant": allocation_variant,
         "population_scope": population_scope,
+        "analysis_mode": manifest.get("analysis_mode", "full"),
+        "publication_status": manifest.get("publication_status", "final_dual_sample"),
         "geometry_vs_inference": "calibrated additive totals define area; raw design-based estimates define SE/CI",
         "treemap": {
             "static_top_languages": 12,
@@ -544,9 +556,10 @@ def main() -> None:
         static = render_static(cells, measure, args.output_dir, args.artifact_tag, artifact_manifest)
         interactive = render_interactive(cells, measure, args.output_dir, args.artifact_tag)
         artifact_manifest["artifacts"][measure] = {**static, "interactive": str(interactive.resolve())}
-    artifact_manifest["weighting_difference"] = render_weighting_difference(
-        publication, args.output_dir, args.artifact_tag
-    )
+    if set(measures) == {"attention", "channels"}:
+        artifact_manifest["weighting_difference"] = render_weighting_difference(
+            publication, args.output_dir, args.artifact_tag
+        )
     artifact_manifest_path = args.output_dir / f"artifact_manifest_{args.artifact_tag}.json"
     artifact_manifest_path.write_text(json.dumps(artifact_manifest, indent=2, sort_keys=True) + "\n")
     print(f"ARTIFACT MANIFEST: {artifact_manifest_path.resolve()}")

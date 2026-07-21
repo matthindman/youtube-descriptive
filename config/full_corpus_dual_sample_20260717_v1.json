@@ -106,7 +106,8 @@
     "static_cell_cap": 200,
     "interactive_initial_maxdepth": 2,
     "packing": "squarify",
-    "dbfs_export_root": "dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication"
+    "dbfs_export_root": "dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication",
+    "pps_attention_dbfs_export_root": "dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication_pps_attention"
   },
   "execution": {
     "databricks_profile": "matt.hindman@researchaccelerator.org",

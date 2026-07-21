@@ -6,7 +6,11 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from scripts.render_full_corpus_expansion_changes import build_changes, render_change_figure
+from scripts.render_full_corpus_expansion_changes import (
+    build_changes,
+    render_change_figure,
+    write_markdown_summary,
+)
 
 
 class FullCorpusExpansionChangeTests(unittest.TestCase):
@@ -156,6 +160,22 @@ class FullCorpusExpansionChangeTests(unittest.TestCase):
             )
             for path in artifacts.values():
                 self.assertGreater(Path(path).stat().st_size, 1_000)
+            summary_path = Path(directory) / "summary.md"
+            write_markdown_summary(changes, summary_path)
+            summary = summary_path.read_text(encoding="utf-8")
+            family_section = summary.split("## Topic families", 1)[1].split(
+                "## Subtopics", 1
+            )[0]
+            growth = family_section.split(
+                "### Largest percentage-point growth", 1
+            )[1].split("### Largest percentage-point decline", 1)[0]
+            decline = family_section.split(
+                "### Largest percentage-point decline", 1
+            )[1].split("### Largest proportional growth", 1)[0]
+            self.assertIn("| B |", growth)
+            self.assertNotIn("| A |", growth)
+            self.assertIn("| A |", decline)
+            self.assertNotIn("| B |", decline)
 
 
 if __name__ == "__main__":

@@ -24,6 +24,12 @@ DBFS_CONFIG="${DBFS_DIR}/full_corpus_dual_sample_20260717_v1.json"
 DBFS_HIERARCHY="${DBFS_DIR}/youtube_topic_hierarchy_v2.yaml"
 DBFS_REMAP="${DBFS_DIR}/topic_remap.yaml"
 TIMEOUT="${TIMEOUT:-24h}"
+ANALYSIS_MODE="${ANALYSIS_MODE:-full}"
+START_AT="${START_AT:-allocate}"
+if [[ "${ANALYSIS_MODE}" != "full" && "${ANALYSIS_MODE}" != "attention_pps" ]]; then
+  echo "Unknown ANALYSIS_MODE: ${ANALYSIS_MODE}" >&2
+  exit 2
+fi
 
 JOB_JSON="$(mktemp "${TMPDIR:-/tmp}/full_corpus_dual_sample_analysis.XXXXXX")"
 cleanup() {
@@ -52,7 +58,9 @@ python3 "${ROOT_DIR}/scripts/build_full_corpus_dual_sample_analysis_job.py" \
   --notebook-path "${NOTEBOOK_PATH}" \
   --dbfs-config-path "${DBFS_CONFIG}" \
   --hierarchy-config-path "${DBFS_HIERARCHY}" \
-  --topic-remap-path "${DBFS_REMAP}"
+  --topic-remap-path "${DBFS_REMAP}" \
+  --analysis-mode "${ANALYSIS_MODE}" \
+  --start-at "${START_AT}"
 
-echo "Submitting post-enrichment analysis job on existing cluster ${CLUSTER_ID}."
+echo "Submitting ${ANALYSIS_MODE} post-enrichment analysis job from ${START_AT} on existing cluster ${CLUSTER_ID}."
 "${DATABRICKS_CMD[@]}" jobs submit --json "@${JOB_JSON}" --timeout "${TIMEOUT}" --output json

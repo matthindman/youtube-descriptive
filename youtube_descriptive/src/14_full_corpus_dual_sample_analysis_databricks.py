@@ -31,6 +31,7 @@ def _get(name: str, default: str) -> str:
 
 
 _widget("stage", "allocate")
+_widget("analysis_mode", "full")
 _widget(
     "design_config_path",
     "dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1.json",
@@ -44,6 +45,9 @@ _widget(
     "dbfs:/FileStore/youtube_descriptive/topic_remap.yaml",
 )
 STAGE = _get("stage", "allocate")
+ANALYSIS_MODE = _get("analysis_mode", "full").lower()
+if ANALYSIS_MODE not in {"full", "attention_pps"}:
+    raise ValueError("analysis_mode must be one of: full, attention_pps")
 CONFIG_PATH = _get(
     "design_config_path",
     "dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1.json",
@@ -62,21 +66,26 @@ DESIGN_VERSION = CONFIG["design_version"]
 FRAME_VERSION = CONFIG["frame_version"]
 ANALYSIS = CONFIG["analysis"]
 PREFIX = f"{CONFIG['output_catalog']}.{CONFIG['output_schema']}.{CONFIG['output_prefix']}"
+OUTPUT_PREFIX = PREFIX if ANALYSIS_MODE == "full" else f"{PREFIX}_pps_attention"
 
 TABLES = {
     "frame": f"{PREFIX}_frame",
+    "platform_topics": f"{PREFIX}_platform_topics",
     "probabilities": f"{PREFIX}_frame_probabilities",
     "analysis_union": f"{PREFIX}_analysis_union",
     "language": f"{PREFIX}_channel_language_current",
+    "pps_language": f"{PREFIX}_channel_language_pps_current",
+    "remainder_routing": f"{PREFIX}_language_routing_comparison_remainder",
     "model_calibrated": f"{PREFIX}_topic_model_calibrated",
-    "allocations": f"{PREFIX}_allocations",
-    "platform_margins": f"{PREFIX}_platform_topic_margins",
-    "estimates": f"{PREFIX}_estimates",
-    "differences": f"{PREFIX}_weighting_differences",
-    "qa": f"{PREFIX}_qa",
-    "publication": f"{PREFIX}_publication_estimates",
-    "treemap_cells": f"{PREFIX}_treemap_cells",
-    "treemap_qa": f"{PREFIX}_treemap_qa",
+    "analysis_language": f"{OUTPUT_PREFIX}_channel_language_current",
+    "allocations": f"{OUTPUT_PREFIX}_allocations",
+    "platform_margins": f"{OUTPUT_PREFIX}_platform_topic_margins",
+    "estimates": f"{OUTPUT_PREFIX}_estimates",
+    "differences": f"{OUTPUT_PREFIX}_weighting_differences",
+    "qa": f"{OUTPUT_PREFIX}_qa",
+    "publication": f"{OUTPUT_PREFIX}_publication_estimates",
+    "treemap_cells": f"{OUTPUT_PREFIX}_treemap_cells",
+    "treemap_qa": f"{OUTPUT_PREFIX}_treemap_qa",
 }
 
 UNLABELED_FAMILY = "Unlabeled"
@@ -290,8 +299,12 @@ def model_completed_allocations(base: DataFrame, platform: DataFrame) -> DataFra
 
 def exact_platform_topic_margins(frame: DataFrame) -> DataFrame:
     """Known platform-topic margins used only to calibrate display geometry."""
+    require_table(TABLES["platform_topics"])
+    topics = spark.table(TABLES["platform_topics"]).select(
+        "channel_id", "raw_topic_categories"
+    )
     allocated = platform_allocations(
-        frame.select("channel_id", "raw_topic_categories")
+        frame.select("channel_id").join(topics, "channel_id", "left")
     ).join(
         frame.select("channel_id", "subscriber_status", "accepted_positive_view_mass"),
         "channel_id",
@@ -320,11 +333,137 @@ def exact_platform_topic_margins(frame: DataFrame) -> DataFrame:
     )
 
 
-def allocate() -> dict[str, int]:
-    for name in ("analysis_union", "language", "frame"):
+def attention_pps_analysis_base() -> DataFrame:
+    """Return every exact stratum row plus the registered Poisson PPS tail."""
+    require_table(TABLES["analysis_union"])
+    require_table(TABLES["probabilities"])
+    analysis = spark.table(TABLES["analysis_union"])
+    exact = analysis.where(F.col("subscriber_status") != "sample_frame_lt10k")
+    pps_ids = (
+        spark.table(TABLES["probabilities"])
+        .where(F.col("selected_pps"))
+        .select("channel_id")
+    )
+    tail = analysis.where(F.col("subscriber_status") == "sample_frame_lt10k").join(
+        pps_ids, "channel_id", "inner"
+    )
+    return exact.unionByName(tail)
+
+
+def provisional_attention_language(base: DataFrame) -> tuple[DataFrame, dict[str, int]]:
+    """Build the complete PPS-era label lookup without claiming SRS completion.
+
+    Exact-stratum rows reuse the frozen published label where available. Exact
+    rows added after that frozen LID frame use only completed dual-LID agreement;
+    cases requiring the pending DeepSeek fallback remain explicit ``und``.
+    Every PPS tail row comes from the finalized PPS publication.
+    """
+    for name in ("pps_language", "remainder_routing"):
         require_table(TABLES[name])
-    base = spark.table(TABLES["analysis_union"])
-    language = spark.table(TABLES["language"]).select(
+    exact = base.where(F.col("subscriber_status") != "sample_frame_lt10k")
+    tail = base.where(F.col("subscriber_status") == "sample_frame_lt10k")
+
+    exact_existing = exact.where(F.col("has_existing_language_label")).select(
+        "channel_id",
+        F.coalesce(F.lower(F.trim("channel_language")), F.lit("und")).alias(
+            "channel_language"
+        ),
+        F.lit("reused_frozen_exact_label").alias("analysis_label_source"),
+    )
+    unresolved_exact = exact.where(~F.col("has_existing_language_label")).select(
+        "channel_id"
+    )
+    routing = spark.table(TABLES["remainder_routing"]).select(
+        "channel_id",
+        "lid_base_language_resolved",
+        "consensus_language_iso639_3",
+        "openlid_primary_language_iso639_3",
+        "glotlid_primary_language_iso639_3",
+    )
+    same_base_iso = (
+        F.col("openlid_primary_language_iso639_3").isNotNull()
+        & F.col("glotlid_primary_language_iso639_3").isNotNull()
+        & (
+            F.lower(F.col("openlid_primary_language_iso639_3"))
+            == F.lower(F.col("glotlid_primary_language_iso639_3"))
+        )
+    )
+    resolved_consensus = (
+        F.coalesce(F.col("lid_base_language_resolved"), F.lit(False))
+        & F.col("consensus_language_iso639_3").isNotNull()
+    )
+    resolved_base_iso = (
+        F.coalesce(F.col("lid_base_language_resolved"), F.lit(False))
+        & (~resolved_consensus)
+        & same_base_iso
+    )
+    exact_interim = unresolved_exact.join(routing, "channel_id", "left").select(
+        "channel_id",
+        F.when(
+            resolved_consensus,
+            F.lower(F.trim("consensus_language_iso639_3")),
+        )
+        .when(
+            resolved_base_iso,
+            F.lower(F.trim("openlid_primary_language_iso639_3")),
+        )
+        .otherwise(F.lit("und"))
+        .alias("channel_language"),
+        F.when(resolved_consensus, F.lit("interim_dual_lid_consensus"))
+        .when(resolved_base_iso, F.lit("interim_dual_lid_base_iso_agreement"))
+        .otherwise(F.lit("interim_pending_deepseek_or_no_text"))
+        .alias("analysis_label_source"),
+    )
+    pps = spark.table(TABLES["pps_language"]).select(
+        "channel_id",
+        F.coalesce(F.lower(F.trim("channel_language")), F.lit("und")).alias(
+            "channel_language"
+        ),
+        F.lit("final_pps_language_publication").alias("analysis_label_source"),
+    )
+    missing_pps = tail.select("channel_id").join(pps, "channel_id", "left_anti").count()
+    unexpected_pps = pps.select("channel_id").join(tail, "channel_id", "left_anti").count()
+    if missing_pps or unexpected_pps:
+        raise RuntimeError(
+            "Final PPS language publication does not match the registered PPS sample: "
+            f"missing={missing_pps:,}, unexpected={unexpected_pps:,}"
+        )
+    language = exact_existing.unionByName(exact_interim).unionByName(pps)
+    counts = {
+        row["analysis_label_source"]: int(row["rows"])
+        for row in language.groupBy("analysis_label_source")
+        .agg(F.count(F.lit(1)).alias("rows"))
+        .collect()
+    }
+    counts["rows"] = language.count()
+    counts["distinct_channels"] = language.select("channel_id").distinct().count()
+    counts["und"] = language.where(F.col("channel_language") == "und").count()
+    base_count = base.count()
+    if counts["rows"] != counts["distinct_channels"] or counts["rows"] != base_count:
+        raise AssertionError(f"Provisional attention labels do not conserve the analysis base: {counts}")
+    write_table(
+        language,
+        TABLES["analysis_language"],
+        "PPS-attention labels: frozen exact labels plus interim dual-LID agreement and finalized PPS labels.",
+    )
+    return language.select("channel_id", "channel_language"), counts
+
+
+def allocate() -> dict[str, int]:
+    for name in ("frame", "platform_topics"):
+        require_table(TABLES[name])
+    if ANALYSIS_MODE == "attention_pps":
+        base = attention_pps_analysis_base()
+        language_source, language_counts = provisional_attention_language(base)
+    else:
+        for name in ("analysis_union", "language"):
+            require_table(TABLES[name])
+        base = spark.table(TABLES["analysis_union"])
+        language_source = spark.table(TABLES["language"]).select(
+            "channel_id", "channel_language"
+        )
+        language_counts = {}
+    language = language_source.select(
         "channel_id", F.coalesce(F.lower("channel_language"), F.lit("und")).alias("language")
     )
     if base.select("channel_id").distinct().count() != base.count():
@@ -334,7 +473,7 @@ def allocate() -> dict[str, int]:
         raise RuntimeError(f"Final language table is missing {missing_languages:,} analysis channels")
     platform = platform_allocations(base)
     allocations = platform
-    model = model_completed_allocations(base, platform)
+    model = None if ANALYSIS_MODE == "attention_pps" else model_completed_allocations(base, platform)
     if model is not None:
         allocations = allocations.unionByName(model)
     allocations = (
@@ -371,7 +510,13 @@ def allocate() -> dict[str, int]:
         .collect()
     }
     counts["platform_margin_cells"] = margins.count()
+    counts["analysis_base_rows"] = base.count()
+    counts["analysis_language_rows"] = int(language_counts.get("rows", counts["analysis_base_rows"]))
+    counts["analysis_language_und"] = int(language_counts.get("und", 0))
     print("CHANNEL ALLOCATION CONSERVATION: PASS")
+    print(f"ANALYSIS MODE: {ANALYSIS_MODE}")
+    if language_counts:
+        print("PROVISIONAL LANGUAGE SOURCES:", json.dumps(language_counts, sort_keys=True))
     print(json.dumps(counts, sort_keys=True))
     return counts
 
@@ -503,19 +648,27 @@ def tail_pps(cells: DataFrame, probabilities: DataFrame) -> DataFrame:
     ).withColumn(
         "y", F.col("accepted_positive_view_mass") * F.col("cell_allocation")
     )
-    return selected.groupBy(
+    grouped = selected.groupBy(
         "allocation_variant", "taxonomy_level", "cell_key", "language", "family", "leaf"
     ).agg(
-        F.sum(F.col("y") / F.col("pi_pps")).alias("tail_total"),
+        F.sum(F.col("y") / F.col("pi_pps")).alias("weighted_sum"),
         F.sum((1.0 - F.col("pi_pps")) * F.col("y") ** 2 / F.col("pi_pps") ** 2).alias(
             "tail_variance"
         ),
         F.count(F.lit(1)).alias("contributing_n"),
-        (
-            F.sum(F.col("y") / F.col("pi_pps")) ** 2
-            / F.sum((F.col("y") / F.col("pi_pps")) ** 2)
-        ).alias("effective_contributing_n"),
+        F.sum((F.col("y") / F.col("pi_pps")) ** 2).alias("weighted_sum2"),
         F.max(F.col("y") / F.col("pi_pps")).alias("max_weighted_value"),
+    )
+    return (
+        grouped.withColumn("tail_total", F.col("weighted_sum"))
+        .withColumn(
+            "effective_contributing_n",
+            F.when(
+                F.col("weighted_sum2") > 0,
+                F.col("weighted_sum") ** 2 / F.col("weighted_sum2"),
+            ).otherwise(F.lit(0.0)),
+        )
+        .drop("weighted_sum", "weighted_sum2")
     )
 
 
@@ -586,7 +739,7 @@ def combine_estimates(
     )
 
 
-def estimate() -> dict[str, float | int]:
+def estimate() -> dict[str, float | int | str]:
     for name in ("allocations", "frame", "probabilities"):
         require_table(TABLES[name])
     allocations = spark.table(TABLES["allocations"])
@@ -595,7 +748,6 @@ def estimate() -> dict[str, float | int]:
     cells = rollups(allocations).persist()
     denominators = domain_denominators(frame).persist()
     tail_n = frame.where(F.col("subscriber_status") == "sample_frame_lt10k").count()
-    sample_n = probabilities.where(F.col("selected_srs")).count()
     tail_view_total = float(
         frame.where(F.col("subscriber_status") == "sample_frame_lt10k")
         .agg(F.sum("accepted_positive_view_mass").alias("value"))
@@ -616,8 +768,46 @@ def estimate() -> dict[str, float | int]:
         raise RuntimeError(
             f"PPS tail-total calibration factor {pps_factor:.6f} falls outside registered [{lower}, {upper}]"
         )
-    srs = tail_srs(cells, probabilities, tail_n, sample_n).persist()
     pps = tail_pps(cells, probabilities).persist()
+    if ANALYSIS_MODE == "attention_pps":
+        estimates = None
+        for scope, include_unknown in (("known_subscriber", False), ("all_retrievable", True)):
+            head = exact_head(cells, include_unknown).persist()
+            attention = combine_estimates(
+                head,
+                pps,
+                denominators,
+                scope,
+                "attention_pps",
+                "view_denominator",
+                tail_view_total,
+                pps_factor,
+            )
+            estimates = attention if estimates is None else estimates.unionByName(attention)
+            head.unpersist()
+        write_table(
+            estimates,
+            TABLES["estimates"],
+            "PPS-only raw design-based and total-ratio display estimates for the attention ecology.",
+        )
+        metrics = {
+            "analysis_mode": ANALYSIS_MODE,
+            "tail_population_n": int(tail_n),
+            "pps_realized_n": probabilities.where(F.col("selected_pps")).count(),
+            "tail_positive_view_total": tail_view_total,
+            "pps_tail_ht_view_total": pps_tail_ht,
+            "pps_tail_calibration_factor": pps_factor,
+            "estimate_rows": estimates.count(),
+        }
+        cells.unpersist()
+        denominators.unpersist()
+        pps.unpersist()
+        print("PPS ATTENTION ESTIMATION: PASS")
+        print(json.dumps(metrics, sort_keys=True))
+        return metrics
+
+    sample_n = probabilities.where(F.col("selected_srs")).count()
+    srs = tail_srs(cells, probabilities, tail_n, sample_n).persist()
     estimates = None
     for scope, include_unknown in (("known_subscriber", False), ("all_retrievable", True)):
         head = exact_head(cells, include_unknown).persist()
@@ -729,7 +919,10 @@ def estimate() -> dict[str, float | int]:
 
 
 def qa() -> dict[str, float | int]:
-    for name in ("allocations", "estimates", "differences"):
+    required = ["allocations", "estimates"]
+    if ANALYSIS_MODE == "full":
+        required.append("differences")
+    for name in required:
         require_table(TABLES[name])
     allocations = spark.table(TABLES["allocations"])
     estimates = spark.table(TABLES["estimates"])
@@ -750,8 +943,20 @@ def qa() -> dict[str, float | int]:
         "max_channel_allocation_error": float(allocation_qa["max_allocation_error"] or 0.0),
         "max_display_share_conservation_error": max_display_error,
         "estimate_rows": estimates.count(),
-        "difference_rows": spark.table(TABLES["differences"]).count(),
+        "difference_rows": (
+            spark.table(TABLES["differences"]).count() if ANALYSIS_MODE == "full" else 0
+        ),
     }
+    estimators = {row["estimator"] for row in estimates.select("estimator").distinct().collect()}
+    expected_estimators = (
+        {"attention_pps"}
+        if ANALYSIS_MODE == "attention_pps"
+        else {"attention_pps", "equal_channel_srs"}
+    )
+    if estimators != expected_estimators:
+        raise AssertionError(
+            f"Unexpected estimators for {ANALYSIS_MODE}: {sorted(estimators)}"
+        )
     if metrics["max_channel_allocation_error"] > 1e-6:
         raise AssertionError(f"Channel allocation conservation failed: {metrics}")
     if max_display_error > 1e-6:
@@ -783,35 +988,53 @@ PUBLICATION_KEYS = [
     "family",
     "leaf",
 ]
+PUBLICATION_METRIC_COLUMNS = [
+    "head_total",
+    "tail_total",
+    "tail_variance",
+    "tail_known_total",
+    "tail_calibration_factor",
+    "denominator",
+    "raw_total",
+    "raw_share",
+    "standard_error",
+    "ci95_lower",
+    "ci95_upper",
+    "display_total",
+    "display_share",
+    "coefficient_of_variation",
+    "largest_weighted_contribution",
+    "contributing_n",
+    "effective_contributing_n",
+    "max_weighted_value",
+    "headline_reliable",
+]
+
+
+def attention_publication_estimates(estimates: DataFrame) -> DataFrame:
+    return (
+        estimates.where(F.col("estimator") == "attention_pps")
+        .select(
+            *PUBLICATION_KEYS,
+            *(
+                F.col(column).alias(f"view_{column}")
+                for column in PUBLICATION_METRIC_COLUMNS
+            ),
+            F.lit(True).alias("view_cell_observed"),
+        )
+        .withColumn("design_version", F.lit(DESIGN_VERSION))
+        .withColumn("frame_version", F.lit(FRAME_VERSION))
+    )
 
 
 def paired_publication_estimates(estimates: DataFrame, differences: DataFrame) -> DataFrame:
-    metric_columns = [
-        "head_total",
-        "tail_total",
-        "tail_variance",
-        "tail_known_total",
-        "tail_calibration_factor",
-        "denominator",
-        "raw_total",
-        "raw_share",
-        "standard_error",
-        "ci95_lower",
-        "ci95_upper",
-        "display_total",
-        "display_share",
-        "coefficient_of_variation",
-        "largest_weighted_contribution",
-        "contributing_n",
-        "effective_contributing_n",
-        "max_weighted_value",
-        "headline_reliable",
-    ]
-
     def one_estimator(estimator: str, prefix: str) -> DataFrame:
         return estimates.where(F.col("estimator") == estimator).select(
             *PUBLICATION_KEYS,
-            *(F.col(column).alias(f"{prefix}_{column}") for column in metric_columns),
+            *(
+                F.col(column).alias(f"{prefix}_{column}")
+                for column in PUBLICATION_METRIC_COLUMNS
+            ),
             F.lit(True).alias(f"{prefix}_cell_observed"),
         )
 
@@ -894,6 +1117,102 @@ def paired_publication_estimates(estimates: DataFrame, differences: DataFrame) -
         )
         .withColumn("design_version", F.lit(DESIGN_VERSION))
         .withColumn("frame_version", F.lit(FRAME_VERSION))
+    )
+
+
+def calibrated_attention_treemap_cells(
+    publication: DataFrame, margins: DataFrame
+) -> DataFrame:
+    cells = publication.where(F.col("taxonomy_level") == "language_family_leaf").join(
+        margins.select("family", "leaf", "tail_view_total"),
+        ["family", "leaf"],
+        "left",
+    )
+    topic_window = Window.partitionBy(
+        "allocation_variant", "population_scope", "family", "leaf"
+    )
+    cells = (
+        cells.withColumn(
+            "sampled_topic_tail_view_total", F.sum("view_tail_total").over(topic_window)
+        )
+        .withColumn(
+            "view_geometry_tail_factor",
+            F.when(
+                F.col("allocation_variant") == "platform_only",
+                F.when(
+                    F.col("sampled_topic_tail_view_total") > 0,
+                    F.col("tail_view_total") / F.col("sampled_topic_tail_view_total"),
+                ).when(
+                    F.coalesce(F.col("tail_view_total"), F.lit(0.0)) == 0,
+                    F.lit(1.0),
+                ),
+            ).otherwise(F.col("view_tail_calibration_factor")),
+        )
+        .withColumn(
+            "view_geometry_calibration_basis",
+            F.when(
+                F.col("allocation_variant") == "platform_only",
+                F.lit("exact frozen-frame platform family/leaf tail view margin"),
+            ).otherwise(F.lit("known global tail view total")),
+        )
+        .withColumn(
+            "view_geometry_tail_total",
+            F.col("view_tail_total") * F.col("view_geometry_tail_factor"),
+        )
+        .withColumn(
+            "view_geometry_total",
+            F.col("view_head_total") + F.col("view_geometry_tail_total"),
+        )
+        .withColumn(
+            "view_geometry_global_share",
+            F.col("view_geometry_total") / F.col("view_denominator"),
+        )
+    )
+    language_window = Window.partitionBy(
+        "allocation_variant", "population_scope", "language"
+    )
+    language_family_window = Window.partitionBy(
+        "allocation_variant", "population_scope", "language", "family"
+    )
+    return (
+        cells.withColumn(
+            "view_language_total", F.sum("view_geometry_total").over(language_window)
+        )
+        .withColumn(
+            "view_language_family_total",
+            F.sum("view_geometry_total").over(language_family_window),
+        )
+        .withColumn(
+            "view_within_language_share",
+            F.when(
+                F.col("view_language_total") > 0,
+                F.col("view_geometry_total") / F.col("view_language_total"),
+            ).otherwise(F.lit(0.0)),
+        )
+        .withColumn(
+            "view_within_language_family_share",
+            F.when(
+                F.col("view_language_family_total") > 0,
+                F.col("view_geometry_total") / F.col("view_language_family_total"),
+            ).otherwise(F.lit(0.0)),
+        )
+        .withColumn(
+            "conditional_share_uncertainty_status",
+            F.lit(
+                "not reported: requires replicate or linearized numerator-denominator covariance"
+            ),
+        )
+        .withColumn(
+            "cell_id",
+            F.concat_ws(
+                "\x1f",
+                "allocation_variant",
+                "population_scope",
+                "language",
+                "family",
+                "leaf",
+            ),
+        )
     )
 
 
@@ -983,19 +1302,32 @@ def calibrated_treemap_cells(publication: DataFrame, margins: DataFrame) -> Data
             F.sum("channel_geometry_total").over(language_family_window),
         )
         .withColumn(
-            "view_within_language_share", F.col("view_geometry_total") / F.col("view_language_total")
+            "view_within_language_share",
+            F.when(
+                F.col("view_language_total") > 0,
+                F.col("view_geometry_total") / F.col("view_language_total"),
+            ).otherwise(F.lit(0.0)),
         )
         .withColumn(
             "channel_within_language_share",
-            F.col("channel_geometry_total") / F.col("channel_language_total"),
+            F.when(
+                F.col("channel_language_total") > 0,
+                F.col("channel_geometry_total") / F.col("channel_language_total"),
+            ).otherwise(F.lit(0.0)),
         )
         .withColumn(
             "view_within_language_family_share",
-            F.col("view_geometry_total") / F.col("view_language_family_total"),
+            F.when(
+                F.col("view_language_family_total") > 0,
+                F.col("view_geometry_total") / F.col("view_language_family_total"),
+            ).otherwise(F.lit(0.0)),
         )
         .withColumn(
             "channel_within_language_family_share",
-            F.col("channel_geometry_total") / F.col("channel_language_family_total"),
+            F.when(
+                F.col("channel_language_family_total") > 0,
+                F.col("channel_geometry_total") / F.col("channel_language_family_total"),
+            ).otherwise(F.lit(0.0)),
         )
         .withColumn(
             "conditional_share_uncertainty_status",
@@ -1006,6 +1338,91 @@ def calibrated_treemap_cells(publication: DataFrame, margins: DataFrame) -> Data
         )
     )
     return cells
+
+
+def attention_treemap_acceptance_metrics(
+    cells: DataFrame, margins: DataFrame
+) -> dict[str, float | int]:
+    key_columns = ["allocation_variant", "population_scope", "language", "family", "leaf"]
+    row_count = cells.count()
+    distinct_count = cells.select(*key_columns).distinct().count()
+    unsampled_margin_rows = cells.where(F.col("view_geometry_tail_factor").isNull()).count()
+    negative_geometry_rows = cells.where(F.col("view_geometry_total") < 0).count()
+    observed_platform_topics = (
+        cells.where(F.col("allocation_variant") == "platform_only")
+        .select("family", "leaf")
+        .distinct()
+    )
+    missing_positive_topic_margins = (
+        margins.where(F.col("tail_view_total") > 0)
+        .select("family", "leaf")
+        .join(observed_platform_topics, ["family", "leaf"], "left_anti")
+        .count()
+    )
+    calibrated_platform_margins = (
+        cells.where(F.col("allocation_variant") == "platform_only")
+        .groupBy("population_scope", "family", "leaf")
+        .agg(F.sum("view_geometry_tail_total").alias("calibrated_tail_view_total"))
+        .join(
+            margins.select("family", "leaf", "tail_view_total"),
+            ["family", "leaf"],
+            "inner",
+        )
+        .withColumn(
+            "view_relative_error",
+            F.abs(F.col("calibrated_tail_view_total") - F.col("tail_view_total"))
+            / F.greatest(F.abs(F.col("tail_view_total")), F.lit(1.0)),
+        )
+    )
+    max_topic_margin_error = float(
+        calibrated_platform_margins.agg(F.max("view_relative_error").alias("value"))
+        .first()["value"]
+        or 0.0
+    )
+    global_checks = cells.groupBy("allocation_variant", "population_scope").agg(
+        F.sum("view_geometry_global_share").alias("view_sum")
+    )
+    max_global_error = float(
+        global_checks.agg(F.max(F.abs(F.col("view_sum") - 1.0)).alias("value"))
+        .first()["value"]
+        or 0.0
+    )
+    language_checks = cells.where(F.col("view_language_total") > 0).groupBy(
+        "allocation_variant", "population_scope", "language"
+    ).agg(F.sum("view_within_language_share").alias("view_sum"))
+    max_language_error = float(
+        language_checks.agg(F.max(F.abs(F.col("view_sum") - 1.0)).alias("value"))
+        .first()["value"]
+        or 0.0
+    )
+    family_checks = cells.where(F.col("view_language_family_total") > 0).groupBy(
+        "allocation_variant", "population_scope", "language", "family"
+    ).agg(F.sum("view_within_language_family_share").alias("view_sum"))
+    max_family_error = float(
+        family_checks.agg(F.max(F.abs(F.col("view_sum") - 1.0)).alias("value"))
+        .first()["value"]
+        or 0.0
+    )
+    metrics = {
+        "treemap_cell_rows": int(row_count),
+        "treemap_distinct_cell_keys": int(distinct_count),
+        "unsampled_positive_topic_margin_rows": int(unsampled_margin_rows),
+        "positive_topic_margins_without_sample_support": int(
+            missing_positive_topic_margins
+        ),
+        "negative_geometry_rows": int(negative_geometry_rows),
+        "max_platform_topic_margin_relative_error": max_topic_margin_error,
+        "max_global_share_conservation_error": max_global_error,
+        "max_within_language_conservation_error": max_language_error,
+        "max_within_language_family_conservation_error": max_family_error,
+    }
+    if row_count != distinct_count:
+        raise AssertionError(f"Treemap cell keys are not unique: {metrics}")
+    if unsampled_margin_rows or missing_positive_topic_margins or negative_geometry_rows:
+        raise AssertionError(f"Treemap geometry contains invalid rows: {metrics}")
+    if max(max_topic_margin_error, max_global_error, max_language_error, max_family_error) > 1e-6:
+        raise AssertionError(f"Treemap share conservation failed: {metrics}")
+    return metrics
 
 
 def treemap_acceptance_metrics(cells: DataFrame, margins: DataFrame) -> dict[str, float | int]:
@@ -1074,10 +1491,19 @@ def treemap_acceptance_metrics(cells: DataFrame, margins: DataFrame) -> dict[str
     language_checks = cells.groupBy("allocation_variant", "population_scope", "language").agg(
         F.sum("view_within_language_share").alias("view_sum"),
         F.sum("channel_within_language_share").alias("channel_sum"),
+        F.max("view_language_total").alias("view_total"),
+        F.max("channel_language_total").alias("channel_total"),
     )
     max_language_error = float(
         language_checks.select(
-            F.greatest(F.abs(F.col("view_sum") - 1.0), F.abs(F.col("channel_sum") - 1.0)).alias(
+            F.greatest(
+                F.when(F.col("view_total") > 0, F.abs(F.col("view_sum") - 1.0)).otherwise(
+                    F.lit(0.0)
+                ),
+                F.when(
+                    F.col("channel_total") > 0, F.abs(F.col("channel_sum") - 1.0)
+                ).otherwise(F.lit(0.0)),
+            ).alias(
                 "error"
             )
         ).agg(F.max("error").alias("value")).first()["value"]
@@ -1088,10 +1514,19 @@ def treemap_acceptance_metrics(cells: DataFrame, margins: DataFrame) -> dict[str
     ).agg(
         F.sum("view_within_language_family_share").alias("view_sum"),
         F.sum("channel_within_language_family_share").alias("channel_sum"),
+        F.max("view_language_family_total").alias("view_total"),
+        F.max("channel_language_family_total").alias("channel_total"),
     )
     max_family_error = float(
         family_checks.select(
-            F.greatest(F.abs(F.col("view_sum") - 1.0), F.abs(F.col("channel_sum") - 1.0)).alias(
+            F.greatest(
+                F.when(F.col("view_total") > 0, F.abs(F.col("view_sum") - 1.0)).otherwise(
+                    F.lit(0.0)
+                ),
+                F.when(
+                    F.col("channel_total") > 0, F.abs(F.col("channel_sum") - 1.0)
+                ).otherwise(F.lit(0.0)),
+            ).alias(
                 "error"
             )
         ).agg(F.max("error").alias("value")).first()["value"]
@@ -1118,23 +1553,43 @@ def treemap_acceptance_metrics(cells: DataFrame, margins: DataFrame) -> dict[str
 
 
 def publish_treemap() -> dict[str, float | int | str]:
-    for name in ("estimates", "differences", "platform_margins"):
+    required = ["estimates", "platform_margins"]
+    if ANALYSIS_MODE == "full":
+        required.append("differences")
+    for name in required:
         require_table(TABLES[name])
-    publication = paired_publication_estimates(
-        spark.table(TABLES["estimates"]), spark.table(TABLES["differences"])
-    )
     margins = spark.table(TABLES["platform_margins"])
-    cells = calibrated_treemap_cells(publication, margins)
-    metrics = treemap_acceptance_metrics(cells, margins)
+    if ANALYSIS_MODE == "attention_pps":
+        publication = attention_publication_estimates(spark.table(TABLES["estimates"]))
+        cells = calibrated_attention_treemap_cells(publication, margins)
+        metrics = attention_treemap_acceptance_metrics(cells, margins)
+        publication_comment = (
+            "PPS attention rollups with raw design-based uncertainty; SRS channel estimates pending."
+        )
+        cells_comment = (
+            "PPS attention language/family/leaf cells; calibrated totals are geometry only."
+        )
+    else:
+        publication = paired_publication_estimates(
+            spark.table(TABLES["estimates"]), spark.table(TABLES["differences"])
+        )
+        cells = calibrated_treemap_cells(publication, margins)
+        metrics = treemap_acceptance_metrics(cells, margins)
+        publication_comment = (
+            "Paired channel- and view-weighted rollup estimates with raw design-based uncertainty."
+        )
+        cells_comment = (
+            "Additive language/family/leaf cells; calibrated totals are geometry only and raw HT/SRS fields remain inferential."
+        )
     write_table(
         publication,
         TABLES["publication"],
-        "Paired channel- and view-weighted rollup estimates with raw design-based uncertainty.",
+        publication_comment,
     )
     write_table(
         cells,
         TABLES["treemap_cells"],
-        "Additive language/family/leaf cells; calibrated totals are geometry only and raw HT/SRS fields remain inferential.",
+        cells_comment,
     )
     qa_rows = [
         (DESIGN_VERSION, key, json.dumps(value), datetime.now(timezone.utc))
@@ -1148,7 +1603,12 @@ def publish_treemap() -> dict[str, float | int | str]:
         "Treemap publication-cell uniqueness, nonnegativity, and additive-conservation checks.",
     )
 
-    export_root = CONFIG["treemap"]["dbfs_export_root"].rstrip("/")
+    export_root_key = (
+        "pps_attention_dbfs_export_root"
+        if ANALYSIS_MODE == "attention_pps"
+        else "dbfs_export_root"
+    )
+    export_root = CONFIG["treemap"][export_root_key].rstrip("/")
     cells_path = f"{export_root}/treemap_cells"
     publication_path = f"{export_root}/publication_estimates"
     cells.coalesce(1).write.mode("overwrite").parquet(cells_path)
@@ -1156,6 +1616,12 @@ def publish_treemap() -> dict[str, float | int | str]:
     manifest = {
         "design_version": DESIGN_VERSION,
         "frame_version": FRAME_VERSION,
+        "analysis_mode": ANALYSIS_MODE,
+        "publication_status": (
+            "provisional_pending_remainder_deepseek"
+            if ANALYSIS_MODE == "attention_pps"
+            else "final_dual_sample"
+        ),
         "tables": {
             "treemap_cells": TABLES["treemap_cells"],
             "publication_estimates": TABLES["publication"],
@@ -1169,7 +1635,6 @@ def publish_treemap() -> dict[str, float | int | str]:
         "primary_population_scope": CONFIG["treemap"]["primary_population_scope"],
         "geometry": {
             "attention": "view_geometry_total",
-            "channel": "channel_geometry_total",
             "platform_only_calibration": "exact family/leaf tail margins",
             "model_completed_calibration": "known global tail total",
         },
@@ -1177,10 +1642,13 @@ def publish_treemap() -> dict[str, float | int | str]:
         "qa": metrics,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
     }
+    if ANALYSIS_MODE == "full":
+        manifest["geometry"]["channel"] = "channel_geometry_total"
     manifest_path = f"{export_root}/run_manifest.json"
     dbutils.fs.put(manifest_path, json.dumps(manifest, indent=2, sort_keys=True), True)
     print("TREEMAP PUBLICATION: PASS")
     print("TREEMAP CONSERVATION: PASS")
+    print(f"ANALYSIS MODE: {ANALYSIS_MODE}")
     print(f"TREEMAP CELLS EXPORT: {cells_path}")
     print(f"PUBLICATION ESTIMATES EXPORT: {publication_path}")
     print(f"TREEMAP MANIFEST: {manifest_path}")

@@ -1607,14 +1607,22 @@ def draw_static(language_cells: list[Cell], total: float, parent_only_share: flo
     )
     fig.text(
         0.010, 0.945,
-        STATIC_SUBTITLE.format(cohort_channels=COHORT_CHANNELS),
+        textwrap.fill(
+            STATIC_SUBTITLE.format(cohort_channels=COHORT_CHANNELS),
+            width=185,
+            replace_whitespace=False,
+        ),
         ha="left", va="top", fontsize=7.2, color="#3E4347",
     )
     fig.text(
         0.010, 0.012,
-        STATIC_FOOTER.format(
-            source=SOURCE_DESCRIPTION,
-            parent_only_share=parent_only_share,
+        textwrap.fill(
+            STATIC_FOOTER.format(
+                source=SOURCE_DESCRIPTION,
+                parent_only_share=parent_only_share,
+            ),
+            width=205,
+            replace_whitespace=False,
         ),
         ha="left", va="bottom", fontsize=6.0, color="#555555",
     )

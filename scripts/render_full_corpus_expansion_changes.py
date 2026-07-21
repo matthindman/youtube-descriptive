@@ -240,21 +240,16 @@ def build_changes(cells: pd.DataFrame, publication: pd.DataFrame) -> pd.DataFram
             / estimates["census_share"],
             np.nan,
         )
-        estimates["log2_ratio"] = np.where(
-            estimates["platform_to_census_ratio"] > 0,
-            np.log2(estimates["platform_to_census_ratio"]),
-            np.nan,
-        )
-        estimates["log2_ratio_ci95_lower"] = np.where(
-            estimates["ratio_ci95_lower"] > 0,
-            np.log2(estimates["ratio_ci95_lower"]),
-            np.nan,
-        )
-        estimates["log2_ratio_ci95_upper"] = np.where(
-            estimates["ratio_ci95_upper"] > 0,
-            np.log2(estimates["ratio_ci95_upper"]),
-            np.nan,
-        )
+        for source, target in (
+            ("platform_to_census_ratio", "log2_ratio"),
+            ("ratio_ci95_lower", "log2_ratio_ci95_lower"),
+            ("ratio_ci95_upper", "log2_ratio_ci95_upper"),
+        ):
+            estimates[target] = np.nan
+            valid_ratio = estimates[source] > 0
+            estimates.loc[valid_ratio, target] = np.log2(
+                estimates.loc[valid_ratio, source]
+            )
         reliable = estimates.get("view_headline_reliable", False)
         if not isinstance(reliable, pd.Series):
             reliable = pd.Series(False, index=estimates.index)
@@ -333,32 +328,39 @@ def write_markdown_summary(changes: pd.DataFrame, output: Path) -> None:
     ]
     for level in LEVELS:
         frame = changes.loc[changes["taxonomy_level"] == level].copy()
+        growth = frame.loc[frame["absolute_change"] > 0]
+        decline = frame.loc[frame["absolute_change"] < 0]
         lines.extend(
             [f"## {LEVEL_TITLES[level]}", "", "### Largest percentage-point growth", ""]
         )
         lines.extend(
-            markdown_table(frame.nlargest(5, "absolute_change"), proportional=False)
+            markdown_table(growth.nlargest(5, "absolute_change"), proportional=False)
         )
         lines.extend(["", "### Largest percentage-point decline", ""])
         lines.extend(
-            markdown_table(frame.nsmallest(5, "absolute_change"), proportional=False)
+            markdown_table(decline.nsmallest(5, "absolute_change"), proportional=False)
         )
         eligible = frame.loc[frame["proportional_ranking_eligible"]].copy()
+        proportional_growth = eligible.loc[eligible["proportional_change"] > 0]
+        proportional_decline = eligible.loc[eligible["proportional_change"] < 0]
         lines.extend(["", "### Largest proportional growth", ""])
         lines.extend(
             markdown_table(
-                eligible.nlargest(5, "proportional_change"), proportional=True
+                proportional_growth.nlargest(5, "proportional_change"),
+                proportional=True,
             )
         )
         lines.extend(["", "### Largest proportional decline", ""])
         lines.extend(
             markdown_table(
-                eligible.nsmallest(5, "proportional_change"), proportional=True
+                proportional_decline.nsmallest(5, "proportional_change"),
+                proportional=True,
             )
         )
-        new_cells = frame.loc[frame["zero_census_baseline"]].nlargest(
-            5, "platform_share"
-        )
+        new_cells = frame.loc[
+            frame["zero_census_baseline"]
+            & (frame["platform_share"] >= MIN_BASELINE_SHARE[level])
+        ].nlargest(5, "platform_share")
         if not new_cells.empty:
             lines.extend(["", "### Largest cells absent from the baseline", ""])
             lines.extend(markdown_table(new_cells, proportional=False))
@@ -438,10 +440,16 @@ def plot_panel(
     ax.tick_params(axis="x", labelsize=7)
     ax.tick_params(axis="y", length=0)
     if metric == "log2_ratio":
-        ticks = np.array([-3, -2, -1, 0, 1, 2, 3], dtype=float)
+        ratios = np.array(
+            [0.5, 2 / 3, 0.8, 0.9, 0.95, 1.0, 1.05, 1.1, 1.2, 1.5, 2.0],
+            dtype=float,
+        )
+        ticks = np.log2(ratios)
         limits = ax.get_xlim()
-        ticks = ticks[(ticks >= limits[0]) & (ticks <= limits[1])]
-        ax.set_xticks(ticks, [f"{2**tick:g}x" for tick in ticks])
+        shown = (ticks >= limits[0]) & (ticks <= limits[1])
+        ticks = ticks[shown]
+        ratios = ratios[shown]
+        ax.set_xticks(ticks, [f"{ratio:g}x" for ratio in ratios])
 
 
 def render_change_figure(

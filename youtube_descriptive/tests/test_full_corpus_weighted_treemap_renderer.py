@@ -33,6 +33,30 @@ class FullCorpusWeightedTreemapRendererTests(unittest.TestCase):
         self.assertEqual(channels.loc[0, renderer.base.VALUE_COL], 50.0)
         self.assertFalse(bool(attention.loc[0, "is_placement_override"]))
 
+    def test_attention_only_publication_does_not_require_srs_columns(self) -> None:
+        cells = pd.DataFrame(
+            {
+                "allocation_variant": ["platform_only"],
+                "population_scope": ["all_retrievable"],
+                "language": ["eng"],
+                "family": ["Music"],
+                "leaf": ["Rock music"],
+                "view_geometry_total": [100.0],
+                "view_raw_share": [1.0],
+                "view_standard_error": [0.0],
+                "view_ci95_lower": [1.0],
+                "view_ci95_upper": [1.0],
+                "view_effective_contributing_n": [1000.0],
+                "view_largest_weighted_contribution": [0.01],
+                "view_headline_reliable": [True],
+                "view_geometry_calibration_basis": ["exact margin"],
+            }
+        )
+        publication = pd.DataFrame({"taxonomy_level": ["language"]})
+        renderer.validate_inputs(cells, publication, ("attention",))
+        with self.assertRaises(RuntimeError):
+            renderer.validate_inputs(cells, publication, ("attention", "channels"))
+
 
 if __name__ == "__main__":
     unittest.main()

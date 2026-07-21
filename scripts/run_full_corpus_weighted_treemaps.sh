@@ -4,10 +4,28 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DATABRICKS_PROFILE="${DATABRICKS_PROFILE:-matt.hindman@researchaccelerator.org}"
 DATABRICKS_AUTH_STORAGE="${DATABRICKS_AUTH_STORAGE:-plaintext}"
-DBFS_EXPORT_ROOT="${DBFS_EXPORT_ROOT:-dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication}"
-LOCAL_EXPORT_DIR="${LOCAL_EXPORT_DIR:-${ROOT_DIR}/outputs/full_corpus_dual_sample_20260717_v1/treemap_publication_input}"
-OUTPUT_DIR="${OUTPUT_DIR:-${ROOT_DIR}/outputs/full_corpus_dual_sample_20260717_v1/weighted_treemaps}"
-ARTIFACT_TAG="${ARTIFACT_TAG:-full_frame_weighted_v1}"
+ANALYSIS_MODE="${ANALYSIS_MODE:-full}"
+if [[ "${ANALYSIS_MODE}" == "attention_pps" ]]; then
+  DEFAULT_DBFS_EXPORT_ROOT="dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication_pps_attention"
+  DEFAULT_LOCAL_EXPORT_DIR="${ROOT_DIR}/outputs/full_corpus_dual_sample_20260717_v1/treemap_publication_pps_attention_input"
+  DEFAULT_OUTPUT_DIR="${ROOT_DIR}/outputs/full_corpus_dual_sample_20260717_v1/weighted_treemaps_pps_attention"
+  DEFAULT_ARTIFACT_TAG="pps_attention_20260721_v1"
+  DEFAULT_MEASURE="attention"
+elif [[ "${ANALYSIS_MODE}" == "full" ]]; then
+  DEFAULT_DBFS_EXPORT_ROOT="dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication"
+  DEFAULT_LOCAL_EXPORT_DIR="${ROOT_DIR}/outputs/full_corpus_dual_sample_20260717_v1/treemap_publication_input"
+  DEFAULT_OUTPUT_DIR="${ROOT_DIR}/outputs/full_corpus_dual_sample_20260717_v1/weighted_treemaps"
+  DEFAULT_ARTIFACT_TAG="full_frame_weighted_v1"
+  DEFAULT_MEASURE="both"
+else
+  echo "Unknown ANALYSIS_MODE: ${ANALYSIS_MODE}" >&2
+  exit 2
+fi
+DBFS_EXPORT_ROOT="${DBFS_EXPORT_ROOT:-${DEFAULT_DBFS_EXPORT_ROOT}}"
+LOCAL_EXPORT_DIR="${LOCAL_EXPORT_DIR:-${DEFAULT_LOCAL_EXPORT_DIR}}"
+OUTPUT_DIR="${OUTPUT_DIR:-${DEFAULT_OUTPUT_DIR}}"
+ARTIFACT_TAG="${ARTIFACT_TAG:-${DEFAULT_ARTIFACT_TAG}}"
+MEASURE="${MEASURE:-${DEFAULT_MEASURE}}"
 
 if [[ "${DATABRICKS_PROFILE}" != "matt.hindman@researchaccelerator.org" ]]; then
   echo "Refusing unregistered Databricks profile: ${DATABRICKS_PROFILE}" >&2
@@ -31,7 +49,7 @@ python3 "${ROOT_DIR}/scripts/render_full_corpus_weighted_treemaps.py" \
   --manifest "${LOCAL_EXPORT_DIR}/run_manifest.json" \
   --output-dir "${OUTPUT_DIR}" \
   --artifact-tag "${ARTIFACT_TAG}" \
-  --measure both
+  --measure "${MEASURE}"
 
 MPLBACKEND=Agg MPLCONFIGDIR="${TMPDIR:-/tmp}/treemap-mpl" \
 python3 "${ROOT_DIR}/scripts/render_full_corpus_expansion_changes.py" \

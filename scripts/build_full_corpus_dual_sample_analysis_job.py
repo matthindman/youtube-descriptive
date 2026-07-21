@@ -20,6 +20,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dbfs-config-path", required=True)
     parser.add_argument("--hierarchy-config-path", required=True)
     parser.add_argument("--topic-remap-path", required=True)
+    parser.add_argument(
+        "--analysis-mode", choices=("full", "attention_pps"), default="full"
+    )
+    parser.add_argument("--start-at", choices=STAGES, default="allocate")
     return parser.parse_args()
 
 
@@ -27,8 +31,11 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
     config = json.loads(args.config.read_text(encoding="utf-8"))
     if args.cluster_id != config["execution"]["existing_cluster_id"]:
         raise ValueError("cluster-id does not match the registered existing cluster")
+    analysis_mode = getattr(args, "analysis_mode", "full")
+    start_at = getattr(args, "start_at", "allocate")
+    selected_stages = STAGES[STAGES.index(start_at) :]
     tasks: list[dict[str, object]] = []
-    for index, stage in enumerate(STAGES):
+    for index, stage in enumerate(selected_stages):
         task: dict[str, object] = {
             "task_key": f"analysis_{stage}",
             "existing_cluster_id": args.cluster_id,
@@ -37,6 +44,7 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
                 "notebook_path": args.notebook_path,
                 "base_parameters": {
                     "stage": stage,
+                    "analysis_mode": analysis_mode,
                     "design_config_path": args.dbfs_config_path,
                     "hierarchy_config_path": args.hierarchy_config_path,
                     "topic_remap_path": args.topic_remap_path,
@@ -44,9 +52,14 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
             },
         }
         if index:
-            task["depends_on"] = [{"task_key": f"analysis_{STAGES[index - 1]}"}]
+            task["depends_on"] = [
+                {"task_key": f"analysis_{selected_stages[index - 1]}"}
+            ]
         tasks.append(task)
-    return {"run_name": f"{config['design_version']}_analysis", "tasks": tasks}
+    return {
+        "run_name": f"{config['design_version']}_analysis_{analysis_mode}_from_{start_at}",
+        "tasks": tasks,
+    }
 
 
 def main() -> None:
