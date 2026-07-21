@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pandas as pd
 
@@ -56,6 +58,23 @@ class FullCorpusWeightedTreemapRendererTests(unittest.TestCase):
         renderer.validate_inputs(cells, publication, ("attention",))
         with self.assertRaises(RuntimeError):
             renderer.validate_inputs(cells, publication, ("attention", "channels"))
+
+    def test_static_configuration_keeps_subtopics(self) -> None:
+        with TemporaryDirectory() as directory:
+            renderer.configure_static(
+                Path(directory),
+                "test",
+                "attention",
+                {
+                    "population_scope": "all_retrievable",
+                    "treemap": {
+                        "static_top_languages": 12,
+                        "static_cell_cap": 200,
+                    },
+                },
+            )
+            self.assertTrue(renderer.base.STATIC_INCLUDE_SUBTOPICS)
+            self.assertEqual(renderer.base.STATIC_CELL_CAP, 200)
 
 
 if __name__ == "__main__":

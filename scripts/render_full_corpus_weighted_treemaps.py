@@ -189,7 +189,8 @@ def configure_static(output_dir: Path, tag: str, measure: str, manifest: dict) -
     status_note = " Provisional PPS expansion; remainder DeepSeek labels pending." if provisional else ""
     base.STATIC_SUBTITLE = (
         f"Full frozen channel frame, 15 June-13 July 2026. Area = {spec['area']}; "
-        f"color = content family. {baseline} plus design-weighted below-10k sample.{status_note}"
+        f"color = content family; shades = subtopics. {baseline} plus design-weighted "
+        f"below-10k sample.{status_note}"
     )
     label_source = (
         "frozen exact labels, completed exact-stratum dual-LID agreements, and final PPS labels"
@@ -204,7 +205,7 @@ def configure_static(output_dir: Path, tag: str, measure: str, manifest: dict) -
     base.SOURCE_DESCRIPTION = (
         f"frozen channel panel, {label_source}, and YouTube topicCategories"
     )
-    base.STATIC_INCLUDE_SUBTOPICS = False
+    base.STATIC_INCLUDE_SUBTOPICS = True
     treemap_config = manifest.get("treemap", {})
     base.TOP_K_LANGUAGES = int(treemap_config.get("static_top_languages", 12))
     base.STATIC_CELL_CAP = int(treemap_config.get("static_cell_cap", 200))
@@ -244,14 +245,24 @@ def render_static(
     stats, dimensions = base.draw_static(language_cells, total, 0.0, placed)
     static_rows = pd.DataFrame(stats.rows)
     static_rows.to_csv(base.CELLS_CSV, index=False)
-    structural = static_rows.loc[static_rows["level"].isin(["language", "family"])]
+    structural = static_rows.loc[
+        static_rows["level"].isin(["language", "family", "leaf"])
+    ]
     ordinary = structural.loc[
         ~structural[
-            ["coverage_rescued", "detail_rescued", "coverage_residual"]
+            [
+                "forced",
+                "priority_topic",
+                "coverage_rescued",
+                "detail_rescued",
+                "coverage_residual",
+            ]
         ].fillna(False).any(axis=1)
     ]
     min_area = float(ordinary["area_frac"].min() * 100.0)
-    family_rows = static_rows.loc[static_rows["level"] == "family"]
+    family_rows = static_rows.loc[
+        static_rows["level"].isin(["family", "leaf"])
+    ]
     aspect = np.maximum(
         family_rows["dx"] / family_rows["dy"], family_rows["dy"] / family_rows["dx"]
     )

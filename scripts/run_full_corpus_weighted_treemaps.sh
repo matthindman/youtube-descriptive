@@ -9,7 +9,7 @@ if [[ "${ANALYSIS_MODE}" == "attention_pps" ]]; then
   DEFAULT_DBFS_EXPORT_ROOT="dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication_pps_attention"
   DEFAULT_LOCAL_EXPORT_DIR="${ROOT_DIR}/outputs/full_corpus_dual_sample_20260717_v1/treemap_publication_pps_attention_input"
   DEFAULT_OUTPUT_DIR="${ROOT_DIR}/outputs/full_corpus_dual_sample_20260717_v1/weighted_treemaps_pps_attention"
-  DEFAULT_ARTIFACT_TAG="pps_attention_20260721_v1"
+  DEFAULT_ARTIFACT_TAG="pps_attention_20260721_v2"
   DEFAULT_MEASURE="attention"
 elif [[ "${ANALYSIS_MODE}" == "full" ]]; then
   DEFAULT_DBFS_EXPORT_ROOT="dbfs:/FileStore/youtube_descriptive/full_corpus_dual_sample_20260717_v1/treemap_publication"

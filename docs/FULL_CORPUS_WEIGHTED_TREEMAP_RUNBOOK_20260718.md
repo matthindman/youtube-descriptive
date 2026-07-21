@@ -353,10 +353,10 @@ outputs/full_corpus_dual_sample_20260717_v1/weighted_treemaps_pps_attention/
 - Unsampled positive margins, positive margins without support, and negative
   geometry rows: all zero.
 
-The accepted static attention master has 121 cells, 0.320% minimum ordinary
-cell area, 0.382% pooled view share, 51 labels, squarified packing, and
-3000x1980-pixel dimensions. Manual inspection confirmed readable language and
-family regions with no stack of thin slivers.
+The accepted static attention master has 200 language/family/subtopic cells,
+0.307% minimum ordinary cell area, 1.118% pooled view share, 84 labels,
+squarified packing, and 3000x1980-pixel dimensions. Manual inspection confirmed
+readable language, family, and subtopic regions with no stack of thin slivers.
 
 ## Rendered Artifacts
 
@@ -377,10 +377,12 @@ weighting_difference_summary_full_frame_weighted_v1.json
 artifact_manifest_full_frame_weighted_v1.json
 ```
 
-The static master is strictly language -> family. It uses the accepted v3
-family palette, white negative space instead of gray borders, squarified
+The static master is language -> family -> subtopic, matching the accepted
+full-corpus treemap. It uses the accepted v3 family palette and family-consistent
+subtopic shades, white negative space instead of gray borders, squarified
 packing, top-12 language pooling, family rescue rules, and a hard 200-cell cap.
-Subtopics are available by drill-down in the interactive HTML.
+The interactive HTML retains the complete unpooled subtopic hierarchy for
+drill-down.
 
 The coefficient plot uses raw `view_share - channel_share`, not calibrated
 geometry. Its interval treats the separate SRS and PPS sampling components as
