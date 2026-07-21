@@ -353,10 +353,13 @@ outputs/full_corpus_dual_sample_20260717_v1/weighted_treemaps_pps_attention/
 - Unsampled positive margins, positive margins without support, and negative
   geometry rows: all zero.
 
-The accepted static attention master has 200 language/family/subtopic cells,
-0.307% minimum ordinary cell area, 1.118% pooled view share, 84 labels,
-squarified packing, and 3000x1980-pixel dimensions. Manual inspection confirmed
-readable language, family, and subtopic regions with no stack of thin slivers.
+The accepted 250-cell-budget static attention master has 217
+language/family/subtopic cells, 0.307% minimum ordinary cell area, 0.382%
+pooled view share, 83 labels, squarified packing, and 3000x1980-pixel
+dimensions. The 0.3% leaf floor is binding before the 250-cell ceiling; the
+renderer does not create smaller cells merely to exhaust the budget. Manual
+inspection confirmed readable language, family, and subtopic regions with no
+stack of thin slivers.
 
 ## Rendered Artifacts
 
@@ -380,7 +383,8 @@ artifact_manifest_full_frame_weighted_v1.json
 The static master is language -> family -> subtopic, matching the accepted
 full-corpus treemap. It uses the accepted v3 family palette and family-consistent
 subtopic shades, white negative space instead of gray borders, squarified
-packing, top-12 language pooling, family rescue rules, and a hard 200-cell cap.
+packing, top-12 language pooling, family rescue rules, a 0.3% ordinary leaf
+floor, and a hard 250-cell cap.
 The interactive HTML retains the complete unpooled subtopic hierarchy for
 drill-down.
 
@@ -409,7 +413,7 @@ The local renderer must print:
 
 ```text
 CONSERVATION: PASS
-STATIC CELLS: <= 200
+STATIC CELLS: <= 250
 MIN CELL AREA: >= 0.300% for ordinary structural cells
 PACKING: squarify
 FIGURE DIMENSIONS: at least 2000x1200

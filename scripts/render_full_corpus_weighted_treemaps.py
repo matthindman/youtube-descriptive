@@ -56,6 +56,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allocation-variant")
     parser.add_argument("--population-scope")
     parser.add_argument("--measure", choices=("attention", "channels", "both"), default="both")
+    parser.add_argument("--static-cell-cap", type=int)
+    parser.add_argument("--leaf-min-frac", type=float)
     parser.add_argument("--artifact-tag", default="full_frame_weighted_v1")
     return parser.parse_args()
 
@@ -172,7 +174,14 @@ def renderer_rows(cells: pd.DataFrame, measure: str) -> pd.DataFrame:
     return rows
 
 
-def configure_static(output_dir: Path, tag: str, measure: str, manifest: dict) -> None:
+def configure_static(
+    output_dir: Path,
+    tag: str,
+    measure: str,
+    manifest: dict,
+    static_cell_cap: int | None = None,
+    leaf_min_frac: float | None = None,
+) -> None:
     spec = MEASURES[measure]
     population_scope = str(manifest.get("population_scope", "known_subscriber"))
     baseline = (
@@ -208,13 +217,35 @@ def configure_static(output_dir: Path, tag: str, measure: str, manifest: dict) -
     base.STATIC_INCLUDE_SUBTOPICS = True
     treemap_config = manifest.get("treemap", {})
     base.TOP_K_LANGUAGES = int(treemap_config.get("static_top_languages", 12))
-    base.STATIC_CELL_CAP = int(treemap_config.get("static_cell_cap", 200))
+    base.STATIC_CELL_CAP = int(
+        static_cell_cap
+        if static_cell_cap is not None
+        else treemap_config.get("static_cell_cap", 250)
+    )
+    base.LEAF_MIN = float(
+        leaf_min_frac
+        if leaf_min_frac is not None
+        else treemap_config.get("static_leaf_min_frac", 0.003)
+    )
 
 
 def render_static(
-    cells: pd.DataFrame, measure: str, output_dir: Path, tag: str, manifest: dict
+    cells: pd.DataFrame,
+    measure: str,
+    output_dir: Path,
+    tag: str,
+    manifest: dict,
+    static_cell_cap: int | None = None,
+    leaf_min_frac: float | None = None,
 ) -> dict[str, float | int | str]:
-    configure_static(output_dir, tag, measure, manifest)
+    configure_static(
+        output_dir,
+        tag,
+        measure,
+        manifest,
+        static_cell_cap,
+        leaf_min_frac,
+    )
     full = renderer_rows(cells, measure)
     detail_suppressed: set[tuple[str, str]] = set()
     for _ in range(40):
@@ -550,6 +581,17 @@ def main() -> None:
     print("CONSERVATION: PASS")
     print(f"ANALYSIS: {allocation_variant}; {population_scope}")
 
+    source_treemap = manifest.get("treemap", {})
+    effective_static_cell_cap = int(
+        args.static_cell_cap
+        if args.static_cell_cap is not None
+        else source_treemap.get("static_cell_cap", 250)
+    )
+    effective_leaf_min_frac = float(
+        args.leaf_min_frac
+        if args.leaf_min_frac is not None
+        else source_treemap.get("static_leaf_min_frac", 0.003)
+    )
     artifact_manifest: dict[str, object] = {
         "source_manifest": str(args.manifest.resolve()),
         "allocation_variant": allocation_variant,
@@ -558,13 +600,24 @@ def main() -> None:
         "publication_status": manifest.get("publication_status", "final_dual_sample"),
         "geometry_vs_inference": "calibrated additive totals define area; raw design-based estimates define SE/CI",
         "treemap": {
-            "static_top_languages": 12,
-            "static_cell_cap": 200,
+            "static_top_languages": int(
+                source_treemap.get("static_top_languages", 12)
+            ),
+            "static_cell_cap": effective_static_cell_cap,
+            "static_leaf_min_frac": effective_leaf_min_frac,
         },
         "artifacts": {},
     }
     for measure in measures:
-        static = render_static(cells, measure, args.output_dir, args.artifact_tag, artifact_manifest)
+        static = render_static(
+            cells,
+            measure,
+            args.output_dir,
+            args.artifact_tag,
+            artifact_manifest,
+            effective_static_cell_cap,
+            effective_leaf_min_frac,
+        )
         interactive = render_interactive(cells, measure, args.output_dir, args.artifact_tag)
         artifact_manifest["artifacts"][measure] = {**static, "interactive": str(interactive.resolve())}
     if set(measures) == {"attention", "channels"}:

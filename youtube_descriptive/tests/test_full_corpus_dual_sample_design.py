@@ -28,7 +28,8 @@ class FullCorpusDualSampleDesignTests(unittest.TestCase):
         self.assertEqual(config["samples"]["selected_alpha"], 0.1)
         self.assertEqual(config["execution"]["existing_cluster_id"], "0601-203643-bkxsqffg")
         self.assertEqual(config["treemap"]["packing"], "squarify")
-        self.assertEqual(config["treemap"]["static_cell_cap"], 200)
+        self.assertEqual(config["treemap"]["static_cell_cap"], 250)
+        self.assertEqual(config["treemap"]["static_leaf_min_frac"], 0.003)
         self.assertEqual(
             config["source_tables"]["channel_videos"],
             "dev_sean.matt.yt_dual_sample_20260717_v1_channel_videos",

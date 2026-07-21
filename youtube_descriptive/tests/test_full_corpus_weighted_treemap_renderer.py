@@ -69,12 +69,27 @@ class FullCorpusWeightedTreemapRendererTests(unittest.TestCase):
                     "population_scope": "all_retrievable",
                     "treemap": {
                         "static_top_languages": 12,
-                        "static_cell_cap": 200,
+                        "static_cell_cap": 250,
+                        "static_leaf_min_frac": 0.003,
                     },
                 },
             )
             self.assertTrue(renderer.base.STATIC_INCLUDE_SUBTOPICS)
-            self.assertEqual(renderer.base.STATIC_CELL_CAP, 200)
+            self.assertEqual(renderer.base.STATIC_CELL_CAP, 250)
+            self.assertEqual(renderer.base.LEAF_MIN, 0.003)
+
+    def test_static_cell_cap_can_override_export_manifest(self) -> None:
+        with TemporaryDirectory() as directory:
+            renderer.configure_static(
+                Path(directory),
+                "test",
+                "attention",
+                {"treemap": {"static_cell_cap": 200}},
+                static_cell_cap=250,
+                leaf_min_frac=0.003,
+            )
+            self.assertEqual(renderer.base.STATIC_CELL_CAP, 250)
+            self.assertEqual(renderer.base.LEAF_MIN, 0.003)
 
 
 if __name__ == "__main__":

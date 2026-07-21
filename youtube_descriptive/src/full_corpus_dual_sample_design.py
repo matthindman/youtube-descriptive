@@ -134,8 +134,11 @@ def validate_design_config(config: Mapping[str, Any]) -> None:
         raise ValueError("Treemap packing must remain squarify")
     if not 1 <= int(treemap["static_top_languages"]) <= 20:
         raise ValueError("Treemap static_top_languages must lie in [1, 20]")
-    if not 1 <= int(treemap["static_cell_cap"]) <= 200:
-        raise ValueError("Treemap static_cell_cap must lie in [1, 200]")
+    if not 1 <= int(treemap["static_cell_cap"]) <= 250:
+        raise ValueError("Treemap static_cell_cap must lie in [1, 250]")
+    leaf_min_frac = float(treemap["static_leaf_min_frac"])
+    if not 0.003 <= leaf_min_frac <= 0.01:
+        raise ValueError("Treemap static_leaf_min_frac must lie in [0.003, 0.01]")
     if int(treemap["interactive_initial_maxdepth"]) != 2:
         raise ValueError("The interactive treemap must open at maxdepth=2")
 
