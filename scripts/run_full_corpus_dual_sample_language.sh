@@ -16,6 +16,7 @@ fi
 WORKSPACE_DIR="${WORKSPACE_DIR:-/Users/matt.hindman@researchaccelerator.org/full_corpus_dual_sample_20260717_v1}"
 ORCHESTRATOR_PATH="${WORKSPACE_DIR}/12_full_corpus_dual_sample_language_databricks"
 LID_PATH="${WORKSPACE_DIR}/01_language_openlid_v3_databricks"
+LLM_PREFLIGHT_PATH="${WORKSPACE_DIR}/03a_deepseek_balance_preflight_databricks"
 LLM_PATH="${WORKSPACE_DIR}/03_language_llm_panel_databricks"
 HELPER_PATH="${WORKSPACE_DIR}/full_corpus_dual_sample_design"
 LOCAL_CONFIG="${ROOT_DIR}/config/full_corpus_dual_sample_20260717_v1.json"
@@ -66,6 +67,9 @@ DATABRICKS_CMD=(env "DATABRICKS_AUTH_STORAGE=${DATABRICKS_AUTH_STORAGE}" databri
 "${DATABRICKS_CMD[@]}" workspace import "${LLM_PATH}" \
   --file "${ROOT_DIR}/youtube_descriptive/src/03_language_llm_panel_databricks.py" \
   --format SOURCE --language PYTHON --overwrite
+"${DATABRICKS_CMD[@]}" workspace import "${LLM_PREFLIGHT_PATH}" \
+  --file "${ROOT_DIR}/youtube_descriptive/src/03a_deepseek_balance_preflight_databricks.py" \
+  --format SOURCE --language PYTHON --overwrite
 "${DATABRICKS_CMD[@]}" fs mkdir "$(dirname "${DBFS_CONFIG}")"
 "${DATABRICKS_CMD[@]}" fs cp "${LOCAL_CONFIG}" "${DBFS_CONFIG}" --overwrite
 
@@ -75,6 +79,7 @@ python3 "${ROOT_DIR}/scripts/build_full_corpus_dual_sample_language_job.py" \
   --cluster-id "${CLUSTER_ID}" \
   --orchestrator-path "${ORCHESTRATOR_PATH}" \
   --lid-path "${LID_PATH}" \
+  --llm-preflight-path "${LLM_PREFLIGHT_PATH}" \
   --llm-path "${LLM_PATH}" \
   --dbfs-config-path "${DBFS_CONFIG}" \
   --sample-phase "${SAMPLE_PHASE}" \

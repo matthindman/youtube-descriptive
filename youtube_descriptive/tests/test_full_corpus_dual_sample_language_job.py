@@ -19,6 +19,7 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
             cluster_id="0601-203643-bkxsqffg",
             orchestrator_path="/Users/test/orchestrator",
             lid_path="/Users/test/lid",
+            llm_preflight_path="/Users/test/deepseek-preflight",
             llm_path="/Users/test/llm",
             dbfs_config_path="dbfs:/FileStore/test/config.json",
             sample_phase="all",
@@ -29,12 +30,19 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
         tasks = payload["tasks"]
         self.assertEqual(
             [task["task_key"] for task in tasks],
-            ["language_preflight", "dual_lid", "prepare_routing", "deepseek_fallback", "publish_language"],
+            [
+                "language_preflight",
+                "dual_lid",
+                "prepare_routing",
+                "deepseek_balance_preflight",
+                "deepseek_fallback",
+                "publish_language",
+            ],
         )
         self.assertTrue(all(task["existing_cluster_id"] == args.cluster_id for task in tasks))
         self.assertNotIn("new_cluster", json.dumps(payload))
         self.assertEqual(tasks[1]["depends_on"], [{"task_key": "language_preflight"}])
-        llm_parameters = tasks[3]["notebook_task"]["base_parameters"]
+        llm_parameters = tasks[4]["notebook_task"]["base_parameters"]
         self.assertEqual(llm_parameters["submit_provider_filter"], "deepseek")
         self.assertEqual(llm_parameters["secret_scope"], "youtube-llm-keys")
         self.assertEqual(llm_parameters["prompt_max_chars"], "6000")
@@ -52,6 +60,7 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
             cluster_id="0601-203643-bkxsqffg",
             orchestrator_path="/Users/test/orchestrator",
             lid_path="/Users/test/lid",
+            llm_preflight_path="/Users/test/deepseek-preflight",
             llm_path="/Users/test/llm",
             dbfs_config_path="dbfs:/FileStore/test/config.json",
             sample_phase="pps",
@@ -60,7 +69,7 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
         )
         tasks = build_payload(args)["tasks"]
         lid = tasks[1]["notebook_task"]["base_parameters"]
-        llm = tasks[3]["notebook_task"]["base_parameters"]
+        llm = tasks[4]["notebook_task"]["base_parameters"]
         self.assertEqual(lid["channels_table"], "yt_dual_sample_20260717_v1_lid_source_channels_pps")
         self.assertEqual(lid["run_id"], "dual_sample_tail_20260717_v1_pps")
         self.assertEqual(
@@ -71,7 +80,7 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
         self.assertTrue(
             all(
                 task["notebook_task"]["base_parameters"].get("sample_phase") == "pps"
-                for task in (tasks[0], tasks[2], tasks[4])
+                for task in (tasks[0], tasks[2], tasks[5])
             )
         )
 
@@ -82,6 +91,7 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
             cluster_id="0601-203643-bkxsqffg",
             orchestrator_path="/Users/test/orchestrator",
             lid_path="/Users/test/lid",
+            llm_preflight_path="/Users/test/deepseek-preflight",
             llm_path="/Users/test/llm",
             dbfs_config_path="dbfs:/FileStore/test/config.json",
             sample_phase="combine",
@@ -102,6 +112,7 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
             cluster_id="0601-203643-bkxsqffg",
             orchestrator_path="/Users/test/orchestrator",
             lid_path="/Users/test/lid",
+            llm_preflight_path="/Users/test/deepseek-preflight",
             llm_path="/Users/test/llm",
             dbfs_config_path="dbfs:/FileStore/test/config.json",
             sample_phase="remainder",
@@ -126,6 +137,7 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
             cluster_id="0601-203643-bkxsqffg",
             orchestrator_path="/Users/test/orchestrator",
             lid_path="/Users/test/lid",
+            llm_preflight_path="/Users/test/deepseek-preflight",
             llm_path="/Users/test/llm",
             dbfs_config_path="dbfs:/FileStore/test/config.json",
             sample_phase="pps",
@@ -135,10 +147,26 @@ class FullCorpusDualSampleLanguageJobTests(unittest.TestCase):
         payload = build_payload(args)
         self.assertEqual(
             [task["task_key"] for task in payload["tasks"]],
-            ["prepare_routing", "deepseek_fallback", "publish_language"],
+            [
+                "prepare_routing",
+                "deepseek_balance_preflight",
+                "deepseek_fallback",
+                "publish_language",
+            ],
         )
         self.assertNotIn("depends_on", payload["tasks"][0])
         self.assertNotIn("dual_lid", json.dumps(payload))
+
+    def test_deepseek_balance_preflight_precedes_prompt_construction(self) -> None:
+        source = (
+            ROOT
+            / "youtube_descriptive"
+            / "src"
+            / "03a_deepseek_balance_preflight_databricks.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("https://api.deepseek.com/user/balance", source)
+        self.assertIn('result["is_available"] is not True', source)
+        self.assertNotIn("chat/completions", source)
 
     def test_llm_request_cache_is_bound_to_the_prompt_payload(self) -> None:
         source = (ROOT / "youtube_descriptive" / "src" / "03_language_llm_panel_databricks.py").read_text(

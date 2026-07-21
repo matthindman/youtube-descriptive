@@ -15,6 +15,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cluster-id", required=True)
     parser.add_argument("--orchestrator-path", required=True)
     parser.add_argument("--lid-path", required=True)
+    parser.add_argument("--llm-preflight-path", required=True)
     parser.add_argument("--llm-path", required=True)
     parser.add_argument("--dbfs-config-path", required=True)
     parser.add_argument(
@@ -236,8 +237,18 @@ def build_payload(args: argparse.Namespace) -> dict[str, object]:
             },
         },
         {
-            "task_key": "deepseek_fallback",
+            "task_key": "deepseek_balance_preflight",
             "depends_on": [{"task_key": "prepare_routing"}],
+            "existing_cluster_id": args.cluster_id,
+            "timeout_seconds": 300,
+            "notebook_task": {
+                "notebook_path": args.llm_preflight_path,
+                "base_parameters": {"design_config_path": args.dbfs_config_path},
+            },
+        },
+        {
+            "task_key": "deepseek_fallback",
+            "depends_on": [{"task_key": "deepseek_balance_preflight"}],
             "existing_cluster_id": args.cluster_id,
             "timeout_seconds": 0,
             "notebook_task": {

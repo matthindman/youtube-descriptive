@@ -58,6 +58,7 @@ compute. Jobs in this runbook contain `existing_cluster_id` and no
 | `youtube_descriptive/src/full_corpus_dual_sample_design.py` | Pure SHA-256, probability, water-filling test, and stratified-allocation helpers |
 | `youtube_descriptive/src/11_full_corpus_dual_sample_databricks.py` | Frame, simulation, sample selection, and enrichment staging |
 | `youtube_descriptive/src/12_full_corpus_dual_sample_language_databricks.py` | Language preflight, base-ISO routing, and final label publication |
+| `youtube_descriptive/src/03a_deepseek_balance_preflight_databricks.py` | Read-only account-availability gate before DeepSeek prompt construction |
 | `youtube_descriptive/src/13_full_corpus_dual_sample_topic_model_databricks.py` | Missing-topic requests, DeepSeek probabilities, strict parse validation |
 | `youtube_descriptive/src/14_full_corpus_dual_sample_analysis_databricks.py` | Topic allocations, SRS/PPS estimates and SEs, exact platform-topic calibration margins, publication cells, and conservation QA |
 | `youtube_descriptive/src/15_full_corpus_dual_sample_repeated_simulation_databricks.py` | Frozen head/tail pseudo-populations and 5,000-replicate empirical design checks |
@@ -76,7 +77,7 @@ compute. Jobs in this runbook contain `existing_cluster_id` and no
 | `scripts/run_full_corpus_dual_sample_collection.sh` | Upload and run the source-text collector after secret names are supplied |
 | `scripts/run_full_corpus_dual_sample_calibration.sh` | Fit and publish validated model-topic probabilities |
 | `scripts/build_full_corpus_dual_sample_job.py` | Deterministic four-task Jobs payload |
-| `scripts/build_full_corpus_dual_sample_language_job.py` | Deterministic five-task language Jobs payload |
+| `scripts/build_full_corpus_dual_sample_language_job.py` | Deterministic six-task language Jobs payload with a pre-inference balance gate |
 | `scripts/build_full_corpus_dual_sample_lid_cutoff_job.py` | Existing-cluster cutoff-experiment Jobs payload |
 | `scripts/build_full_corpus_dual_sample_topic_job.py` | Deterministic three-task topic Jobs payload |
 | `scripts/build_full_corpus_dual_sample_analysis_job.py` | Deterministic four-task analysis Jobs payload |
@@ -813,6 +814,14 @@ halts all later chunks. On deterministic retry it rewrites an existing failed
 result file while retaining only prior successes, rather than appending stale
 failure rows. After the DeepSeek account is funded, rerun the same remainder
 continuation command; the immutable request IDs and prompts will be reused.
+
+The production job graph also runs
+`03a_deepseek_balance_preflight_databricks.py` after routing and before the LLM
+notebook. It calls DeepSeek's read-only `/user/balance` endpoint using the
+registered secret and requires `is_available=true`; it does not issue a chat
+request or reveal the key. Probe run `733625175663566` on 2026-07-21 returned
+HTTP 200 but `is_available=false` with USD total balance `-0.34`, confirming the
+external account state remained unresolved at that time.
 
 Repeated-sample highlights from `896176326148446`:
 
