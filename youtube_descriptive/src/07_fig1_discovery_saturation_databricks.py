@@ -25,7 +25,11 @@
 # MAGIC   floored at 0; channels missing from the prior snapshot get null (counted as 0 views in
 # MAGIC   the view-weighted curves, excluded from the weekly-view bins).
 # MAGIC - Activity comes from each channel's latest `yt_channel_videos` collection (last 10
-# MAGIC   uploads). Channels absent from it are `unknown` and excluded from the active variants.
+# MAGIC   uploads). A channel the fetcher reached (`yt_channel_descriptions`) but that returned no
+# MAGIC   videos has no public uploads and is `inactive`; one the API reported missing
+# MAGIC   (`yt_cd_not_found`) is `not_found`; one never fetched is `unknown`. Only `active`
+# MAGIC   channels enter the active variants. `{prefix}_refresh_ids_{version}` lists the
+# MAGIC   unknown + inactive channels to refetch.
 # MAGIC - Crawl anchor: a channel whose 10 stored uploads all post-date the anchor counts as active.
 # MAGIC - Topic channels = channel name ending in " - Topic" (case-insensitive); excluded from both
 # MAGIC   active variants by name.
@@ -79,7 +83,7 @@ def out(name: str) -> str:
     return f"{P['output_prefix']}_{name}_{P['version']}"
 
 
-OUTPUTS = ["channels", "exhaustion", "totals", "trending", "activity"]
+OUTPUTS = ["channels", "exhaustion", "totals", "trending", "activity", "refresh_ids"]
 print({**P, "outputs": [out(n) for n in OUTPUTS]})
 
 # COMMAND ----------
@@ -188,10 +192,14 @@ WITH base AS (
          CASE WHEN s.canonical_id IS NOT NULL THEN 'seed' ELSE coalesce(f.source, 'untracked') END AS first_source,
          f.disc_date,
          a.newest_upload, a.n_stored_uploads,
-         CASE WHEN a.canonical_id IS NULL THEN 'unknown'
+         CASE WHEN a.canonical_id IS NULL THEN
+                   CASE WHEN fd.canonical_id IS NOT NULL THEN 'inactive'
+                        WHEN nf.canonical_id IS NOT NULL THEN 'not_found' ELSE 'unknown' END
               WHEN to_date(a.newest_upload) >= date_sub(DATE'{PANEL_ANCHOR}', 365) THEN 'active'
               ELSE 'inactive' END AS activity_panel,
-         CASE WHEN a.canonical_id IS NULL THEN 'unknown'
+         CASE WHEN a.canonical_id IS NULL THEN
+                   CASE WHEN fd.canonical_id IS NOT NULL THEN 'inactive'
+                        WHEN nf.canonical_id IS NOT NULL THEN 'not_found' ELSE 'unknown' END
               WHEN a.n_in_crawl_window > 0 THEN 'active'
               WHEN a.n_stored_uploads >= 10 AND to_date(a.oldest_stored_upload) > DATE'{CRAWL_ANCHOR}' THEN 'active'
               ELSE 'inactive' END AS activity_crawl
@@ -199,6 +207,8 @@ WITH base AS (
   LEFT JOIN (SELECT DISTINCT canonical_id FROM dev_sean.default.new_yt_top_list) s USING (canonical_id)
   LEFT JOIN first_discovery f USING (canonical_id)
   LEFT JOIN activity a USING (canonical_id)
+  LEFT JOIN (SELECT DISTINCT canonical_id FROM dev_sean.matt.yt_channel_descriptions) fd USING (canonical_id)
+  LEFT JOIN (SELECT DISTINCT canonical_id FROM dev_sean.matt.yt_cd_not_found) nf USING (canonical_id)
 )
 SELECT base.*,
        CASE WHEN subscriber_count < 100000 THEN 1 WHEN subscriber_count < 1000000 THEN 2
@@ -259,6 +269,9 @@ spark.sql(f"""{mode} {out('activity')} AS
 SELECT sub_bin, is_topic, activity_panel, activity_crawl,
        count(*) AS n_channels, sum(coalesce(weekly_views, 0)) AS weekly_views
 FROM {ch} GROUP BY ALL""")
+
+spark.sql(f"""{mode} {out('refresh_ids')} AS
+SELECT DISTINCT canonical_id FROM {ch} WHERE activity_panel IN ('unknown', 'inactive')""")
 
 # COMMAND ----------
 # 6. Checks.
