@@ -33,11 +33,13 @@
 # MAGIC - Crawl anchor: a channel whose 10 stored uploads all post-date the anchor counts as active.
 # MAGIC - Topic channels = channel name ending in " - Topic" (case-insensitive); excluded from both
 # MAGIC   active variants by name.
-# MAGIC - Incumbent vs entrant (top-1% fix, 2026-10-13): a channel is an `entrant` if its
-# MAGIC   subscriber count at its earliest discovery record was below the threshold (it crossed
-# MAGIC   10k after the crawl saw it); otherwise, and for seeds or hidden counts, `incumbent`.
-# MAGIC   There is no March snapshot, so subscribers-at-first-record is the proxy for size at
-# MAGIC   crawl time. Aggregates carry `cohort` in {all, incumbent, entrant}.
+# MAGIC - Incumbent vs entrant (top-1% fix, 2026-10-13): a channel is an `entrant` if it was
+# MAGIC   created after the snowball ended (`created_at_table`, from
+# MAGIC   `09_fetch_channel_created_at_databricks`) or its subscriber count at its earliest
+# MAGIC   discovery record was below the threshold (it crossed 10k after the crawl saw it).
+# MAGIC   Otherwise, and for seeds, `incumbent`. There is no March snapshot, so
+# MAGIC   subscribers-at-first-record is the proxy for size at crawl time. Aggregates carry
+# MAGIC   `cohort` in {all, incumbent, entrant}; `entry_reason` records which rule fired.
 # MAGIC - Undated discovery batches get a lower-bound date (unlabeled batch 21 -> 2026-04-30;
 # MAGIC   `pub_subs_full` batch 2 -> 2026-03-11). This only affects ordering among later sources.
 
@@ -72,6 +74,7 @@ DEFAULTS = {
     "version": "v1",
     "overwrite": "false",
     "figure_dir": "",
+    "created_at_table": "dev_sean.matt.yt_channel_created_at",
 }
 for k, v in DEFAULTS.items():
     _create_text_widget(k, v)
@@ -205,9 +208,14 @@ WITH base AS (
          CASE WHEN s.canonical_id IS NOT NULL THEN 0 ELSE f.step END AS step,
          CASE WHEN s.canonical_id IS NOT NULL THEN 'seed' ELSE coalesce(f.source, 'untracked') END AS first_source,
          f.disc_date, f.first_recorded_subs,
-         CASE WHEN s.canonical_id IS NOT NULL OR f.first_recorded_subs IS NULL
-                   OR f.first_recorded_subs >= {THR} THEN 'incumbent'
-              ELSE 'entrant' END AS entry_cohort,
+         ca.created_at,
+         CASE WHEN s.canonical_id IS NOT NULL THEN 'seed'
+              WHEN to_date(ca.created_at) > DATE'{CRAWL_ANCHOR}' THEN 'created_after_crawl'
+              WHEN f.first_recorded_subs < {THR} THEN 'below_threshold_at_discovery'
+              ELSE 'none' END AS entry_reason,
+         CASE WHEN s.canonical_id IS NULL AND (to_date(ca.created_at) > DATE'{CRAWL_ANCHOR}'
+                                               OR f.first_recorded_subs < {THR})
+              THEN 'entrant' ELSE 'incumbent' END AS entry_cohort,
          a.newest_upload, a.n_stored_uploads,
          CASE WHEN a.canonical_id IS NULL THEN
                    CASE WHEN fd.canonical_id IS NOT NULL THEN 'inactive'
@@ -226,6 +234,8 @@ WITH base AS (
   LEFT JOIN activity a USING (canonical_id)
   LEFT JOIN (SELECT DISTINCT canonical_id FROM dev_sean.matt.yt_channel_descriptions) fd USING (canonical_id)
   LEFT JOIN (SELECT DISTINCT canonical_id FROM dev_sean.matt.yt_cd_not_found) nf USING (canonical_id)
+  LEFT JOIN (SELECT canonical_id, max_by(published_at, collected_at) AS created_at
+             FROM {P['created_at_table']} WHERE status = 'ok' GROUP BY canonical_id) ca USING (canonical_id)
 )
 SELECT base.*,
        CASE WHEN subscriber_count < 100000 THEN 1 WHEN subscriber_count < 1000000 THEN 2
@@ -292,7 +302,7 @@ SELECT sub_bin, is_topic, activity_panel, activity_crawl,
 FROM {ch} GROUP BY ALL""")
 
 spark.sql(f"""{mode} {out('cohorts')} AS
-SELECT entry_cohort, first_source, sub_bin, view_bin, activity_panel, is_topic,
+SELECT entry_cohort, entry_reason, first_source, sub_bin, view_bin, activity_panel, is_topic,
        count(*) AS n_channels, sum(coalesce(weekly_views, 0)) AS weekly_views
 FROM {ch} GROUP BY ALL""")
 
