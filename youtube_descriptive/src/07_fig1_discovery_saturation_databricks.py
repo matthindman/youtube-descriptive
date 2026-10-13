@@ -168,7 +168,7 @@ ranked AS (
            ORDER BY CASE WHEN step IS NOT NULL THEN 0 ELSE 1 END, step, disc_date,
                     CASE source WHEN 'trending' THEN 1 ELSE 0 END) AS rn
   FROM events
-)
+),
 first_rec AS (
   -- Subscribers at the channel's earliest-dated discovery record (any source).
   SELECT canonical_id, min_by(subs, struct(disc_date, step)) AS first_recorded_subs
