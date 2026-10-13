@@ -121,6 +121,10 @@ SOURCE_TABLE = _widget("source_table", "")
 if not SOURCE_TABLE:
     raise ValueError("source_table widget is required")
 
+# Optional key override as a job parameter (never committed). The youtube/api-key secret
+# held an expired key on 2026-10-13; pass a working key here until the secret is renewed.
+API_KEY = _widget("api_key", "") or API_KEY
+
 # ── Output schema for the distributed fetch ──────────────────────────────────
 # A single wide row type discriminated by `row_type`; the driver projects the
 # 'channel' and 'video' subsets into their respective tables.
@@ -350,6 +354,10 @@ def make_fetch_partition(threads, rate_per_task, num_recent):
                                        timeout=REQUEST_TIMEOUT)
                     if resp.status_code == 200:
                         return ("ok", resp.json())
+                    if resp.status_code == 400 and "API key" in resp.text:
+                        # Expired/invalid key: every call will fail. Fail fast instead
+                        # of marking the whole run as transient errors.
+                        raise RuntimeError("API key rejected (expired or invalid)")
                     if resp.status_code == 403:
                         reason = _parse_403_reason(resp)
                         if reason in _DAILY_403:
