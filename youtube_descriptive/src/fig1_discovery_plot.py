@@ -36,7 +36,7 @@ RENDER_SPECS = [
 ]
 
 COHORT_NOTES = {
-    "incumbent": "panel a: incumbents (\u226510k subscribers when first recorded)",
+    "incumbent": "panel a: incumbents (created by 2026-03-04 and \u226510k subscribers when first recorded)",
     "all": "panel a: all channels, incumbents and entrants",
 }
 
