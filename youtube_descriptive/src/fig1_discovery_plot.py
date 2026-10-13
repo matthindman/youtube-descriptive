@@ -25,6 +25,21 @@ INK = "#1f1f1f"
 MUTED = "#6b6b6b"
 GRID = "#e6e6e3"
 
+# (variant, bin_type, cohort) rendered by the notebook and the local renderer.
+# Panel a uses the cohort; panels b-c (trending flow) always use every channel.
+RENDER_SPECS = [
+    ("active_panel", "subscribers", "incumbent"),   # main Fig 1
+    ("all", "subscribers", "incumbent"),            # ED Fig 1
+    ("active_panel", "weekly_views", "incumbent"),  # ED Fig 1
+    ("active_crawl", "subscribers", "incumbent"),   # ED Fig 1 sensitivity
+    ("active_panel", "subscribers", "all"),         # comparison: no incumbent filter
+]
+
+COHORT_NOTES = {
+    "incumbent": "panel a: incumbents (\u226510k subscribers when first recorded)",
+    "all": "panel a: all channels, incumbents and entrants",
+}
+
 VARIANT_TITLES = {
     "active_panel": "Active channels (upload within 365 days of 2026-10-05, Topic channels excluded)",
     "active_crawl": "Active channels (upload within 365 days before 2026-03-04, Topic channels excluded)",
@@ -54,9 +69,14 @@ def _numeric(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def cumulative_curves(exhaustion: pd.DataFrame, totals: pd.DataFrame, variant: str, bin_type: str) -> pd.DataFrame:
+def _cohort(df: pd.DataFrame, cohort: str) -> pd.DataFrame:
+    return df[df.cohort == cohort] if "cohort" in df else df
+
+
+def cumulative_curves(exhaustion: pd.DataFrame, totals: pd.DataFrame, variant: str, bin_type: str,
+                      cohort: str = "all") -> pd.DataFrame:
     """Cumulative share of each bin's universe discovered by each snowball step."""
-    exhaustion, totals = _numeric(exhaustion), _numeric(totals)
+    exhaustion, totals = _numeric(_cohort(exhaustion, cohort)), _numeric(_cohort(totals, cohort))
     ex = exhaustion[(exhaustion.variant == variant) & (exhaustion.bin_type == bin_type)]
     ex = ex[ex.step_order <= 13]
     # Steps with no new channels have no row; fill them with zeros so every curve runs 0..13.
@@ -74,9 +94,10 @@ def cumulative_curves(exhaustion: pd.DataFrame, totals: pd.DataFrame, variant: s
     return ex
 
 
-def plot_fig1(exhaustion, trending, totals, variant: str, bin_type: str = "subscribers", path: str | None = None):
-    trending, totals = _numeric(trending), _numeric(totals)
-    curves = cumulative_curves(exhaustion, totals, variant, bin_type)
+def plot_fig1(exhaustion, trending, totals, variant: str, bin_type: str = "subscribers",
+              cohort: str = "all", path: str | None = None):
+    curves = cumulative_curves(exhaustion, totals, variant, bin_type, cohort)
+    trending, totals = _numeric(_cohort(trending, "all")), _numeric(_cohort(totals, "all"))
     bins = curves[["bin_order", "bin_label"]].drop_duplicates().sort_values("bin_order")
     colors = BLUE_4 if len(bins) <= 4 else BLUE_5
 
@@ -132,7 +153,10 @@ def plot_fig1(exhaustion, trending, totals, variant: str, bin_type: str = "subsc
     for ax, letter in ((ax_a, "a"), (ax_b, "b"), (ax_c, "c")):
         ax.text(-0.3 if ax is not ax_a else -0.16, 1.0, letter, transform=ax.transAxes, fontsize=10,
                 fontweight="bold", color=INK, va="bottom")
-    fig.suptitle(VARIANT_TITLES.get(variant, variant), fontsize=8, color=MUTED, y=1.0)
+    title = VARIANT_TITLES.get(variant, variant)
+    if cohort in COHORT_NOTES:
+        title += "\n" + COHORT_NOTES[cohort]
+    fig.suptitle(title, fontsize=8, color=MUTED, y=1.04)
     if path:
         fig.savefig(path, bbox_inches="tight")
     return fig

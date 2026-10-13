@@ -20,10 +20,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
-from fig1_discovery_plot import plot_fig1  # noqa: E402
-
-VARIANTS = [("active_panel", "subscribers"), ("all", "subscribers"),
-            ("active_panel", "weekly_views"), ("active_crawl", "subscribers")]
+from fig1_discovery_plot import RENDER_SPECS, plot_fig1  # noqa: E402
 
 
 def query(sql: str, profile: str, warehouse: str) -> pd.DataFrame:
@@ -59,16 +56,15 @@ def main() -> None:
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     tables = {}
-    for name in ("exhaustion", "totals", "trending", "activity"):
+    for name in ("exhaustion", "totals", "trending", "activity", "cohorts"):
         df = query(f"SELECT * FROM {a.prefix}_{name}_{a.version}", a.profile, a.warehouse)
         df.to_csv(out / f"fig1_{name}_{a.version}.csv", index=False)
         tables[name] = df
-    for variant, bin_type in VARIANTS:
-        stem = out / f"fig1_{variant}_{bin_type}_{a.version}"
-        plot_fig1(tables["exhaustion"], tables["trending"], tables["totals"], variant, bin_type,
-                  path=f"{stem}.pdf")
-        plot_fig1(tables["exhaustion"], tables["trending"], tables["totals"], variant, bin_type,
-                  path=f"{stem}.png")
+    for variant, bin_type, cohort in RENDER_SPECS:
+        stem = out / f"fig1_{variant}_{bin_type}_{cohort}_{a.version}"
+        for ext in ("pdf", "png"):
+            plot_fig1(tables["exhaustion"], tables["trending"], tables["totals"], variant, bin_type,
+                      cohort=cohort, path=f"{stem}.{ext}")
         print("wrote", stem)
 
 

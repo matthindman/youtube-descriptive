@@ -33,6 +33,11 @@
 # MAGIC - Crawl anchor: a channel whose 10 stored uploads all post-date the anchor counts as active.
 # MAGIC - Topic channels = channel name ending in " - Topic" (case-insensitive); excluded from both
 # MAGIC   active variants by name.
+# MAGIC - Incumbent vs entrant (top-1% fix, 2026-10-13): a channel is an `entrant` if its
+# MAGIC   subscriber count at its earliest discovery record was below the threshold (it crossed
+# MAGIC   10k after the crawl saw it); otherwise, and for seeds or hidden counts, `incumbent`.
+# MAGIC   There is no March snapshot, so subscribers-at-first-record is the proxy for size at
+# MAGIC   crawl time. Aggregates carry `cohort` in {all, incumbent, entrant}.
 # MAGIC - Undated discovery batches get a lower-bound date (unlabeled batch 21 -> 2026-04-30;
 # MAGIC   `pub_subs_full` batch 2 -> 2026-03-11). This only affects ordering among later sources.
 
@@ -83,7 +88,7 @@ def out(name: str) -> str:
     return f"{P['output_prefix']}_{name}_{P['version']}"
 
 
-OUTPUTS = ["channels", "exhaustion", "totals", "trending", "activity", "refresh_ids"]
+OUTPUTS = ["channels", "exhaustion", "totals", "trending", "activity", "refresh_ids", "cohorts"]
 print({**P, "outputs": [out(n) for n in OUTPUTS]})
 
 # COMMAND ----------
@@ -129,10 +134,12 @@ WHERE c.subscriber_count >= {THR}
 spark.sql(f"""
 CREATE OR REPLACE TEMP VIEW first_discovery AS
 WITH raw AS (
-  SELECT canonical_id, coalesce(batch_source, '') AS batch_source, batch_number
+  SELECT canonical_id, coalesce(batch_source, '') AS batch_source, batch_number,
+         CASE WHEN hidden_subscriber_count THEN NULL ELSE subscriber_count END AS subs
   FROM dev_sean.default.new_channels
   UNION ALL
-  SELECT canonical_id, coalesce(batch_source, '') AS batch_source, batch_number
+  SELECT canonical_id, coalesce(batch_source, '') AS batch_source, batch_number,
+         CASE WHEN hidden_subscriber_count THEN NULL ELSE subscriber_count END AS subs
   FROM dev_sean.default.new_threshold_channels
 ),
 events AS (
@@ -141,6 +148,7 @@ events AS (
               WHEN r.batch_source = 'trending' THEN 'trending'
               ELSE 'later_sources' END AS source,
          CASE WHEN r.batch_source = '' AND r.batch_number BETWEEN 1 AND 13 THEN r.batch_number END AS step,
+         r.subs,
          CASE WHEN r.batch_source = '' THEN coalesce(to_date(pb.run_date), DATE'2026-04-30')
               WHEN r.batch_source = 'trending' THEN to_date(tb.run_date)
               WHEN r.batch_source = 'pub_subs_full' THEN DATE'2026-03-11'
@@ -161,7 +169,13 @@ ranked AS (
                     CASE source WHEN 'trending' THEN 1 ELSE 0 END) AS rn
   FROM events
 )
-SELECT canonical_id, source, step, disc_date FROM ranked WHERE rn = 1
+first_rec AS (
+  -- Subscribers at the channel's earliest-dated discovery record (any source).
+  SELECT canonical_id, min_by(subs, struct(disc_date, step)) AS first_recorded_subs
+  FROM events GROUP BY canonical_id
+)
+SELECT r.canonical_id, r.source, r.step, r.disc_date, f.first_recorded_subs
+FROM ranked r JOIN first_rec f USING (canonical_id) WHERE r.rn = 1
 """)
 
 # COMMAND ----------
@@ -190,7 +204,10 @@ WITH base AS (
   SELECT u.*,
          CASE WHEN s.canonical_id IS NOT NULL THEN 0 ELSE f.step END AS step,
          CASE WHEN s.canonical_id IS NOT NULL THEN 'seed' ELSE coalesce(f.source, 'untracked') END AS first_source,
-         f.disc_date,
+         f.disc_date, f.first_recorded_subs,
+         CASE WHEN s.canonical_id IS NOT NULL OR f.first_recorded_subs IS NULL
+                   OR f.first_recorded_subs >= {THR} THEN 'incumbent'
+              ELSE 'entrant' END AS entry_cohort,
          a.newest_upload, a.n_stored_uploads,
          CASE WHEN a.canonical_id IS NULL THEN
                    CASE WHEN fd.canonical_id IS NOT NULL THEN 'inactive'
@@ -240,33 +257,42 @@ VARIANTS = f"""
   UNION ALL SELECT 'active_panel', * FROM {ch} WHERE activity_panel = 'active' AND NOT is_topic
   UNION ALL SELECT 'active_crawl', * FROM {ch} WHERE activity_crawl = 'active' AND NOT is_topic
 """
+VARIANTS = f"""
+  SELECT v.*, c.cohort FROM ({VARIANTS}) v
+  LATERAL VIEW explode(array('all', v.entry_cohort)) c AS cohort
+"""
 BINS = f"""
-  SELECT variant, 'subscribers' AS bin_type, sub_bin AS bin_order,
+  SELECT variant, cohort, 'subscribers' AS bin_type, sub_bin AS bin_order,
          element_at(array('10k-100k','100k-1M','1M-10M','10M+'), sub_bin) AS bin_label,
          step_order, coalesce(weekly_views, 0) AS wv
   FROM ({VARIANTS})
   UNION ALL
-  SELECT variant, 'weekly_views', view_bin,
+  SELECT variant, cohort, 'weekly_views', view_bin,
          element_at(array('Bottom 25%','25-50%','50-75%','75-99%','Top 1%'), view_bin),
          step_order, weekly_views
   FROM ({VARIANTS}) WHERE view_bin IS NOT NULL
 """
 spark.sql(f"""{mode} {out('exhaustion')} AS
-SELECT variant, bin_type, bin_order, bin_label, step_order,
+SELECT variant, cohort, bin_type, bin_order, bin_label, step_order,
        CASE WHEN step_order <= 13 THEN CAST(step_order AS STRING)
             WHEN step_order = 14 THEN 'later_sources' WHEN step_order = 15 THEN 'trending'
             ELSE 'untracked' END AS step_label,
        count(*) AS n_channels, sum(wv) AS weekly_views
 FROM ({BINS}) GROUP BY ALL""")
 spark.sql(f"""{mode} {out('totals')} AS
-SELECT variant, bin_type, bin_order, count(*) AS n_channels_total, sum(wv) AS weekly_views_total
+SELECT variant, cohort, bin_type, bin_order, count(*) AS n_channels_total, sum(wv) AS weekly_views_total
 FROM ({BINS}) GROUP BY ALL""")
 spark.sql(f"""{mode} {out('trending')} AS
-SELECT variant, date_trunc('week', disc_date) AS week_start,
+SELECT variant, cohort, date_trunc('week', disc_date) AS week_start,
        count(*) AS n_channels, sum(coalesce(weekly_views, 0)) AS weekly_views
 FROM ({VARIANTS}) WHERE first_source = 'trending' GROUP BY ALL""")
 spark.sql(f"""{mode} {out('activity')} AS
 SELECT sub_bin, is_topic, activity_panel, activity_crawl,
+       count(*) AS n_channels, sum(coalesce(weekly_views, 0)) AS weekly_views
+FROM {ch} GROUP BY ALL""")
+
+spark.sql(f"""{mode} {out('cohorts')} AS
+SELECT entry_cohort, first_source, sub_bin, view_bin, activity_panel, is_topic,
        count(*) AS n_channels, sum(coalesce(weekly_views, 0)) AS weekly_views
 FROM {ch} GROUP BY ALL""")
 
@@ -277,13 +303,14 @@ SELECT DISTINCT canonical_id FROM {ch} WHERE activity_panel IN ('unknown', 'inac
 # 6. Checks.
 n_universe = spark.sql("SELECT count(*) FROM universe").first()[0]
 n_all = spark.sql(f"""SELECT sum(n_channels_total) FROM {out('totals')}
-                      WHERE variant='all' AND bin_type='subscribers'""").first()[0]
+                      WHERE variant='all' AND cohort='all' AND bin_type='subscribers'""").first()[0]
 assert n_universe == n_all, f"bin counts {n_all} != universe {n_universe}"
 n_dupes = spark.sql(f"SELECT count(*) - count(DISTINCT canonical_id) FROM {ch}").first()[0]
 assert n_dupes == 0, f"{n_dupes} duplicate channels in {ch}"
 print("universe:", n_universe)
 display(spark.sql(f"""SELECT step_label, sum(n_channels) n FROM {out('exhaustion')}
-                      WHERE variant='all' AND bin_type='subscribers' GROUP BY ALL ORDER BY min(step_order)"""))
+                      WHERE variant='all' AND cohort='all' AND bin_type='subscribers'
+                      GROUP BY ALL ORDER BY min(step_order)"""))
 display(spark.sql(f"""SELECT is_topic, activity_panel, activity_crawl, sum(n_channels) n, sum(weekly_views) wv
                       FROM {out('activity')} GROUP BY ALL ORDER BY n DESC"""))
 
@@ -299,7 +326,7 @@ from fig1_discovery_plot import plot_fig1  # noqa: E402
 ex_pd = spark.table(out("exhaustion")).toPandas()
 tr_pd = spark.table(out("trending")).toPandas()
 tot_pd = spark.table(out("totals")).toPandas()
-for variant, bin_type in [("active_panel", "subscribers"), ("all", "subscribers"),
-                          ("active_panel", "weekly_views"), ("active_crawl", "subscribers")]:
-    path = f"{P['figure_dir']}/fig1_{variant}_{bin_type}.png" if P["figure_dir"] else None
-    display(plot_fig1(ex_pd, tr_pd, tot_pd, variant, bin_type, path=path))
+from fig1_discovery_plot import RENDER_SPECS  # noqa: E402
+for variant, bin_type, cohort in RENDER_SPECS:
+    path = f"{P['figure_dir']}/fig1_{variant}_{bin_type}_{cohort}.png" if P["figure_dir"] else None
+    display(plot_fig1(ex_pd, tr_pd, tot_pd, variant, bin_type, cohort=cohort, path=path))
