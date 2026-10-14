@@ -235,7 +235,11 @@ WITH base AS (
   LEFT JOIN (SELECT DISTINCT canonical_id FROM dev_sean.matt.yt_channel_descriptions) fd USING (canonical_id)
   LEFT JOIN (SELECT DISTINCT canonical_id FROM dev_sean.matt.yt_cd_not_found) nf USING (canonical_id)
   LEFT JOIN (SELECT canonical_id, max_by(published_at, collected_at) AS created_at
-             FROM {P['created_at_table']} WHERE status = 'ok' GROUP BY canonical_id) ca USING (canonical_id)
+             FROM {P['created_at_table']}
+             -- Dates before YouTube launched are placeholders (1970-01-01 for the YouTube channel
+             -- itself, 2004-09-16 for one other); treat them as unknown.
+             WHERE status = 'ok' AND to_date(published_at) >= DATE'2005-02-14'
+             GROUP BY canonical_id) ca USING (canonical_id)
 )
 SELECT base.*,
        CASE WHEN subscriber_count < 100000 THEN 1 WHEN subscriber_count < 1000000 THEN 2

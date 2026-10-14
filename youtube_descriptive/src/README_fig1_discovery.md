@@ -93,7 +93,9 @@ Share of each bin discovered by snowball step 13:
 - 1,486,703 channels are inactive, holding 1.4% of weekly views. 3,674 are not found.
 - 30,093 Topic channels are excluded; after the refresh, 20,971 of them would have passed the activity rule.
 - Creation dates cover all 4,990,312 channels: 4,984,800 have a date and 5,512 were not found.
-  Two dates are the 1970-01-01 placeholder.
+  Two dates predate YouTube's launch (1970-01-01 for the YouTube channel itself, and 2004-09-16).
+  The notebook treats any date before 2005-02-14 as unknown. Neither channel could be an entrant
+  by creation date, so the v4 aggregates are unaffected.
 
 ## Run log
 
@@ -107,6 +109,7 @@ Share of each bin discovered by snowball step 13:
 | 2026-10-13 | Fig 1 v3 | 411019945153851 | Success; incumbents defined by subscribers at discovery only |
 | 2026-10-13 | Creation dates | 735569832398830 | 4,984,800 ok, 5,512 not found (~100k quota units) |
 | 2026-10-13 | Fig 1 v4 | 803091634682123 | Success; entrant rule adds created-after-crawl |
+| 2026-10-14 | v4 re-render | local | Panel b labels 1-2-5 log ticks; aggregates unchanged |
 
 ## Rerunning
 
@@ -123,7 +126,8 @@ Share of each bin discovered by snowball step 13:
 
 ## Known limits
 
-- Panel b's log axis shows only one labelled tick (10³).
-- Weekly-view bins use percent ranks. Ties at zero make the bottom bin slightly larger than 25%.
+- Weekly-view bins use percent ranks over the universe. 468,512 channels (9.4%) have zero weekly
+  views. All of them fall in the bottom bin, which still holds exactly 25.0% of channels
+  (1,247,032 of 4,988,123), so ties do not distort the bins.
 - Some discovery dates are lower bounds: unlabeled batch 21 → 2026-04-30, and `pub_subs_full`
   batch 2 → 2026-03-11. This affects only the ordering among later sources.

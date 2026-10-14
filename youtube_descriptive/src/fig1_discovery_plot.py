@@ -15,7 +15,9 @@ from __future__ import annotations
 import matplotlib
 
 matplotlib.use("Agg")
+import matplotlib.dates  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker  # noqa: E402
 import pandas as pd  # noqa: E402
 
 # Reference blue ramp (ordinal, light surface, starts no lighter than step 250).
@@ -142,6 +144,10 @@ def plot_fig1(exhaustion, trending, totals, variant: str, bin_type: str = "subsc
     ax_b.bar(pd.to_datetime(tr.week_start), tr.n_channels, width=5, color=BLUE_4[2])
     ax_b.set_ylabel("New channels", fontsize=8, color=INK)
     ax_b.set_yscale("log")
+    # Label 1-2-5 steps: the data span about one decade, so default log ticks label only 10^3.
+    ax_b.yaxis.set_major_locator(matplotlib.ticker.LogLocator(base=10, subs=(1, 2, 5)))
+    ax_b.yaxis.set_major_formatter(matplotlib.ticker.StrMethodFormatter("{x:,.0f}"))
+    ax_b.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     _style(ax_b)
     ax_c.bar(pd.to_datetime(tr.week_start), tr.weekly_views / tot_views * 100, width=5, color=BLUE_4[2])
     ax_c.set_ylabel("% of weekly views", fontsize=8, color=INK)
