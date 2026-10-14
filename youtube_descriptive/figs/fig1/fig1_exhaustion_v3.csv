@@ -1,0 +1,951 @@
+variant,cohort,bin_type,bin_order,bin_label,step_order,step_label,n_channels,weekly_views
+all,incumbent,subscribers,1,10k-100k,6,6,78302,5470594514.835829
+all,all,subscribers,1,10k-100k,1,1,811239,56670268898.16391
+all,all,subscribers,2,100k-1M,14,later_sources,27890,64155966226.914474
+all,incumbent,subscribers,2,100k-1M,9,9,24,24133398.497688305
+all,incumbent,subscribers,2,100k-1M,0,0,109647,39061982450.97764
+all,incumbent,subscribers,2,100k-1M,1,1,291939,193687811764.2615
+all,entrant,subscribers,1,10k-100k,1,1,25745,4616794654.550393
+all,all,subscribers,1,10k-100k,2,2,1586,333161851.8936596
+all,entrant,subscribers,2,100k-1M,6,6,246,935453607.0857395
+all,incumbent,subscribers,1,10k-100k,9,9,915,61790643.80969287
+all,incumbent,subscribers,1,10k-100k,5,5,309686,21790186687.04967
+all,entrant,subscribers,1,10k-100k,14,later_sources,142591,64696495195.26127
+all,incumbent,subscribers,2,100k-1M,3,3,216911,159496137168.5891
+all,all,subscribers,3,1M-10M,1,1,19799,86514601971.13568
+all,entrant,subscribers,1,10k-100k,15,trending,894,623900808.3463191
+all,all,subscribers,2,100k-1M,6,6,2385,3879631612.2818384
+all,all,subscribers,1,10k-100k,6,6,89067,9341078479.48363
+all,incumbent,subscribers,4,10M+,0,0,3127,119475086947.66656
+all,incumbent,subscribers,2,100k-1M,4,4,69158,58840017106.72704
+all,entrant,subscribers,1,10k-100k,8,8,602,191717162.0914237
+all,all,subscribers,2,100k-1M,7,7,499,1243860244.9869018
+all,all,subscribers,2,100k-1M,9,9,29,26739529.832385264
+all,entrant,subscribers,1,10k-100k,6,6,10765,3870483964.6477976
+all,all,subscribers,2,100k-1M,15,trending,6968,42824889882.16193
+all,incumbent,subscribers,1,10k-100k,10,10,191,13062503.741138885
+all,incumbent,subscribers,3,1M-10M,3,3,4234,31896367835.996796
+all,incumbent,subscribers,1,10k-100k,3,3,1167871,82234345242.45193
+all,entrant,subscribers,2,100k-1M,1,1,267,1376322327.484324
+all,all,subscribers,1,10k-100k,9,9,1055,120788362.28501137
+all,incumbent,subscribers,1,10k-100k,1,1,785494,52053474243.61352
+all,incumbent,subscribers,1,10k-100k,4,4,828927,60888780701.91423
+all,all,subscribers,1,10k-100k,5,5,344322,33481052461.953297
+all,all,subscribers,2,100k-1M,0,0,109647,39061982450.97764
+all,all,subscribers,4,10M+,0,0,3127,119475086947.66656
+all,incumbent,subscribers,1,10k-100k,8,8,3791,221421471.33303696
+all,incumbent,subscribers,1,10k-100k,15,trending,25637,51395596586.41192
+all,all,subscribers,2,100k-1M,1,1,292206,195064134091.74585
+all,incumbent,subscribers,3,1M-10M,4,4,409,7845450120.833763
+all,incumbent,subscribers,2,100k-1M,8,8,85,146165019.12112427
+all,all,subscribers,1,10k-100k,15,trending,26531,52019497394.75824
+all,incumbent,subscribers,3,1M-10M,2,2,43,577205026.8258644
+all,entrant,subscribers,1,10k-100k,4,4,66987,19585603068.572334
+all,incumbent,subscribers,2,100k-1M,15,trending,6938,42729883060.13375
+all,all,subscribers,3,1M-10M,15,trending,200,5010970804.025614
+all,incumbent,subscribers,1,10k-100k,7,7,17556,1292665942.0811243
+all,all,subscribers,3,1M-10M,14,later_sources,2046,16272625658.523804
+all,incumbent,subscribers,2,100k-1M,6,6,2139,2944178005.1960983
+all,entrant,subscribers,1,10k-100k,2,2,367,89465118.45088914
+all,incumbent,subscribers,1,10k-100k,14,later_sources,506952,58288648559.12415
+all,incumbent,subscribers,3,1M-10M,1,1,19795,86480779671.67114
+all,entrant,subscribers,1,10k-100k,7,7,2598,886204031.0256759
+all,incumbent,subscribers,3,1M-10M,5,5,55,815376802.0768518
+all,all,subscribers,4,10M+,1,1,5,360252969.7451913
+all,entrant,subscribers,3,1M-10M,14,later_sources,50,1115303809.78414
+all,entrant,subscribers,2,100k-1M,14,later_sources,3871,17825564299.180374
+all,incumbent,subscribers,3,1M-10M,15,trending,200,5010970804.025614
+all,all,subscribers,3,1M-10M,4,4,415,7889895644.227597
+all,all,subscribers,1,10k-100k,8,8,4393,413138633.42446065
+all,entrant,subscribers,2,100k-1M,5,5,764,3212158727.367025
+all,incumbent,subscribers,2,100k-1M,7,7,432,862198939.755728
+all,incumbent,subscribers,2,100k-1M,2,2,579,1021754770.6493824
+all,all,subscribers,2,100k-1M,2,2,595,1075009344.016451
+all,all,subscribers,3,1M-10M,0,0,50851,245671705379.77884
+all,all,subscribers,2,100k-1M,8,8,92,150117976.5865489
+all,all,subscribers,1,10k-100k,10,10,213,18051308.499750495
+all,all,subscribers,1,10k-100k,0,0,91013,6819266326.077464
+all,incumbent,subscribers,3,1M-10M,0,0,50851,245671705379.77884
+all,entrant,subscribers,1,10k-100k,5,5,34636,11690865774.903627
+all,incumbent,subscribers,2,100k-1M,5,5,12676,15696776591.502275
+all,all,subscribers,3,1M-10M,3,3,4241,31972369492.062218
+all,all,subscribers,1,10k-100k,7,7,20154,2178869973.1068006
+all,incumbent,subscribers,4,10M+,1,1,5,360252969.7451913
+all,all,subscribers,2,100k-1M,3,3,217750,162468229358.71973
+all,incumbent,subscribers,2,100k-1M,14,later_sources,24019,46330401927.73409
+all,all,subscribers,1,10k-100k,4,4,895914,80474383770.48656
+all,entrant,subscribers,2,100k-1M,7,7,67,381661305.231174
+all,entrant,subscribers,1,10k-100k,9,9,140,58997718.4753185
+all,entrant,subscribers,1,10k-100k,3,3,64711,15245333755.629894
+all,entrant,subscribers,2,100k-1M,4,4,1178,4574333091.549974
+all,all,subscribers,2,100k-1M,4,4,70336,63414350198.27701
+all,all,subscribers,3,1M-10M,5,5,61,1562789634.2279727
+all,all,subscribers,2,100k-1M,5,5,13440,18908935318.8693
+all,all,subscribers,3,1M-10M,2,2,43,577205026.8258644
+all,incumbent,subscribers,1,10k-100k,0,0,91013,6819266326.077464
+all,entrant,subscribers,2,100k-1M,3,3,839,2972092190.130627
+all,all,subscribers,1,10k-100k,3,3,1232582,97479678998.08182
+all,incumbent,subscribers,1,10k-100k,2,2,1219,243696733.44277048
+all,entrant,subscribers,3,1M-10M,3,3,7,76001656.06542468
+all,all,subscribers,1,10k-100k,14,later_sources,649543,122985143754.3854
+all,incumbent,subscribers,3,1M-10M,14,later_sources,1996,15157321848.739664
+all,entrant,subscribers,2,100k-1M,9,9,5,2606131.334696962
+all,incumbent,subscribers,1,10k-100k,11,11,42,1157589.89270611
+all,incumbent,subscribers,1,10k-100k,12,12,4,110.000771348
+all,incumbent,subscribers,3,1M-10M,6,6,13,97259965.48928611
+all,all,subscribers,1,10k-100k,11,11,46,2105814.753831826
+all,entrant,subscribers,2,100k-1M,15,trending,30,95006822.02818054
+all,all,subscribers,1,10k-100k,12,12,8,4648002.942227508
+all,all,subscribers,3,1M-10M,6,6,14,97283230.79697703
+all,entrant,subscribers,2,100k-1M,2,2,16,53254573.36706836
+all,entrant,subscribers,3,1M-10M,6,6,1,23265.307690915
+all,all,subscribers,3,1M-10M,8,8,1,106092002.4511972
+all,entrant,subscribers,1,10k-100k,12,12,4,4647892.94145616
+all,incumbent,subscribers,3,1M-10M,8,8,1,106092002.4511972
+all,entrant,subscribers,1,10k-100k,10,10,22,4988804.758611613
+all,entrant,subscribers,3,1M-10M,4,4,6,44445523.39383378
+all,entrant,subscribers,2,100k-1M,8,8,7,3952957.465424589
+active_panel,entrant,subscribers,2,100k-1M,1,1,266,1376301361.0228612
+active_panel,all,subscribers,1,10k-100k,7,7,14857,2139719479.3892689
+active_panel,all,subscribers,2,100k-1M,4,4,59588,63010422945.61087
+active_panel,incumbent,subscribers,2,100k-1M,15,trending,6823,42382920723.5354
+active_panel,incumbent,subscribers,2,100k-1M,7,7,403,860316467.9776307
+active_panel,entrant,subscribers,1,10k-100k,9,9,135,58932071.56042461
+active_panel,entrant,subscribers,1,10k-100k,15,trending,785,555279918.4456195
+active_panel,incumbent,subscribers,3,1M-10M,15,trending,198,5010970804.025614
+active_panel,entrant,subscribers,2,100k-1M,4,4,1172,4573510811.792309
+active_panel,incumbent,subscribers,2,100k-1M,4,4,58416,58436912133.81856
+active_panel,entrant,subscribers,1,10k-100k,1,1,23721,4533502787.563653
+active_panel,incumbent,subscribers,1,10k-100k,14,later_sources,346935,56571850135.729965
+active_panel,entrant,subscribers,3,1M-10M,14,later_sources,50,1115303809.78414
+active_panel,all,subscribers,2,100k-1M,15,trending,6852,42477541844.83345
+active_panel,entrant,subscribers,2,100k-1M,6,6,244,935453607.0857395
+active_panel,all,subscribers,3,1M-10M,1,1,17893,86021521626.85019
+active_panel,all,subscribers,4,10M+,0,0,3010,118707495973.84663
+active_panel,all,subscribers,1,10k-100k,4,4,603044,77030985434.21062
+active_panel,all,subscribers,3,1M-10M,4,4,389,7888547875.874934
+active_panel,incumbent,subscribers,2,100k-1M,0,0,75766,36756784888.86871
+active_panel,incumbent,subscribers,3,1M-10M,5,5,49,813762102.7629038
+active_panel,all,subscribers,1,10k-100k,15,trending,25968,51497274178.87464
+active_panel,all,subscribers,1,10k-100k,2,2,1386,329779610.5749023
+active_panel,incumbent,subscribers,3,1M-10M,0,0,45202,242705898746.69748
+active_panel,entrant,subscribers,1,10k-100k,3,3,60197,14997951342.092625
+active_panel,entrant,subscribers,3,1M-10M,3,3,7,76001656.06542468
+active_panel,all,subscribers,2,100k-1M,3,3,177158,160063205177.21857
+active_panel,incumbent,subscribers,3,1M-10M,3,3,3902,31866554387.653957
+active_panel,all,subscribers,3,1M-10M,5,5,55,1561174934.914025
+active_panel,incumbent,subscribers,4,10M+,0,0,3010,118707495973.84663
+active_panel,all,subscribers,3,1M-10M,3,3,3909,31942556043.719376
+active_panel,all,subscribers,3,1M-10M,15,trending,198,5010970804.025614
+active_panel,incumbent,subscribers,2,100k-1M,9,9,23,24133365.492449433
+active_panel,incumbent,subscribers,1,10k-100k,6,6,54598,5235502570.769454
+active_panel,incumbent,subscribers,1,10k-100k,2,2,1026,240384207.88969073
+active_panel,incumbent,subscribers,1,10k-100k,15,trending,25183,50941994260.429016
+active_panel,all,subscribers,2,100k-1M,0,0,75766,36756784888.86871
+active_panel,all,subscribers,4,10M+,1,1,5,360252969.7451913
+active_panel,all,subscribers,2,100k-1M,1,1,238759,189101103086.27863
+active_panel,all,subscribers,1,10k-100k,8,8,3240,402395542.4867725
+active_panel,incumbent,subscribers,1,10k-100k,9,9,648,59831553.08446773
+active_panel,all,subscribers,2,100k-1M,5,5,11985,18789247725.04631
+active_panel,entrant,subscribers,1,10k-100k,8,8,577,189540791.877712
+active_panel,all,subscribers,1,10k-100k,10,10,157,17821789.05078707
+active_panel,incumbent,subscribers,3,1M-10M,4,4,383,7844102352.481101
+active_panel,incumbent,subscribers,1,10k-100k,7,7,12368,1260059104.3613155
+active_panel,entrant,subscribers,1,10k-100k,14,later_sources,136797,64023829478.88704
+active_panel,incumbent,subscribers,2,100k-1M,1,1,238493,187724801725.25577
+active_panel,all,subscribers,1,10k-100k,6,6,64807,9068867274.114792
+active_panel,entrant,subscribers,2,100k-1M,7,7,67,381661305.231174
+active_panel,all,subscribers,2,100k-1M,2,2,557,1068801488.2287582
+active_panel,entrant,subscribers,2,100k-1M,5,5,759,3192577089.0570583
+active_panel,all,subscribers,3,1M-10M,14,later_sources,1931,16237522910.350544
+active_panel,all,subscribers,2,100k-1M,9,9,28,26739496.827146392
+active_panel,all,subscribers,2,100k-1M,14,later_sources,25696,63580286958.4553
+active_panel,incumbent,subscribers,1,10k-100k,5,5,210252,20778961586.976795
+active_panel,incumbent,subscribers,3,1M-10M,1,1,17889,85987699327.38565
+active_panel,incumbent,subscribers,3,1M-10M,14,later_sources,1881,15122219100.566404
+active_panel,incumbent,subscribers,1,10k-100k,10,10,135,12832984.292175457
+active_panel,all,subscribers,1,10k-100k,14,later_sources,483732,120595679614.617
+active_panel,incumbent,subscribers,2,100k-1M,8,8,75,146017692.23291904
+active_panel,all,subscribers,1,10k-100k,3,3,807567,91271151892.7912
+active_panel,incumbent,subscribers,2,100k-1M,5,5,11226,15596670635.989252
+active_panel,incumbent,subscribers,1,10k-100k,1,1,481579,44942124104.46573
+active_panel,entrant,subscribers,2,100k-1M,14,later_sources,3822,17623727351.096214
+active_panel,all,subscribers,2,100k-1M,7,7,470,1241977773.2088048
+active_panel,incumbent,subscribers,2,100k-1M,14,later_sources,21874,45956559607.35908
+active_panel,entrant,subscribers,1,10k-100k,5,5,32747,11567157225.648764
+active_panel,incumbent,subscribers,1,10k-100k,3,3,747370,76273200550.69856
+active_panel,entrant,subscribers,1,10k-100k,4,4,62817,19346931789.51649
+active_panel,incumbent,subscribers,1,10k-100k,4,4,540227,57684053644.69413
+active_panel,incumbent,subscribers,1,10k-100k,8,8,2663,212854750.60906047
+active_panel,all,subscribers,1,10k-100k,1,1,505300,49475626892.02937
+active_panel,incumbent,subscribers,2,100k-1M,3,3,176326,157094543677.4812
+active_panel,entrant,subscribers,1,10k-100k,2,2,360,89395402.68521158
+active_panel,all,subscribers,3,1M-10M,0,0,45202,242705898746.69748
+active_panel,incumbent,subscribers,1,10k-100k,0,0,44172,6065527740.422588
+active_panel,all,subscribers,1,10k-100k,5,5,242999,32346118812.62556
+active_panel,incumbent,subscribers,2,100k-1M,6,6,1951,2935814319.963556
+active_panel,incumbent,subscribers,4,10M+,1,1,5,360252969.7451913
+active_panel,incumbent,subscribers,2,100k-1M,2,2,541,1015546914.86169
+active_panel,all,subscribers,2,100k-1M,6,6,2195,3871267927.049296
+active_panel,entrant,subscribers,1,10k-100k,7,7,2489,879660375.0279529
+active_panel,entrant,subscribers,1,10k-100k,6,6,10209,3833364703.345337
+active_panel,all,subscribers,1,10k-100k,9,9,783,118763624.64489233
+active_panel,entrant,subscribers,2,100k-1M,3,3,832,2968661499.7373605
+active_panel,all,subscribers,3,1M-10M,2,2,43,577205026.8258644
+active_panel,incumbent,subscribers,3,1M-10M,2,2,43,577205026.8258644
+active_panel,all,subscribers,2,100k-1M,8,8,82,149970649.69834363
+active_panel,all,subscribers,1,10k-100k,0,0,44172,6065527740.422588
+active_panel,all,subscribers,1,10k-100k,12,12,7,4647956.941542755
+active_panel,incumbent,subscribers,1,10k-100k,11,11,30,1067738.526408897
+active_panel,incumbent,subscribers,3,1M-10M,6,6,12,96978117.3929096
+active_panel,entrant,subscribers,2,100k-1M,15,trending,29,94621121.29804963
+active_panel,entrant,subscribers,2,100k-1M,9,9,5,2606131.334696962
+active_panel,all,subscribers,1,10k-100k,11,11,34,2015963.387534613
+active_panel,incumbent,subscribers,1,10k-100k,12,12,3,64.000086595
+active_panel,all,subscribers,3,1M-10M,6,6,13,97001382.7006005
+active_panel,entrant,subscribers,2,100k-1M,2,2,16,53254573.36706836
+active_panel,entrant,subscribers,3,1M-10M,6,6,1,23265.307690915
+all,entrant,subscribers,1,10k-100k,11,11,4,948224.861125716
+all,incumbent,subscribers,4,10M+,14,later_sources,1,99754680.49820189
+all,all,subscribers,4,10M+,14,later_sources,1,99754680.49820189
+all,entrant,subscribers,3,1M-10M,5,5,6,747412832.1511211
+all,entrant,subscribers,3,1M-10M,1,1,4,33822299.46453744
+all,all,subscribers,2,100k-1M,10,10,3,1531217.285125619
+all,all,subscribers,2,100k-1M,11,11,1,0.99996693
+all,incumbent,subscribers,2,100k-1M,10,10,3,1531217.285125619
+all,incumbent,subscribers,2,100k-1M,11,11,1,0.99996693
+active_panel,entrant,subscribers,2,100k-1M,8,8,7,3952957.465424589
+active_panel,entrant,subscribers,1,10k-100k,10,10,22,4988804.758611613
+active_panel,entrant,subscribers,1,10k-100k,11,11,4,948224.861125716
+active_panel,entrant,subscribers,3,1M-10M,5,5,6,747412832.1511211
+active_panel,incumbent,subscribers,4,10M+,14,later_sources,1,99754680.49820189
+active_panel,all,subscribers,4,10M+,14,later_sources,1,99754680.49820189
+active_panel,entrant,subscribers,3,1M-10M,1,1,4,33822299.46453744
+active_panel,entrant,subscribers,3,1M-10M,4,4,6,44445523.39383378
+active_panel,entrant,subscribers,1,10k-100k,12,12,4,4647892.94145616
+active_panel,incumbent,subscribers,2,100k-1M,10,10,2,1480102.678541951
+active_panel,all,subscribers,2,100k-1M,10,10,2,1480102.678541951
+active_crawl,all,subscribers,3,1M-10M,15,trending,192,5002485799.2192335
+active_crawl,entrant,subscribers,1,10k-100k,7,7,2482,876327541.8020844
+active_crawl,incumbent,subscribers,3,1M-10M,1,1,18127,86092764676.09644
+active_crawl,incumbent,subscribers,2,100k-1M,8,8,80,146058633.2892207
+active_crawl,entrant,subscribers,1,10k-100k,5,5,32729,11549904241.184814
+active_crawl,incumbent,subscribers,1,10k-100k,14,later_sources,362033,56205268286.54543
+active_crawl,incumbent,subscribers,3,1M-10M,0,0,45926,242178546345.983
+active_crawl,entrant,subscribers,2,100k-1M,5,5,742,3179957216.4204106
+active_crawl,all,subscribers,3,1M-10M,14,later_sources,1939,16222914016.55148
+active_crawl,all,subscribers,1,10k-100k,15,trending,25000,50742130669.48712
+active_crawl,incumbent,subscribers,2,100k-1M,5,5,11360,15549294266.271738
+active_crawl,incumbent,subscribers,1,10k-100k,1,1,499744,45020221069.86785
+active_crawl,entrant,subscribers,1,10k-100k,14,later_sources,134893,63666000385.3116
+active_crawl,incumbent,subscribers,1,10k-100k,12,12,3,64.000086595
+active_crawl,all,subscribers,2,100k-1M,2,2,553,1063490730.0962944
+active_crawl,incumbent,subscribers,2,100k-1M,6,6,1968,2934255900.0238314
+active_crawl,all,subscribers,2,100k-1M,0,0,77372,36570380668.88776
+active_crawl,incumbent,subscribers,1,10k-100k,3,3,781501,75865458431.01613
+active_crawl,all,subscribers,3,1M-10M,2,2,42,576977710.2406908
+active_crawl,all,subscribers,1,10k-100k,8,8,3351,388194472.2082483
+active_crawl,entrant,subscribers,1,10k-100k,4,4,62755,19305855356.90193
+active_crawl,incumbent,subscribers,3,1M-10M,5,5,52,814860858.1760366
+active_crawl,incumbent,subscribers,1,10k-100k,2,2,1018,239174206.1165312
+active_crawl,all,subscribers,3,1M-10M,0,0,45926,242178546345.983
+active_crawl,incumbent,subscribers,2,100k-1M,4,4,59441,58195312363.705246
+active_crawl,entrant,subscribers,3,1M-10M,3,3,7,76001656.06542468
+active_crawl,all,subscribers,2,100k-1M,1,1,244364,188990884599.92868
+active_crawl,entrant,subscribers,1,10k-100k,8,8,580,189546777.32276076
+active_crawl,incumbent,subscribers,3,1M-10M,4,4,384,7844129382.507847
+active_crawl,entrant,subscribers,2,100k-1M,6,6,240,935427788.310959
+active_crawl,entrant,subscribers,1,10k-100k,6,6,10159,3822378439.498827
+active_crawl,entrant,subscribers,2,100k-1M,8,8,6,3952940.466014954
+active_crawl,entrant,subscribers,2,100k-1M,2,2,15,52636047.112093605
+active_crawl,all,subscribers,1,10k-100k,14,later_sources,496926,119871268671.85703
+active_crawl,incumbent,subscribers,1,10k-100k,4,4,568335,57591130088.08125
+active_crawl,all,subscribers,3,1M-10M,3,3,3936,31724981888.262196
+active_crawl,all,subscribers,1,10k-100k,5,5,253555,32212732012.227955
+active_crawl,all,subscribers,1,10k-100k,7,7,15405,2137667194.474435
+active_crawl,all,subscribers,1,10k-100k,2,2,1371,328632726.5682837
+active_crawl,entrant,subscribers,1,10k-100k,9,9,135,58858428.90150696
+active_crawl,all,subscribers,1,10k-100k,1,1,523487,49533172919.57416
+active_crawl,incumbent,subscribers,2,100k-1M,15,trending,6563,41841104037.09613
+active_crawl,incumbent,subscribers,2,100k-1M,0,0,77372,36570380668.88776
+active_crawl,incumbent,subscribers,1,10k-100k,6,6,57204,5213028002.258
+active_crawl,all,subscribers,2,100k-1M,5,5,12102,18729251482.692146
+active_crawl,entrant,subscribers,2,100k-1M,3,3,822,2961443664.2045374
+active_crawl,entrant,subscribers,1,10k-100k,15,trending,734,543463855.0473651
+active_crawl,all,subscribers,2,100k-1M,15,trending,6590,41909904873.34428
+active_crawl,entrant,subscribers,1,10k-100k,3,3,60336,14937115287.181671
+active_crawl,all,subscribers,3,1M-10M,1,1,18131,86126586975.56097
+active_crawl,incumbent,subscribers,4,10M+,0,0,3032,119208382340.25143
+active_crawl,incumbent,subscribers,3,1M-10M,15,trending,192,5002485799.2192335
+active_crawl,incumbent,subscribers,3,1M-10M,2,2,42,576977710.2406908
+active_crawl,all,subscribers,2,100k-1M,6,6,2208,3869683688.33479
+active_crawl,all,subscribers,1,10k-100k,12,12,7,4647956.941542755
+active_crawl,incumbent,subscribers,1,10k-100k,0,0,45596,6011621471.965402
+active_crawl,all,subscribers,1,10k-100k,4,4,631090,76896985444.98318
+active_crawl,incumbent,subscribers,2,100k-1M,7,7,402,859945740.3427743
+active_crawl,incumbent,subscribers,2,100k-1M,14,later_sources,21712,45678742835.274
+active_crawl,incumbent,subscribers,1,10k-100k,10,10,136,12846736.576755088
+active_crawl,entrant,subscribers,2,100k-1M,14,later_sources,3735,17526372898.95485
+active_crawl,all,subscribers,2,100k-1M,4,4,60589,62755811852.17727
+active_crawl,entrant,subscribers,1,10k-100k,1,1,23743,4512951849.706317
+active_crawl,entrant,subscribers,2,100k-1M,1,1,259,1376178162.0759106
+active_crawl,all,subscribers,2,100k-1M,7,7,469,1241607045.5739484
+active_crawl,incumbent,subscribers,2,100k-1M,2,2,538,1010854682.9842008
+active_crawl,all,subscribers,1,10k-100k,0,0,45596,6011621471.965402
+active_crawl,entrant,subscribers,2,100k-1M,4,4,1148,4560499488.472023
+active_crawl,incumbent,subscribers,1,10k-100k,15,trending,24266,50198666814.43976
+active_crawl,incumbent,subscribers,1,10k-100k,8,8,2771,198647694.88548756
+active_crawl,entrant,subscribers,1,10k-100k,10,10,22,4988804.758611613
+active_crawl,all,subscribers,3,1M-10M,4,4,390,7888574905.90168
+active_crawl,all,subscribers,1,10k-100k,3,3,841837,90802573718.19778
+active_crawl,all,subscribers,3,1M-10M,5,5,58,1562273690.3271575
+active_crawl,incumbent,subscribers,3,1M-10M,3,3,3929,31648980232.19677
+active_crawl,entrant,subscribers,1,10k-100k,2,2,353,89458520.4517525
+active_crawl,incumbent,subscribers,3,1M-10M,14,later_sources,1889,15107610206.76734
+active_crawl,all,subscribers,1,10k-100k,6,6,67363,9035406441.756828
+active_crawl,all,subscribers,2,100k-1M,3,3,181357,159070176716.3415
+active_crawl,entrant,subscribers,3,1M-10M,14,later_sources,50,1115303809.78414
+active_crawl,all,subscribers,1,10k-100k,10,10,158,17835541.3353667
+active_crawl,incumbent,subscribers,1,10k-100k,5,5,220826,20662827771.04314
+active_crawl,incumbent,subscribers,2,100k-1M,1,1,244105,187614706437.8528
+active_crawl,all,subscribers,2,100k-1M,8,8,86,150011573.75523564
+active_crawl,incumbent,subscribers,1,10k-100k,7,7,12923,1261339652.6723506
+active_crawl,all,subscribers,1,10k-100k,9,9,796,118224775.74269976
+active_crawl,incumbent,subscribers,1,10k-100k,9,9,661,59366346.841192804
+active_crawl,incumbent,subscribers,2,100k-1M,3,3,180535,156108733052.13696
+active_crawl,all,subscribers,4,10M+,0,0,3032,119208382340.25143
+active_crawl,all,subscribers,2,100k-1M,14,later_sources,25447,63205115734.22885
+active_crawl,entrant,subscribers,2,100k-1M,7,7,67,381661305.231174
+active_crawl,all,subscribers,1,10k-100k,11,11,37,2095432.442327039
+active_crawl,entrant,subscribers,1,10k-100k,11,11,4,948224.861125716
+active_crawl,entrant,subscribers,2,100k-1M,15,trending,27,68800836.24814643
+active_crawl,all,subscribers,2,100k-1M,9,9,27,26739475.825514264
+active_crawl,incumbent,subscribers,2,100k-1M,9,9,22,24133344.490817305
+active_crawl,incumbent,subscribers,1,10k-100k,11,11,33,1147207.581201323
+active_crawl,entrant,subscribers,3,1M-10M,5,5,6,747412832.1511211
+active_crawl,incumbent,subscribers,3,1M-10M,6,6,13,97259965.48928611
+active_crawl,all,subscribers,4,10M+,14,later_sources,1,99754680.49820189
+active_crawl,all,subscribers,3,1M-10M,6,6,14,97283230.79697703
+active_crawl,incumbent,subscribers,4,10M+,14,later_sources,1,99754680.49820189
+active_crawl,entrant,subscribers,3,1M-10M,1,1,4,33822299.46453744
+active_crawl,entrant,subscribers,3,1M-10M,4,4,6,44445523.39383378
+active_crawl,entrant,subscribers,2,100k-1M,9,9,5,2606131.334696962
+active_crawl,entrant,subscribers,1,10k-100k,12,12,4,4647892.94145616
+active_crawl,all,subscribers,4,10M+,1,1,5,360252969.7451913
+active_crawl,incumbent,subscribers,4,10M+,1,1,5,360252969.7451913
+active_crawl,all,subscribers,2,100k-1M,10,10,2,1480102.678541951
+active_crawl,incumbent,subscribers,2,100k-1M,10,10,2,1480102.678541951
+all,incumbent,weekly_views,2,25-50%,0,0,46480,63320798.55079639
+all,all,weekly_views,3,50-75%,4,4,235965,3292428626.7287517
+all,all,weekly_views,3,50-75%,0,0,62579,940764230.169281
+all,incumbent,weekly_views,1,Bottom 25%,7,7,7254,185403.185202123
+all,incumbent,weekly_views,5,Top 1%,3,3,8576,137901241818.63547
+all,incumbent,weekly_views,2,25-50%,15,trending,2773,3341438.451813801
+all,incumbent,weekly_views,1,Bottom 25%,2,2,286,5980.674243847
+all,all,weekly_views,1,Bottom 25%,0,0,37086,731929.94770608
+all,incumbent,weekly_views,5,Top 1%,15,trending,4476,72109579916.42633
+all,entrant,weekly_views,4,75-99%,1,1,9840,3404949494.1328254
+all,incumbent,weekly_views,3,50-75%,1,1,298555,4293814040.560327
+all,all,weekly_views,5,Top 1%,2,2,59,1323341263.5379956
+all,all,weekly_views,1,Bottom 25%,8,8,1651,42259.670105992
+all,incumbent,weekly_views,2,25-50%,2,2,280,367845.300754854
+all,incumbent,weekly_views,3,50-75%,7,7,3507,46331542.25872171
+all,all,weekly_views,5,Top 1%,6,6,403,5220962865.474845
+all,entrant,weekly_views,1,Bottom 25%,5,5,3677,105668.486199849
+all,entrant,weekly_views,5,Top 1%,1,1,168,2445467653.320919
+all,incumbent,weekly_views,3,50-75%,10,10,43,532977.899783257
+all,entrant,weekly_views,5,Top 1%,6,6,155,2027036681.6803849
+all,entrant,weekly_views,4,75-99%,15,trending,694,443598633.0679128
+all,incumbent,weekly_views,5,Top 1%,1,1,10277,173304579374.31046
+all,entrant,weekly_views,2,25-50%,3,3,9126,14659141.554562047
+all,all,weekly_views,1,Bottom 25%,6,6,32814,843558.684865032
+all,all,weekly_views,4,75-99%,15,trending,19050,27424825054.18912
+all,entrant,weekly_views,2,25-50%,14,later_sources,22092,29217892.419824928
+all,entrant,weekly_views,3,50-75%,7,7,684,10575195.994845048
+all,incumbent,weekly_views,3,50-75%,14,later_sources,101368,1382957364.079235
+all,entrant,weekly_views,3,50-75%,1,1,10944,169868635.2809254
+all,all,weekly_views,2,25-50%,6,6,22670,26449031.388026077
+all,entrant,weekly_views,1,Bottom 25%,7,7,360,11530.299112423
+all,all,weekly_views,4,75-99%,7,7,3626,1782161900.151882
+all,entrant,weekly_views,1,Bottom 25%,8,8,84,2431.34630006
+all,all,weekly_views,2,25-50%,5,5,92241,109546860.28288206
+all,incumbent,weekly_views,2,25-50%,8,8,1021,1209720.239444831
+all,incumbent,weekly_views,2,25-50%,9,9,236,269973.160746883
+all,entrant,weekly_views,4,75-99%,3,3,27461,11446010451.504349
+all,all,weekly_views,5,Top 1%,1,1,10445,175750047027.63138
+all,all,weekly_views,5,Top 1%,15,trending,4498,72383215817.51277
+all,incumbent,weekly_views,5,Top 1%,2,2,55,1263624362.8465664
+all,incumbent,weekly_views,4,75-99%,7,7,2461,1133576473.824172
+all,all,weekly_views,2,25-50%,7,7,5102,5903239.075160972
+all,all,weekly_views,1,Bottom 25%,15,trending,3038,71906.892738017
+all,entrant,weekly_views,4,75-99%,5,5,15737,8911366021.333847
+all,incumbent,weekly_views,1,Bottom 25%,9,9,380,9182.143611603
+all,entrant,weekly_views,4,75-99%,2,2,178,81303655.72275199
+all,entrant,weekly_views,5,Top 1%,5,5,461,6566731464.684036
+all,incumbent,weekly_views,1,Bottom 25%,6,6,31445,806711.499459935
+all,all,weekly_views,5,Top 1%,0,0,11937,340918520524.7597
+all,incumbent,weekly_views,1,Bottom 25%,3,3,334450,9079084.805585476
+all,entrant,weekly_views,3,50-75%,5,5,10455,165008994.146426
+all,all,weekly_views,2,25-50%,15,trending,2810,3393933.75494631
+all,entrant,weekly_views,3,50-75%,6,6,3130,48651882.208167925
+all,entrant,weekly_views,1,Bottom 25%,6,6,1369,36847.185405097
+all,all,weekly_views,3,50-75%,14,later_sources,135211,1912610889.608004
+all,entrant,weekly_views,3,50-75%,14,later_sources,33843,529653525.52876914
+all,entrant,weekly_views,5,Top 1%,7,7,45,608143266.0755118
+all,all,weekly_views,3,50-75%,7,7,4191,56906738.25356676
+all,incumbent,weekly_views,4,75-99%,3,3,297750,130055538062.64996
+all,all,weekly_views,4,75-99%,5,5,63154,30074003900.298298
+all,entrant,weekly_views,1,Bottom 25%,4,4,5770,157516.127709865
+all,all,weekly_views,4,75-99%,0,0,96522,69104703621.07303
+all,entrant,weekly_views,5,Top 1%,3,3,502,6443240719.68124
+all,incumbent,weekly_views,2,25-50%,3,3,378256,477211051.78242713
+all,incumbent,weekly_views,3,50-75%,6,6,16644,223774318.62965944
+all,all,weekly_views,3,50-75%,8,8,898,12234843.162700512
+all,entrant,weekly_views,5,Top 1%,14,later_sources,2911,37902792312.84674
+all,all,weekly_views,1,Bottom 25%,5,5,119800,3104820.357444295
+all,entrant,weekly_views,1,Bottom 25%,1,1,1201,22898.821549957
+all,incumbent,weekly_views,2,25-50%,7,7,4691,5353321.515490358
+all,entrant,weekly_views,5,Top 1%,4,4,758,8965334296.13363
+all,incumbent,weekly_views,1,Bottom 25%,12,12,4,110.000771348
+all,incumbent,weekly_views,3,50-75%,3,3,369769,5183780229.164345
+all,entrant,weekly_views,3,50-75%,4,4,21904,343360875.62362367
+all,all,weekly_views,4,75-99%,10,10,38,18904519.302466728
+all,all,weekly_views,4,75-99%,14,later_sources,163081,101637005810.96951
+all,entrant,weekly_views,3,50-75%,8,8,161,2567692.71191876
+all,all,weekly_views,2,25-50%,4,4,257117,312623522.6229223
+all,entrant,weekly_views,3,50-75%,9,9,41,711379.267152545
+all,all,weekly_views,5,Top 1%,7,7,117,1598651251.246467
+all,entrant,weekly_views,2,25-50%,7,7,411,549917.559670614
+all,entrant,weekly_views,4,75-99%,9,9,61,24378086.86566587
+all,all,weekly_views,1,Bottom 25%,1,1,201399,5346727.466780121
+all,all,weekly_views,2,25-50%,8,8,1127,1365856.293285777
+all,incumbent,weekly_views,1,Bottom 25%,10,10,70,1314.151255435
+all,all,weekly_views,4,75-99%,1,1,325683,158027557167.31253
+all,entrant,weekly_views,1,Bottom 25%,14,later_sources,19474,578170.199835149
+all,incumbent,weekly_views,1,Bottom 25%,4,4,279922,7454890.037096358
+all,incumbent,weekly_views,3,50-75%,0,0,62579,940764230.169281
+all,all,weekly_views,3,50-75%,15,trending,2908,43851368.59621988
+all,incumbent,weekly_views,5,Top 1%,7,7,72,990507985.1709554
+all,incumbent,weekly_views,1,Bottom 25%,5,5,116123,2999151.871244446
+all,entrant,weekly_views,3,50-75%,3,3,24512,389416207.1002156
+all,all,weekly_views,1,Bottom 25%,10,10,72,1381.151671956
+all,incumbent,weekly_views,3,50-75%,4,4,214061,2949067751.105128
+all,incumbent,weekly_views,1,Bottom 25%,15,trending,2968,71590.862700242
+all,all,weekly_views,4,75-99%,6,6,15787,7797311666.176878
+all,all,weekly_views,5,Top 1%,3,3,9078,144344482538.3167
+all,incumbent,weekly_views,2,25-50%,6,6,21038,24171526.448844194
+all,incumbent,weekly_views,2,25-50%,5,5,87173,102321674.51161768
+all,incumbent,weekly_views,5,Top 1%,0,0,11937,340918520524.7597
+all,entrant,weekly_views,4,75-99%,7,7,1165,648585426.3277098
+all,incumbent,weekly_views,5,Top 1%,6,6,248,3193926183.79446
+all,incumbent,weekly_views,4,75-99%,6,6,11063,5069353745.148791
+all,entrant,weekly_views,2,25-50%,9,9,18,17871.392714167
+all,all,weekly_views,1,Bottom 25%,3,3,338391,9180166.79116704
+all,incumbent,weekly_views,2,25-50%,4,4,247489,298061219.3738134
+all,entrant,weekly_views,3,50-75%,2,2,92,1602990.706474133
+all,all,weekly_views,2,25-50%,2,2,349,463144.909818841
+all,incumbent,weekly_views,4,75-99%,2,2,776,571773682.0409932
+all,incumbent,weekly_views,3,50-75%,2,2,443,6884660.055459069
+all,entrant,weekly_views,2,25-50%,15,trending,37,52495.303132509
+all,all,weekly_views,5,Top 1%,14,later_sources,6958,99777393651.92867
+all,incumbent,weekly_views,4,75-99%,0,0,96522,69104703621.07303
+all,entrant,weekly_views,2,25-50%,8,8,106,156136.053840946
+all,incumbent,weekly_views,4,75-99%,15,trending,18356,26981226421.121204
+all,all,weekly_views,5,Top 1%,4,4,4715,66038957317.58217
+all,entrant,weekly_views,1,Bottom 25%,2,2,40,845.08823806
+all,incumbent,weekly_views,1,Bottom 25%,8,8,1567,39828.323805932
+all,entrant,weekly_views,4,75-99%,14,later_sources,68144,45175121403.230606
+all,all,weekly_views,3,50-75%,9,9,211,3254909.685462718
+all,all,weekly_views,2,25-50%,10,10,59,62096.556844215
+all,incumbent,weekly_views,4,75-99%,14,later_sources,94937,56461884407.73893
+all,incumbent,weekly_views,2,25-50%,14,later_sources,133263,151524329.97502196
+all,all,weekly_views,3,50-75%,6,6,19774,272426200.8378274
+all,all,weekly_views,1,Bottom 25%,2,2,326,6825.762481907
+all,all,weekly_views,2,25-50%,3,3,387382,491870193.3369891
+all,incumbent,weekly_views,1,Bottom 25%,14,later_sources,199249,5159575.220992192
+all,entrant,weekly_views,1,Bottom 25%,15,trending,70,316.030037775
+all,all,weekly_views,4,75-99%,9,9,212,89993936.13979545
+all,all,weekly_views,1,Bottom 25%,9,9,401,10042.256668532
+all,all,weekly_views,2,25-50%,14,later_sources,155355,180742222.3948469
+all,all,weekly_views,4,75-99%,3,3,325211,141501548514.15433
+all,incumbent,weekly_views,4,75-99%,1,1,315843,154622607673.17972
+all,entrant,weekly_views,4,75-99%,4,4,30098,14880966692.382072
+all,entrant,weekly_views,4,75-99%,6,6,4724,2727957921.028088
+all,incumbent,weekly_views,2,25-50%,10,10,55,57167.684983791
+all,entrant,weekly_views,2,25-50%,2,2,69,95299.609063987
+all,all,weekly_views,4,75-99%,2,2,954,653077337.7637452
+all,incumbent,weekly_views,5,Top 1%,14,later_sources,4047,61874601339.081924
+all,all,weekly_views,1,Bottom 25%,14,later_sources,218723,5737745.420827341
+all,all,weekly_views,3,50-75%,10,10,47,614528.77389322
+all,all,weekly_views,3,50-75%,5,5,80921,1125155773.6909134
+all,incumbent,weekly_views,3,50-75%,15,trending,2811,42231083.709227934
+all,entrant,weekly_views,1,Bottom 25%,3,3,3941,101081.985581565
+all,all,weekly_views,1,Bottom 25%,7,7,7614,196933.484314546
+all,incumbent,weekly_views,4,75-99%,9,9,151,65615849.27412959
+all,incumbent,weekly_views,3,50-75%,5,5,70466,960146779.5444874
+all,entrant,weekly_views,4,75-99%,8,8,252,147491287.55880812
+all,all,weekly_views,5,Top 1%,5,5,1646,22640966060.42104
+all,incumbent,weekly_views,4,75-99%,5,5,47417,21162637878.964447
+all,all,weekly_views,3,50-75%,2,2,535,8487650.761933202
+all,all,weekly_views,1,Bottom 25%,4,4,285692,7612406.164806223
+all,entrant,weekly_views,2,25-50%,5,5,5068,7225185.771264387
+all,incumbent,weekly_views,3,50-75%,8,8,737,9667150.450781751
+all,incumbent,weekly_views,3,50-75%,9,9,170,2543530.418310173
+all,all,weekly_views,2,25-50%,9,9,254,287844.55346105
+all,entrant,weekly_views,2,25-50%,1,1,3858,6630599.943034572
+all,all,weekly_views,3,50-75%,1,1,309499,4463682675.841252
+all,all,weekly_views,1,Bottom 25%,12,12,4,110.000771348
+all,incumbent,weekly_views,1,Bottom 25%,0,0,37086,731929.94770608
+all,incumbent,weekly_views,2,25-50%,1,1,272215,355993732.59563696
+all,all,weekly_views,4,75-99%,4,4,183033,82127007739.89252
+all,incumbent,weekly_views,1,Bottom 25%,1,1,200198,5323828.645230164
+all,incumbent,weekly_views,4,75-99%,8,8,537,226607580.97638664
+all,incumbent,weekly_views,4,75-99%,4,4,152935,67246041047.510445
+all,incumbent,weekly_views,5,Top 1%,4,4,3957,57073623021.44855
+all,entrant,weekly_views,5,Top 1%,2,2,4,59716900.69142932
+all,entrant,weekly_views,2,25-50%,6,6,1632,2277504.93918188
+all,incumbent,weekly_views,5,Top 1%,5,5,1185,16074234595.737
+all,all,weekly_views,3,50-75%,3,3,394281,5573196436.264561
+all,entrant,weekly_views,2,25-50%,4,4,9628,14562303.249108857
+all,all,weekly_views,2,25-50%,0,0,46480,63320798.55079639
+all,all,weekly_views,2,25-50%,1,1,276073,362624332.5386716
+all,all,weekly_views,4,75-99%,8,8,789,374098868.5351947
+all,entrant,weekly_views,4,75-99%,10,10,12,4902258.012224705
+all,entrant,weekly_views,1,Bottom 25%,9,9,21,860.113056929
+all,entrant,weekly_views,4,75-99%,11,11,2,913499.648607886
+all,entrant,weekly_views,3,50-75%,15,trending,97,1620284.886991934
+all,all,weekly_views,4,75-99%,11,11,5,1899903.342427159
+all,entrant,weekly_views,2,25-50%,10,10,4,4928.871860424
+all,incumbent,weekly_views,2,25-50%,11,11,10,7928.549421493
+all,all,weekly_views,1,Bottom 25%,11,11,21,868.093040984
+all,all,weekly_views,3,50-75%,11,11,11,197115.76890912
+all,entrant,weekly_views,5,Top 1%,15,trending,22,273635901.0864246
+all,incumbent,weekly_views,4,75-99%,11,11,3,986403.693819273
+all,all,weekly_views,2,25-50%,11,11,10,7928.549421493
+all,incumbent,weekly_views,1,Bottom 25%,11,11,21,868.093040984
+all,incumbent,weekly_views,3,50-75%,11,11,9,162390.55639129
+all,incumbent,weekly_views,5,Top 1%,8,8,14,236154212.91493928
+all,entrant,weekly_views,5,Top 1%,9,9,4,36495652.17142594
+all,all,weekly_views,5,Top 1%,9,9,6,53981159.482008874
+all,entrant,weekly_views,5,Top 1%,8,8,6,45452571.885980375
+all,all,weekly_views,5,Top 1%,8,8,20,281606784.80091965
+all,entrant,weekly_views,3,50-75%,11,11,2,34725.21251783
+all,incumbent,weekly_views,4,75-99%,10,10,26,14002261.29024202
+all,all,weekly_views,4,75-99%,12,12,4,4647892.94145616
+all,entrant,weekly_views,4,75-99%,12,12,4,4647892.94145616
+all,entrant,weekly_views,1,Bottom 25%,10,10,2,67.000416521
+active_panel,all,weekly_views,5,Top 1%,0,0,11782,337609428539.3561
+active_panel,entrant,weekly_views,3,50-75%,14,later_sources,31590,494122284.4205184
+active_panel,incumbent,weekly_views,3,50-75%,2,2,387,6105830.149953956
+active_panel,entrant,weekly_views,2,25-50%,9,9,18,17871.392714167
+active_panel,incumbent,weekly_views,3,50-75%,0,0,39360,626247835.36013
+active_panel,all,weekly_views,1,Bottom 25%,14,later_sources,129907,3906028.546924822
+active_panel,entrant,weekly_views,4,75-99%,10,10,12,4902258.012224705
+active_panel,entrant,weekly_views,1,Bottom 25%,15,trending,60,316.030037775
+active_panel,all,weekly_views,2,25-50%,15,trending,2786,3370025.341847972
+active_panel,incumbent,weekly_views,1,Bottom 25%,10,10,42,921.123248416
+active_panel,entrant,weekly_views,3,50-75%,5,5,9518,150555760.6703274
+active_panel,all,weekly_views,4,75-99%,4,4,168387,79644869188.12827
+active_panel,entrant,weekly_views,4,75-99%,7,7,1126,642696717.9659967
+active_panel,entrant,weekly_views,3,50-75%,4,4,19949,313889560.00613767
+active_panel,all,weekly_views,1,Bottom 25%,9,9,250,8086.025234426
+active_panel,entrant,weekly_views,4,75-99%,14,later_sources,66470,44709059123.997856
+active_panel,entrant,weekly_views,3,50-75%,3,3,22351,357620736.220344
+active_panel,entrant,weekly_views,1,Bottom 25%,1,1,1013,20445.443354203
+active_panel,incumbent,weekly_views,3,50-75%,3,3,284856,4124865740.4233313
+active_panel,entrant,weekly_views,5,Top 1%,3,3,499,6408127352.912162
+active_panel,all,weekly_views,2,25-50%,0,0,17531,27184913.53862677
+active_panel,all,weekly_views,3,50-75%,15,trending,2874,43347346.770192266
+active_panel,all,weekly_views,4,75-99%,9,9,199,88696164.69425966
+active_panel,entrant,weekly_views,2,25-50%,1,1,3374,5803773.935992421
+active_panel,all,weekly_views,3,50-75%,7,7,3425,47184554.084892735
+active_panel,incumbent,weekly_views,1,Bottom 25%,9,9,229,7225.912177497
+active_panel,entrant,weekly_views,4,75-99%,15,trending,605,398351110.8516115
+active_panel,all,weekly_views,4,75-99%,7,7,3368,1752360556.885806
+active_panel,entrant,weekly_views,1,Bottom 25%,5,5,3483,104741.344573328
+active_panel,incumbent,weekly_views,2,25-50%,0,0,17531,27184913.53862677
+active_panel,incumbent,weekly_views,4,75-99%,6,6,10041,4911379332.098243
+active_panel,all,weekly_views,3,50-75%,9,9,170,2601136.985075308
+active_panel,incumbent,weekly_views,2,25-50%,7,7,3313,3928573.995051595
+active_panel,entrant,weekly_views,3,50-75%,7,7,643,9943766.724171016
+active_panel,incumbent,weekly_views,1,Bottom 25%,7,7,4359,124231.010097518
+active_panel,all,weekly_views,5,Top 1%,1,1,10058,171113473199.70343
+active_panel,entrant,weekly_views,3,50-75%,6,6,2850,44091598.34399577
+active_panel,all,weekly_views,4,75-99%,3,3,297181,135937115915.4266
+active_panel,entrant,weekly_views,5,Top 1%,7,7,45,608143266.0755118
+active_panel,all,weekly_views,3,50-75%,10,10,37,446245.489602032
+active_panel,all,weekly_views,1,Bottom 25%,7,7,4703,135618.286769222
+active_panel,entrant,weekly_views,1,Bottom 25%,7,7,344,11387.276671704
+active_panel,incumbent,weekly_views,1,Bottom 25%,0,0,14906,189623.939161375
+active_panel,incumbent,weekly_views,5,Top 1%,6,6,244,3158226051.6864386
+active_panel,entrant,weekly_views,5,Top 1%,14,later_sources,2888,37531061868.420074
+active_panel,entrant,weekly_views,2,25-50%,7,7,398,526542.216775731
+active_panel,entrant,weekly_views,4,75-99%,5,5,15233,8810525381.09172
+active_panel,entrant,weekly_views,1,Bottom 25%,2,2,35,845.08823806
+active_panel,all,weekly_views,4,75-99%,10,10,36,18809771.14070815
+active_panel,all,weekly_views,3,50-75%,5,5,65089,922779109.2034785
+active_panel,incumbent,weekly_views,4,75-99%,1,1,289497,146720002953.38
+active_panel,all,weekly_views,4,75-99%,8,8,732,365479383.8740672
+active_panel,entrant,weekly_views,4,75-99%,2,2,177,81236612.53152525
+active_panel,incumbent,weekly_views,2,25-50%,1,1,138555,203033897.35451096
+active_panel,all,weekly_views,1,Bottom 25%,10,10,44,988.123664937
+active_panel,all,weekly_views,5,Top 1%,14,later_sources,6899,98911109562.35274
+active_panel,entrant,weekly_views,1,Bottom 25%,8,8,82,2406.342785995
+active_panel,incumbent,weekly_views,3,50-75%,15,trending,2785,41873964.29848804
+active_panel,all,weekly_views,3,50-75%,0,0,39360,626247835.36013
+active_panel,entrant,weekly_views,3,50-75%,1,1,9972,156404922.81097755
+active_panel,entrant,weekly_views,1,Bottom 25%,6,6,1303,36546.159218496
+active_panel,incumbent,weekly_views,2,25-50%,3,3,220352,299920418.37223226
+active_panel,incumbent,weekly_views,3,50-75%,14,later_sources,77293,1080576417.8816807
+active_panel,entrant,weekly_views,4,75-99%,9,9,61,24378086.86566587
+active_panel,incumbent,weekly_views,4,75-99%,8,8,489,219993416.709194
+active_panel,entrant,weekly_views,2,25-50%,6,6,1569,2156018.251842752
+active_panel,entrant,weekly_views,3,50-75%,8,8,152,2407563.865123137
+active_panel,incumbent,weekly_views,5,Top 1%,2,2,55,1263624362.8465664
+active_panel,incumbent,weekly_views,3,50-75%,6,6,13269,180660147.9986324
+active_panel,incumbent,weekly_views,2,25-50%,9,9,168,198702.892746306
+active_panel,entrant,weekly_views,3,50-75%,2,2,92,1602990.706474133
+active_panel,all,weekly_views,2,25-50%,9,9,186,216574.285460473
+active_panel,all,weekly_views,1,Bottom 25%,1,1,74158,1862117.810964386
+active_panel,all,weekly_views,4,75-99%,6,6,14616,7606900063.401569
+active_panel,incumbent,weekly_views,4,75-99%,4,4,139377,64972762178.71972
+active_panel,all,weekly_views,5,Top 1%,2,2,59,1323341263.5379956
+active_panel,entrant,weekly_views,4,75-99%,3,3,26416,11263646938.242376
+active_panel,entrant,weekly_views,2,25-50%,15,trending,37,52495.303132509
+active_panel,entrant,weekly_views,4,75-99%,1,1,9462,3350750251.163253
+active_panel,incumbent,weekly_views,5,Top 1%,15,trending,4432,71509670519.71202
+active_panel,all,weekly_views,5,Top 1%,5,5,1636,22359528966.865112
+active_panel,all,weekly_views,3,50-75%,3,3,307207,4482486476.643675
+active_panel,incumbent,weekly_views,4,75-99%,5,5,43312,20523477415.364357
+active_panel,all,weekly_views,2,25-50%,14,later_sources,110825,132611146.90804803
+active_panel,incumbent,weekly_views,4,75-99%,15,trending,18198,26780952812.127686
+active_panel,entrant,weekly_views,4,75-99%,6,6,4575,2695520731.303325
+active_panel,incumbent,weekly_views,2,25-50%,15,trending,2749,3317530.038715463
+active_panel,all,weekly_views,1,Bottom 25%,12,12,3,64.000086595
+active_panel,incumbent,weekly_views,4,75-99%,14,later_sources,88273,55181859599.81328
+active_panel,all,weekly_views,1,Bottom 25%,6,6,19641,569914.684283228
+active_panel,incumbent,weekly_views,4,75-99%,0,0,84545,65972656437.64138
+active_panel,entrant,weekly_views,5,Top 1%,5,5,459,6539208774.564914
+active_panel,all,weekly_views,4,75-99%,5,5,58545,29334002796.456078
+active_panel,entrant,weekly_views,5,Top 1%,1,1,166,2430647054.697474
+active_panel,all,weekly_views,1,Bottom 25%,2,2,228,5390.591679978
+active_panel,incumbent,weekly_views,2,25-50%,4,4,155360,197994954.68672785
+active_panel,incumbent,weekly_views,1,Bottom 25%,1,1,73145,1841672.367610183
+active_panel,all,weekly_views,3,50-75%,1,1,236737,3563578381.555224
+active_panel,entrant,weekly_views,5,Top 1%,2,2,4,59716900.69142932
+active_panel,incumbent,weekly_views,5,Top 1%,14,later_sources,4011,61380047693.93267
+active_panel,incumbent,weekly_views,3,50-75%,8,8,594,7932146.148952423
+active_panel,all,weekly_views,3,50-75%,8,8,746,10339710.01407556
+active_panel,incumbent,weekly_views,4,75-99%,7,7,2242,1109663838.9198096
+active_panel,all,weekly_views,1,Bottom 25%,5,5,66374,1947461.450554039
+active_panel,all,weekly_views,4,75-99%,0,0,84545,65972656437.64138
+active_panel,all,weekly_views,3,50-75%,4,4,186151,2667206237.2899766
+active_panel,all,weekly_views,2,25-50%,1,1,141929,208837671.29050335
+active_panel,incumbent,weekly_views,3,50-75%,5,5,55571,772223348.533151
+active_panel,entrant,weekly_views,1,Bottom 25%,4,4,5305,153849.71260301
+active_panel,incumbent,weekly_views,2,25-50%,2,2,221,295097.423846959
+active_panel,entrant,weekly_views,2,25-50%,3,3,8255,13122407.98936185
+active_panel,incumbent,weekly_views,5,Top 1%,3,3,8471,136131699287.2716
+active_panel,incumbent,weekly_views,4,75-99%,9,9,138,64318077.82859379
+active_panel,incumbent,weekly_views,2,25-50%,8,8,710,858960.841781423
+active_panel,all,weekly_views,3,50-75%,2,2,479,7708820.856428089
+active_panel,entrant,weekly_views,2,25-50%,14,later_sources,21440,28045346.398447983
+active_panel,incumbent,weekly_views,5,Top 1%,7,7,72,990507985.1709554
+active_panel,all,weekly_views,2,25-50%,6,6,16227,19652126.06938417
+active_panel,all,weekly_views,5,Top 1%,15,trending,4451,71759694254.7992
+active_panel,all,weekly_views,1,Bottom 25%,15,trending,2738,71277.843161416
+active_panel,entrant,weekly_views,4,75-99%,4,4,29010,14672107009.408548
+active_panel,all,weekly_views,2,25-50%,4,4,164321,211398364.128445
+active_panel,incumbent,weekly_views,1,Bottom 25%,5,5,62891,1842720.105980711
+active_panel,incumbent,weekly_views,1,Bottom 25%,15,trending,2678,70961.813123641
+active_panel,incumbent,weekly_views,3,50-75%,1,1,226765,3407173458.7442465
+active_panel,all,weekly_views,4,75-99%,14,later_sources,154743,99890918723.81113
+active_panel,all,weekly_views,4,75-99%,15,trending,18803,27179303922.979294
+active_panel,incumbent,weekly_views,3,50-75%,7,7,2782,37240787.36072173
+active_panel,entrant,weekly_views,2,25-50%,2,2,68,92627.034613199
+active_panel,all,weekly_views,2,25-50%,5,5,63357,78283138.61067562
+active_panel,incumbent,weekly_views,4,75-99%,3,3,270765,124673468977.1842
+active_panel,entrant,weekly_views,3,50-75%,9,9,36,645732.352258665
+active_panel,incumbent,weekly_views,1,Bottom 25%,6,6,18338,533368.525064732
+active_panel,incumbent,weekly_views,5,Top 1%,5,5,1177,15820320192.300196
+active_panel,incumbent,weekly_views,4,75-99%,2,2,754,563106313.653436
+active_panel,all,weekly_views,5,Top 1%,3,3,8970,142539826640.18375
+active_panel,entrant,weekly_views,4,75-99%,8,8,243,145485967.16487318
+active_panel,all,weekly_views,5,Top 1%,7,7,117,1598651251.246467
+active_panel,entrant,weekly_views,5,Top 1%,6,6,155,2027036681.6803849
+active_panel,all,weekly_views,1,Bottom 25%,3,3,146507,4441255.113505411
+active_panel,incumbent,weekly_views,1,Bottom 25%,12,12,3,64.000086595
+active_panel,incumbent,weekly_views,2,25-50%,6,6,14658,17496107.817541413
+active_panel,incumbent,weekly_views,5,Top 1%,1,1,9892,168682826145.00595
+active_panel,entrant,weekly_views,1,Bottom 25%,3,3,3503,97062.531166173
+active_panel,incumbent,weekly_views,2,25-50%,5,5,58545,71530649.42526737
+active_panel,incumbent,weekly_views,1,Bottom 25%,2,2,193,4545.503441918
+active_panel,all,weekly_views,1,Bottom 25%,0,0,14906,189623.939161375
+active_panel,incumbent,weekly_views,1,Bottom 25%,8,8,931,25708.678309611
+active_panel,incumbent,weekly_views,5,Top 1%,4,4,3924,56436872395.55018
+active_panel,incumbent,weekly_views,1,Bottom 25%,3,3,143004,4344192.582339238
+active_panel,all,weekly_views,2,25-50%,3,3,228607,313042826.36159414
+active_panel,incumbent,weekly_views,3,50-75%,10,10,33,364694.615492069
+active_panel,entrant,weekly_views,2,25-50%,4,4,8961,13403409.441717144
+active_panel,all,weekly_views,5,Top 1%,4,4,4682,65402206691.68381
+active_panel,all,weekly_views,1,Bottom 25%,8,8,1013,28115.021095606
+active_panel,incumbent,weekly_views,3,50-75%,9,9,134,1955404.632816643
+active_panel,incumbent,weekly_views,3,50-75%,4,4,166202,2353316677.2838383
+active_panel,all,weekly_views,4,75-99%,1,1,298959,150070753204.54327
+active_panel,all,weekly_views,2,25-50%,2,2,289,387724.458460158
+active_panel,all,weekly_views,4,75-99%,2,2,931,644342926.1849612
+active_panel,entrant,weekly_views,2,25-50%,5,5,4812,6752489.185408245
+active_panel,all,weekly_views,2,25-50%,10,10,42,44886.975353904
+active_panel,all,weekly_views,2,25-50%,8,8,811,1004200.926155349
+active_panel,entrant,weekly_views,5,Top 1%,4,4,758,8965334296.13363
+active_panel,all,weekly_views,2,25-50%,7,7,3711,4455116.211827326
+active_panel,all,weekly_views,3,50-75%,14,later_sources,108883,1574698702.3021991
+active_panel,incumbent,weekly_views,5,Top 1%,0,0,11782,337609428539.3561
+active_panel,incumbent,weekly_views,2,25-50%,14,later_sources,89385,104565800.50960007
+active_panel,entrant,weekly_views,1,Bottom 25%,14,later_sources,18247,572016.530499614
+active_panel,all,weekly_views,3,50-75%,6,6,16119,224751746.34262815
+active_panel,incumbent,weekly_views,2,25-50%,10,10,38,39958.10349348
+active_panel,all,weekly_views,5,Top 1%,6,6,399,5185262733.366823
+active_panel,incumbent,weekly_views,1,Bottom 25%,14,later_sources,111660,3334012.016425208
+active_panel,all,weekly_views,1,Bottom 25%,4,4,139370,4275774.465927619
+active_panel,incumbent,weekly_views,1,Bottom 25%,4,4,134065,4121924.753324609
+active_panel,entrant,weekly_views,2,25-50%,8,8,101,145240.084373926
+active_panel,entrant,weekly_views,5,Top 1%,15,trending,19,250023735.08718303
+active_panel,entrant,weekly_views,1,Bottom 25%,9,9,21,860.113056929
+active_panel,all,weekly_views,3,50-75%,11,11,10,187583.50806336
+active_panel,all,weekly_views,2,25-50%,11,11,7,6954.453437656
+active_panel,incumbent,weekly_views,4,75-99%,11,11,2,907337.699148476
+active_panel,entrant,weekly_views,3,50-75%,15,trending,89,1473382.471704232
+active_panel,entrant,weekly_views,4,75-99%,11,11,2,913499.648607886
+active_panel,entrant,weekly_views,2,25-50%,10,10,4,4928.871860424
+active_panel,incumbent,weekly_views,2,25-50%,11,11,7,6954.453437656
+active_panel,incumbent,weekly_views,3,50-75%,11,11,8,152858.29554553
+active_panel,all,weekly_views,4,75-99%,11,11,4,1820837.347756362
+active_panel,all,weekly_views,5,Top 1%,9,9,6,53981159.482008874
+active_panel,entrant,weekly_views,5,Top 1%,8,8,6,45452571.885980375
+active_panel,entrant,weekly_views,3,50-75%,11,11,2,34725.21251783
+active_panel,all,weekly_views,5,Top 1%,8,8,20,281606784.80091965
+active_panel,entrant,weekly_views,5,Top 1%,9,9,4,36495652.17142594
+active_panel,incumbent,weekly_views,4,75-99%,10,10,24,13907513.128483444
+active_panel,incumbent,weekly_views,5,Top 1%,8,8,14,236154212.91493928
+active_panel,incumbent,weekly_views,1,Bottom 25%,11,11,13,588.078277235
+active_panel,all,weekly_views,1,Bottom 25%,11,11,13,588.078277235
+active_panel,entrant,weekly_views,4,75-99%,12,12,4,4647892.94145616
+active_panel,all,weekly_views,4,75-99%,12,12,4,4647892.94145616
+active_panel,entrant,weekly_views,1,Bottom 25%,10,10,2,67.000416521
+active_crawl,entrant,weekly_views,2,25-50%,4,4,8914,13396473.401281135
+active_crawl,entrant,weekly_views,2,25-50%,9,9,18,17871.392714167
+active_crawl,incumbent,weekly_views,2,25-50%,7,7,3504,4115772.055015949
+active_crawl,incumbent,weekly_views,4,75-99%,4,4,140958,64985019387.81051
+active_crawl,entrant,weekly_views,4,75-99%,9,9,60,24293803.9548149
+active_crawl,all,weekly_views,1,Bottom 25%,7,7,4939,145341.478051892
+active_crawl,entrant,weekly_views,4,75-99%,8,8,242,145435558.08949092
+active_crawl,all,weekly_views,5,Top 1%,6,6,397,5165538666.719405
+active_crawl,entrant,weekly_views,1,Bottom 25%,5,5,3314,102686.162847246
+active_crawl,entrant,weekly_views,4,75-99%,5,5,15283,8790967864.030163
+active_crawl,all,weekly_views,5,Top 1%,1,1,10045,170815099273.13376
+active_crawl,all,weekly_views,2,25-50%,9,9,192,223231.147014814
+active_crawl,all,weekly_views,1,Bottom 25%,5,5,70394,2127954.480343548
+active_crawl,all,weekly_views,5,Top 1%,7,7,117,1598651251.246467
+active_crawl,incumbent,weekly_views,1,Bottom 25%,9,9,232,7185.897068068
+active_crawl,all,weekly_views,2,25-50%,3,3,246599,334275155.363
+active_crawl,incumbent,weekly_views,1,Bottom 25%,5,5,67080,2025268.317496302
+active_crawl,incumbent,weekly_views,3,50-75%,8,8,610,8197260.489965674
+active_crawl,incumbent,weekly_views,2,25-50%,0,0,18773,28873572.18106592
+active_crawl,incumbent,weekly_views,4,75-99%,0,0,85253,66099623501.88627
+active_crawl,entrant,weekly_views,1,Bottom 25%,4,4,4985,147958.016088421
+active_crawl,all,weekly_views,4,75-99%,8,8,734,366246115.0672561
+active_crawl,all,weekly_views,4,75-99%,5,5,59010,29291616208.409824
+active_crawl,entrant,weekly_views,3,50-75%,7,7,649,10026761.37597036
+active_crawl,all,weekly_views,2,25-50%,6,6,17182,20603950.61783565
+active_crawl,all,weekly_views,1,Bottom 25%,14,later_sources,135245,4155903.537197243
+active_crawl,incumbent,weekly_views,3,50-75%,4,4,172472,2431090829.2614045
+active_crawl,entrant,weekly_views,5,Top 1%,6,6,155,2027036681.6803849
+active_crawl,all,weekly_views,1,Bottom 25%,15,trending,2295,62649.819643614
+active_crawl,all,weekly_views,3,50-75%,7,7,3525,48661500.38397217
+active_crawl,all,weekly_views,4,75-99%,2,2,926,637650531.1422374
+active_crawl,entrant,weekly_views,3,50-75%,6,6,2890,44837802.54392274
+active_crawl,incumbent,weekly_views,4,75-99%,9,9,136,63729224.924010314
+active_crawl,incumbent,weekly_views,1,Bottom 25%,14,later_sources,118416,3608836.883346902
+active_crawl,entrant,weekly_views,5,Top 1%,3,3,497,6361683631.404448
+active_crawl,entrant,weekly_views,3,50-75%,4,4,20168,317242156.5835772
+active_crawl,incumbent,weekly_views,2,25-50%,4,4,167899,211390291.8886495
+active_crawl,incumbent,weekly_views,4,75-99%,5,5,43727,20500648344.379665
+active_crawl,all,weekly_views,5,Top 1%,15,trending,4395,70841616502.3184
+active_crawl,incumbent,weekly_views,5,Top 1%,5,5,1167,15649882639.589712
+active_crawl,all,weekly_views,1,Bottom 25%,2,2,209,5374.600300976
+active_crawl,entrant,weekly_views,2,25-50%,2,2,65,88712.611407429
+active_crawl,entrant,weekly_views,3,50-75%,9,9,37,656372.604191985
+active_crawl,entrant,weekly_views,4,75-99%,7,7,1126,639279505.8020372
+active_crawl,incumbent,weekly_views,3,50-75%,3,3,295133,4255474819.2391686
+active_crawl,entrant,weekly_views,2,25-50%,3,3,8262,13221734.700217431
+active_crawl,entrant,weekly_views,4,75-99%,10,10,12,4902258.012224705
+active_crawl,all,weekly_views,3,50-75%,2,2,482,7716175.765562703
+active_crawl,incumbent,weekly_views,5,Top 1%,3,3,8430,134301243578.93105
+active_crawl,entrant,weekly_views,5,Top 1%,5,5,458,6527037897.519796
+active_crawl,all,weekly_views,3,50-75%,5,5,67213,951029207.5535297
+active_crawl,incumbent,weekly_views,5,Top 1%,2,2,55,1263624362.8465664
+active_crawl,all,weekly_views,5,Top 1%,5,5,1625,22176920537.10951
+active_crawl,entrant,weekly_views,3,50-75%,8,8,155,2458115.371450206
+active_crawl,entrant,weekly_views,2,25-50%,15,trending,34,48880.750709357
+active_crawl,incumbent,weekly_views,2,25-50%,15,trending,2576,3135907.123208722
+active_crawl,incumbent,weekly_views,3,50-75%,2,2,390,6113185.05908857
+active_crawl,incumbent,weekly_views,1,Bottom 25%,3,3,150534,4778204.743318667
+active_crawl,all,weekly_views,1,Bottom 25%,6,6,20745,614111.944492962
+active_crawl,all,weekly_views,2,25-50%,10,10,44,50337.321023439
+active_crawl,incumbent,weekly_views,2,25-50%,3,3,238337,321053420.6627825
+active_crawl,incumbent,weekly_views,2,25-50%,2,2,225,299109.247764676
+active_crawl,entrant,weekly_views,4,75-99%,3,3,26470,11239246419.224089
+active_crawl,all,weekly_views,5,Top 1%,2,2,59,1323341263.5379956
+active_crawl,incumbent,weekly_views,2,25-50%,1,1,149250,216619318.42575395
+active_crawl,all,weekly_views,2,25-50%,7,7,3901,4644145.60952097
+active_crawl,incumbent,weekly_views,1,Bottom 25%,0,0,15421,201452.075045065
+active_crawl,all,weekly_views,3,50-75%,8,8,765,10655375.86141588
+active_crawl,entrant,weekly_views,5,Top 1%,7,7,45,608143266.0755118
+active_crawl,incumbent,weekly_views,4,75-99%,3,3,273381,124740621691.77354
+active_crawl,incumbent,weekly_views,5,Top 1%,0,0,11783,337196782985.4975
+active_crawl,incumbent,weekly_views,1,Bottom 25%,15,trending,2239,62340.790740323
+active_crawl,entrant,weekly_views,5,Top 1%,1,1,165,2423810538.1859517
+active_crawl,all,weekly_views,2,25-50%,2,2,290,387821.859172105
+active_crawl,all,weekly_views,2,25-50%,1,1,152612,222435409.3233083
+active_crawl,entrant,weekly_views,4,75-99%,4,4,29075,14641265861.454536
+active_crawl,incumbent,weekly_views,1,Bottom 25%,2,2,179,4540.513542987
+active_crawl,all,weekly_views,3,50-75%,4,4,192640,2748332985.8449817
+active_crawl,incumbent,weekly_views,1,Bottom 25%,7,7,4607,134401.252817849
+active_crawl,all,weekly_views,2,25-50%,5,5,67433,82563277.69405153
+active_crawl,all,weekly_views,1,Bottom 25%,12,12,3,64.000086595
+active_crawl,all,weekly_views,5,Top 1%,3,3,8927,140662927210.33548
+active_crawl,all,weekly_views,4,75-99%,10,10,36,18814753.797663894
+active_crawl,entrant,weekly_views,1,Bottom 25%,14,later_sources,16829,547066.653850341
+active_crawl,incumbent,weekly_views,4,75-99%,14,later_sources,88430,54813126012.68352
+active_crawl,incumbent,weekly_views,1,Bottom 25%,8,8,978,28456.008967561
+active_crawl,entrant,weekly_views,3,50-75%,3,3,22576,360314808.9567062
+active_crawl,incumbent,weekly_views,4,75-99%,6,6,10142,4901535619.868233
+active_crawl,entrant,weekly_views,5,Top 1%,4,4,755,8938747919.31231
+active_crawl,all,weekly_views,1,Bottom 25%,4,4,147817,4686836.533581171
+active_crawl,incumbent,weekly_views,2,25-50%,10,10,40,45408.449163015
+active_crawl,all,weekly_views,4,75-99%,15,trending,18434,26768242950.74136
+active_crawl,all,weekly_views,3,50-75%,0,0,40670,643449315.4477212
+active_crawl,entrant,weekly_views,1,Bottom 25%,8,8,80,2351.338537801
+active_crawl,all,weekly_views,4,75-99%,3,3,299851,135979868110.99763
+active_crawl,incumbent,weekly_views,1,Bottom 25%,6,6,19526,578743.93391299
+active_crawl,entrant,weekly_views,2,25-50%,1,1,3362,5816090.897554341
+active_crawl,incumbent,weekly_views,4,75-99%,7,7,2263,1108982339.6460233
+active_crawl,incumbent,weekly_views,2,25-50%,9,9,174,205359.754300647
+active_crawl,incumbent,weekly_views,2,25-50%,6,6,15622,18457017.62837746
+active_crawl,incumbent,weekly_views,5,Top 1%,14,later_sources,3984,61052382556.807785
+active_crawl,all,weekly_views,2,25-50%,8,8,861,1064892.825588664
+active_crawl,entrant,weekly_views,5,Top 1%,2,2,4,59716900.69142932
+active_crawl,all,weekly_views,2,25-50%,4,4,176813,224786765.28993064
+active_crawl,all,weekly_views,3,50-75%,10,10,37,449526.7653222
+active_crawl,incumbent,weekly_views,2,25-50%,5,5,62643,75800817.0616449
+active_crawl,all,weekly_views,2,25-50%,15,trending,2610,3184787.873918079
+active_crawl,entrant,weekly_views,2,25-50%,5,5,4790,6762460.632406644
+active_crawl,incumbent,weekly_views,5,Top 1%,6,6,242,3138501985.0390196
+active_crawl,all,weekly_views,3,50-75%,6,6,16532,230308303.84549776
+active_crawl,incumbent,weekly_views,3,50-75%,7,7,2876,38634739.008001804
+active_crawl,entrant,weekly_views,4,75-99%,14,later_sources,66295,44482159754.73022
+active_crawl,incumbent,weekly_views,5,Top 1%,15,trending,4377,70615381914.01872
+active_crawl,all,weekly_views,1,Bottom 25%,1,1,77455,2031995.675994109
+active_crawl,incumbent,weekly_views,4,75-99%,2,2,749,556965401.6744602
+active_crawl,incumbent,weekly_views,3,50-75%,9,9,139,2072413.44604817
+active_crawl,entrant,weekly_views,2,25-50%,14,later_sources,21043,27622007.32666527
+active_crawl,all,weekly_views,4,75-99%,4,4,170033,79626285249.26505
+active_crawl,all,weekly_views,1,Bottom 25%,9,9,253,8046.010124997
+active_crawl,entrant,weekly_views,1,Bottom 25%,6,6,1219,35368.010579972
+active_crawl,incumbent,weekly_views,2,25-50%,14,later_sources,95025,110271924.14509308
+active_crawl,incumbent,weekly_views,3,50-75%,1,1,234460,3501934729.2601566
+active_crawl,all,weekly_views,4,75-99%,7,7,3389,1748261845.4480605
+active_crawl,entrant,weekly_views,2,25-50%,7,7,397,528373.554505021
+active_crawl,entrant,weekly_views,2,25-50%,6,6,1560,2146932.989458187
+active_crawl,incumbent,weekly_views,3,50-75%,10,10,33,367975.891212237
+active_crawl,all,weekly_views,1,Bottom 25%,3,3,153882,4872217.909493671
+active_crawl,entrant,weekly_views,4,75-99%,15,trending,576,384698782.6398513
+active_crawl,all,weekly_views,1,Bottom 25%,8,8,1058,30807.347505362
+active_crawl,all,weekly_views,5,Top 1%,0,0,11783,337196782985.4975
+active_crawl,incumbent,weekly_views,3,50-75%,6,6,13642,185470501.30157503
+active_crawl,entrant,weekly_views,3,50-75%,5,5,9624,152403381.41113117
+active_crawl,entrant,weekly_views,3,50-75%,2,2,92,1602990.706474133
+active_crawl,incumbent,weekly_views,5,Top 1%,7,7,72,990507985.1709554
+active_crawl,entrant,weekly_views,2,25-50%,8,8,103,151121.103316404
+active_crawl,incumbent,weekly_views,4,75-99%,15,trending,17858,26383544168.10151
+active_crawl,incumbent,weekly_views,4,75-99%,8,8,492,220810556.9777652
+active_crawl,entrant,weekly_views,3,50-75%,14,later_sources,31611,494707586.1584412
+active_crawl,incumbent,weekly_views,2,25-50%,8,8,758,913771.72227226
+active_crawl,entrant,weekly_views,1,Bottom 25%,15,trending,56,309.028903291
+active_crawl,entrant,weekly_views,1,Bottom 25%,3,3,3348,94013.166175004
+active_crawl,all,weekly_views,3,50-75%,15,trending,2746,41414451.29730919
+active_crawl,entrant,weekly_views,4,75-99%,2,2,177,80685129.46777725
+active_crawl,entrant,weekly_views,1,Bottom 25%,7,7,332,10940.225234043
+active_crawl,all,weekly_views,4,75-99%,1,1,301256,150312233916.90613
+active_crawl,all,weekly_views,5,Top 1%,4,4,4656,64937280366.1286
+active_crawl,incumbent,weekly_views,3,50-75%,14,later_sources,79716,1111986678.565218
+active_crawl,entrant,weekly_views,5,Top 1%,14,later_sources,2870,37302640679.18141
+active_crawl,entrant,weekly_views,4,75-99%,6,6,4574,2683772707.8931317
+active_crawl,all,weekly_views,2,25-50%,14,later_sources,116068,137893931.47175837
+active_crawl,incumbent,weekly_views,3,50-75%,5,5,57589,798625826.1423984
+active_crawl,all,weekly_views,4,75-99%,14,later_sources,154725,99295285767.41374
+active_crawl,incumbent,weekly_views,1,Bottom 25%,1,1,76486,2012928.338138545
+active_crawl,all,weekly_views,1,Bottom 25%,0,0,15421,201452.075045065
+active_crawl,all,weekly_views,5,Top 1%,14,later_sources,6854,98355023235.9892
+active_crawl,incumbent,weekly_views,3,50-75%,15,trending,2670,40132320.720931105
+active_crawl,all,weekly_views,4,75-99%,0,0,85253,66099623501.88627
+active_crawl,all,weekly_views,3,50-75%,14,later_sources,111327,1606694264.7236593
+active_crawl,incumbent,weekly_views,5,Top 1%,4,4,3901,55998532446.81629
+active_crawl,all,weekly_views,3,50-75%,9,9,176,2728786.050240155
+active_crawl,incumbent,weekly_views,4,75-99%,1,1,291795,146976089442.5904
+active_crawl,incumbent,weekly_views,5,Top 1%,1,1,9880,168391288734.9478
+active_crawl,all,weekly_views,3,50-75%,3,3,317709,4615789628.195875
+active_crawl,incumbent,weekly_views,1,Bottom 25%,12,12,3,64.000086595
+active_crawl,incumbent,weekly_views,1,Bottom 25%,4,4,142832,4538878.51749275
+active_crawl,entrant,weekly_views,1,Bottom 25%,2,2,30,834.086757989
+active_crawl,entrant,weekly_views,1,Bottom 25%,1,1,969,19067.337855564
+active_crawl,incumbent,weekly_views,3,50-75%,0,0,40670,643449315.4477212
+active_crawl,entrant,weekly_views,4,75-99%,1,1,9461,3336144474.3157578
+active_crawl,all,weekly_views,4,75-99%,9,9,196,88023028.8788252
+active_crawl,all,weekly_views,4,75-99%,6,6,14716,7585308327.761363
+active_crawl,all,weekly_views,3,50-75%,1,1,244504,3659096869.7698026
+active_crawl,all,weekly_views,2,25-50%,0,0,18773,28873572.18106592
+active_crawl,entrant,weekly_views,3,50-75%,1,1,10044,157162140.5096457
+active_crawl,all,weekly_views,1,Bottom 25%,10,10,43,1026.129899118
+active_crawl,incumbent,weekly_views,3,50-75%,11,11,8,152858.29554553
+active_crawl,entrant,weekly_views,1,Bottom 25%,9,9,21,860.113056929
+active_crawl,all,weekly_views,2,25-50%,11,11,8,7352.512674557
+active_crawl,all,weekly_views,4,75-99%,11,11,5,1899903.342427159
+active_crawl,incumbent,weekly_views,2,25-50%,11,11,8,7352.512674557
+active_crawl,incumbent,weekly_views,1,Bottom 25%,10,10,41,959.129482597
+active_crawl,incumbent,weekly_views,4,75-99%,11,11,3,986403.693819273
+active_crawl,entrant,weekly_views,3,50-75%,15,trending,76,1282130.576378088
+active_crawl,entrant,weekly_views,5,Top 1%,15,trending,18,226234588.29966956
+active_crawl,entrant,weekly_views,2,25-50%,10,10,4,4928.871860424
+active_crawl,entrant,weekly_views,4,75-99%,11,11,2,913499.648607886
+active_crawl,all,weekly_views,3,50-75%,11,11,10,187583.50806336
+active_crawl,entrant,weekly_views,3,50-75%,11,11,2,34725.21251783
+active_crawl,all,weekly_views,5,Top 1%,9,9,6,53981159.482008874
+active_crawl,incumbent,weekly_views,4,75-99%,10,10,24,13912495.78543919
+active_crawl,all,weekly_views,5,Top 1%,8,8,19,266300857.31291515
+active_crawl,incumbent,weekly_views,5,Top 1%,8,8,13,220848285.4269348
+active_crawl,entrant,weekly_views,5,Top 1%,8,8,6,45452571.885980375
+active_crawl,entrant,weekly_views,5,Top 1%,9,9,4,36495652.17142594
+active_crawl,incumbent,weekly_views,1,Bottom 25%,11,11,14,593.079161963
+active_crawl,all,weekly_views,1,Bottom 25%,11,11,14,593.079161963
+active_crawl,all,weekly_views,4,75-99%,12,12,4,4647892.94145616
+active_crawl,entrant,weekly_views,4,75-99%,12,12,4,4647892.94145616
+active_crawl,entrant,weekly_views,1,Bottom 25%,10,10,2,67.000416521
+active_panel,all,subscribers,3,1M-10M,8,8,1,106092002.4511972
+active_panel,incumbent,subscribers,3,1M-10M,8,8,1,106092002.4511972
+active_crawl,entrant,subscribers,3,1M-10M,6,6,1,23265.307690915
+active_crawl,all,subscribers,3,1M-10M,8,8,1,106092002.4511972
+active_crawl,incumbent,subscribers,3,1M-10M,8,8,1,106092002.4511972
+all,incumbent,subscribers,3,1M-10M,7,7,1,21089844.11768925
+all,all,subscribers,3,1M-10M,7,7,1,21089844.11768925
+active_panel,incumbent,subscribers,3,1M-10M,7,7,1,21089844.11768925
+active_panel,all,subscribers,3,1M-10M,7,7,1,21089844.11768925
+active_crawl,incumbent,subscribers,3,1M-10M,7,7,1,21089844.11768925
+active_crawl,all,subscribers,3,1M-10M,7,7,1,21089844.11768925
+all,entrant,weekly_views,3,50-75%,10,10,4,81550.874109963
+all,incumbent,weekly_views,5,Top 1%,9,9,2,17485507.310582925
+active_panel,entrant,weekly_views,3,50-75%,10,10,4,81550.874109963
+active_panel,incumbent,weekly_views,5,Top 1%,9,9,2,17485507.310582925
+active_crawl,entrant,weekly_views,3,50-75%,10,10,4,81550.874109963
+active_crawl,incumbent,weekly_views,5,Top 1%,9,9,2,17485507.310582925
