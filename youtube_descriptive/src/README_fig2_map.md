@@ -29,7 +29,7 @@ optional `api_key` job parameter as the Figure 1 fetchers.
 - **Language:**
   - Source: `channel_language` (ISO 639-3), taking the first non-`und` label from, in order: the LID v3
     silver table; `yt_dual_sample_20260717_v1_channel_language_current` (LID v3 + DeepSeek, dual
-    sample); `fig2_und_lid_v1_channel_language` (the v2 gap-fill LID run, see below). Set by the
+    sample); `fig2_und_lid_v1_channel_language` (the v2 gap-fill run: LID v3, then DeepSeek flash for unresolved cases, see below). Set by the
     `language_table` and `fallback_language_tables` widgets of step 2.
   - `und` in every source, or no row, is shown as "Unknown language".
   - The map shows the 8 largest languages by weekly views; the rest pool into "Other languages".
@@ -56,19 +56,25 @@ optional `api_key` job parameter as the Figure 1 fetchers.
     and compared with the view-weighted JSD of each traffic block's mix from its own language's mix.
   - Unclassified views are excluded from this comparison.
 
-## Results (v2, 2026-10-15)
+## Results (v2, 2026-10-16)
 
 v2 differs from v1 only in the language source. Weekly views, universe, topics and categories are unchanged.
 
 **Label coverage**
 - Category covers 98.1% of weekly views (unchanged; Unclassified is 1.9%).
-- Language covers 98.3% of weekly views, up from 87.0% in v1. "Unknown language" holds 1.7%, down
+- Language covers 98.8% of weekly views, up from 87.0% in v1. "Unknown language" holds 1.2%, down
   from 13.0%.
 - Where the v1 gap was filled (the 280,752 ≥10k channels missing from the June crawl):
   - 173,345 were already labelled in the dual-sample table (171,539 with a real label);
   - 107,407 had no label anywhere and were run through LID v3 for this figure: 90,938 labelled
-    (89,693 consensus, 1,245 ISO/script-variant agreement), 16,469 left `und` (models disagree or too
-    little text).
+    (89,693 consensus, 1,245 ISO/script-variant agreement); 16,469 were left `und` (models disagree or
+    too little text);
+  - for 9,335 of those (7,183 model disagreement, 2,152 unresolved high-risk tail) DeepSeek
+    `deepseek-v4-flash` classified the channel metadata (notebook `03_language_llm_panel_databricks.py`,
+    single model, run_id `fig2_und_20261014_dsfb`, ~$1.5–3 at list price): 8,971 labelled, the rest
+    left `und` (37 insufficient text, 264 low confidence, 62 high-risk tail labels, 1 malformed
+    confidence); 7,498 gap-fill channels remain `und`, i.e. ~6,700 with no usable text, 419
+    cluster-level agreements and the rejects above.
 - The new labels also fill some channels the June crawl labelled `und`, which is why Unknown falls
   further than the 94% share attributed to missing channels would predict.
 
@@ -76,19 +82,19 @@ v2 differs from v1 only in the language source. Weekly views, universe, topics a
 
 | Language | Share of views | | Category | Share of views |
 |---|---|---|---|---|
-| English | 49.3% | | Entertainment | 32.6% |
+| English | 49.4% | | Entertainment | 32.6% |
 | Other languages | 17.9% | | Lifestyle | 32.6% |
-| Spanish | 6.2% | | Music | 13.0% |
-| Hindi | 5.9% | | Society | 8.2% |
-| Indonesian | 5.3% | | Gaming | 7.2% |
+| Spanish | 6.3% | | Music | 13.0% |
+| Hindi | 6.1% | | Society | 8.2% |
+| Indonesian | 5.4% | | Gaming | 7.2% |
 | Portuguese | 4.2% | | Sports | 3.2% |
 | Arabic | 4.1% | | Unclassified | 1.9% |
 | Korean | 2.8% | | Knowledge | 1.3% |
 | Japanese | 2.6% | | | |
-| Unknown | 1.7% | | | |
+| Unknown | 1.2% | | | |
 
 - The language ranking is unchanged from v1 except that Unknown drops from third to last; English
-  gains most (43.1% → 49.3%).
+  gains most (43.1% → 49.4%).
 - No single channel dominates:
   - only 127 channels hold ≥0.02% of weekly views each, together 5.1% of all views;
   - only 7 channels hold ≥0.1%.
@@ -101,7 +107,7 @@ v2 differs from v1 only in the language source. Weekly views, universe, topics a
 - Category mixes differ more between languages than across traffic blocks within a language:
   - between languages: mean JSD 0.038 bits over the 28 pairs of the top 8 languages;
   - within a language: mean JSD 0.016 bits for English, Spanish and Hindi.
-- The closest pair is English–Spanish (0.007 bits), and the furthest is Hindi–Japanese (0.144 bits).
+- The closest pair is English–Spanish (0.007 bits), and the furthest is Hindi–Japanese (0.143 bits).
 
 v1 (language from silver only) had Unknown at 13.0%, English 43.1%, between-language JSD 0.039 and
 within-language 0.019; its outputs remain as `fig2_map_*_v1`.
@@ -114,7 +120,11 @@ within-language 0.019; its outputs remain as `fig2_map_*_v1`.
 | 2026-10-14 | Fig 2 v1 | 397226955466533 | Success; label threshold 0.1% gave only 7 named channels |
 | 2026-10-14 | Fig 2 v1 (overwrite) | 710882764670948 | Success; label threshold lowered to 0.02% (127 channels) |
 | 2026-10-15 | LID v3 gap-fill (`run_id=fig2_und_20261014`) | 980202936593843 | Success; 107,407 channels, 1,309,535 valid segments, about 3 h on `sean-research-medium-compute`; outputs `fig2_und_lid_v1_lid_*` |
-| 2026-10-15 | Fig 2 v2 | (job run of `12_…`, `version=v2`) | Success; Unknown language 13.0% → 1.7% |
+| 2026-10-15 | Fig 2 v2 (LID + dual-sample only) | n/a | Success; Unknown language 13.0% → 1.7% (superseded below) |
+| 2026-10-16 | DeepSeek flash fallback requests | 735252650637058 | 9,335 requests built (`fig2_und_lid_v1_dsfb_llm_requests`), nothing sent |
+| 2026-10-16 | DeepSeek flash submit | 1044533639912791 | Success; 9,298 classified, 37 insufficient text, no parse errors |
+| 2026-10-16 | DeepSeek import | 796566519464698 | Success after two failed attempts (runs 139073521774852, 1050399855385108; array-index bugs in `03_…`, fixed with `try_element_at`) |
+| 2026-10-16 | Fig 2 v2 (overwrite, with DeepSeek labels) | 474846533421417 | Success; Unknown language 1.2%, language coverage 98.8% |
 
 ## Rerunning
 
@@ -135,11 +145,14 @@ within-language 0.019; its outputs remain as `fig2_map_*_v1`.
   - 35% of Lifestyle's views come from channels whose only topic is the generic "Lifestyle
     (sociology)".
   - The same holds for 22% of Entertainment's views and 13% of Society's.
-- **Unknown language is now 1.7% of views.** It is channels where LID v3 had too little text or the
-  two models disagreed (16,469 of the gap-fill channels, plus residual `und` in the other sources).
-  The gap-fill run did not use the DeepSeek fallback that the dual-sample table did, so its disagreement
-  cases stay `und` rather than being adjudicated.
-- **Gap-fill labels are LID consensus only.** The new run reuses `01_language_openlid_v3_databricks.py`
+- **Unknown language is now 1.2% of views.** It is mostly channels with no usable text, the 419
+  cluster-level agreements (not routed to DeepSeek) and low-confidence or high-risk-tail DeepSeek
+  answers (7,498 gap-fill channels), plus residual `und` in the other sources.
+- **DeepSeek-labelled channels.** 8,971 gap-fill labels (and 20,424 in the dual-sample table) come from
+  an LLM reading channel metadata, not from LID consensus; we kept only `high`/`medium` confidence,
+  non-high-risk-tail answers, using the taxonomy-normalized base ISO. They carry
+  `language_label_source='deepseek_flash_fallback'` and `llm_confidence`.
+- **Gap-fill inputs.** The new run reuses `01_language_openlid_v3_databricks.py`
   unchanged, on scratch inputs `fig2_und_lid_v1_{targets,channels,videos}` built from
   `yt_channel_descriptions` and the 10 most recent videos in `yt_channel_videos`.
 - **Topic channels are kept.** " - Topic" channels (0.8% of views) are real attention to auto-generated
