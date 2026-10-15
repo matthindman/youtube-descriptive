@@ -9,8 +9,9 @@
 # MAGIC
 # MAGIC - **Universe and weekly views:** the Figure 1 channel table (`channels_table`): channels with
 # MAGIC   ≥10k subscribers on 2026-10-05, weekly views from the 2026-09-28 → 2026-10-05 delta.
-# MAGIC - **Language:** `channel_language` (ISO 639-3) from the LID v3 silver table. `und` or no row
-# MAGIC   → `und` (shown as "Unknown").
+# MAGIC - **Language:** `channel_language` (ISO 639-3): the LID v3 silver table first, then the dual-sample
+# MAGIC   table, then the Fig 2 gap-fill run (`fallback_language_tables`); the first non-`und` label wins.
+# MAGIC   `und` everywhere or no row → `und` (shown as "Unknown").
 # MAGIC - **Category:** YouTube's own topic hierarchy, from `topicDetails.topicCategories`
 # MAGIC   (`11_fetch_channel_topics_databricks`). Each topic maps to one of YouTube's seven parent
 # MAGIC   topics. A channel takes the parent of its first *specific* topic (e.g. Pop music, Action
@@ -45,6 +46,8 @@ def _get_widget(name: str, default: str) -> str:
 DEFAULTS = {
     "channels_table": "dev_sean.matt.fig1_discovery_channels_v4",
     "language_table": "dev_sean.matt.yt_lid_v3_channel_crawl_full_20260623_channel_language_silver_current",
+    "fallback_language_tables": "dev_sean.matt.yt_dual_sample_20260717_v1_channel_language_current,"
+                                "dev_sean.matt.fig2_und_lid_v1_channel_language",
     "topics_table": "dev_sean.matt.yt_channel_topics",
     "n_blocks": "20",
     "top_languages": "8",
@@ -107,6 +110,14 @@ for parent, topics in TOPIC_MAP.items():
 spark.createDataFrame(rows, "topic STRING, category STRING, specific INT").createOrReplaceTempView("topic_map")
 
 # COMMAND ----------
+# Language source: first non-`und` label wins, in table order (silver, then each fallback table).
+LANG_TABLES = [P["language_table"]] + [t.strip() for t in P["fallback_language_tables"].split(",") if t.strip()]
+LANG_UNION = "\n    UNION ALL\n    ".join(
+    f"SELECT channel_id AS canonical_id, channel_language, {i} AS prio FROM {t}"
+    for i, t in enumerate(LANG_TABLES)
+)
+
+# COMMAND ----------
 # 2. Channel-level frame (stays in Databricks).
 spark.sql(f"""
 CREATE OR REPLACE TEMP VIEW ch AS
@@ -123,8 +134,9 @@ cat AS (
   SELECT canonical_id, max_by(category, struct(specific, -pos)) AS category FROM tp GROUP BY canonical_id
 ),
 lang AS (
-  SELECT channel_id AS canonical_id, max(channel_language) AS channel_language
-  FROM {P['language_table']} GROUP BY channel_id
+  SELECT canonical_id, min_by(channel_language, prio) AS channel_language FROM (
+    {LANG_UNION}
+  ) WHERE channel_language IS NOT NULL AND channel_language NOT IN ('', 'und') GROUP BY canonical_id
 )
 SELECT c.canonical_id, c.channel_name, c.is_topic,
        CAST(coalesce(c.weekly_views, 0) AS DOUBLE) AS wv,

@@ -410,11 +410,11 @@ def canonical_base_iso_expr(col):
     iso = F.when(iso.isin("", "null", "none"), F.lit(None).cast("string")).otherwise(iso)
     iso = F.when(iso.isin(*sorted(ARABIC_FAMILY_ISO)), F.lit("ara")).otherwise(iso)
     mapping = F.create_map(*sum([[F.lit(k), F.lit(v)] for k, v in CANONICAL_BASE_ISO.items()], []))
-    return F.coalesce(F.element_at(mapping, iso), iso)
+    return F.coalesce(F.try_element_at(mapping, iso), iso)
 
 
 def script_from_label_expr(label_col):
-    script = F.element_at(F.split(label_col.cast("string"), "_"), 2)
+    script = F.try_element_at(F.split(label_col.cast("string"), "_"), F.lit(2))
     return F.when(script.isin("", "null", "none"), F.lit(None).cast("string")).otherwise(script)
 
 
@@ -2035,7 +2035,7 @@ if IMPORT_RESULTS:
         .withColumn("_panel_label_iso", F.when(F.col("_panel_label_iso").isin("", "null", "none"), F.lit(None)).otherwise(F.col("_panel_label_iso")))
         .withColumn("panel_language_iso", F.coalesce(F.col("_panel_label_iso"), F.col("panel_majority_vote_iso")))
         .withColumn("panel_language_iso639_3", F.col("panel_language_iso"))
-        .withColumn("panel_language_script", F.coalesce(F.col("panel_language_script_from_model"), F.element_at(F.split("panel_language_label", "_"), 2)))
+        .withColumn("panel_language_script", F.coalesce(F.col("panel_language_script_from_model"), F.try_element_at(F.split("panel_language_label", "_"), F.lit(2))))
         .withColumn("panel_language_script_family", script_family_expr(F.col("panel_language_script")))
         .withColumn("panel_normalized_language_iso639_3", canonical_base_iso_expr(F.col("panel_language_iso639_3")))
         .withColumn(
