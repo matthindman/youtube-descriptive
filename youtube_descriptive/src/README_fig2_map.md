@@ -13,6 +13,7 @@ The spec is the Fig 2 row of the "Attention on YouTube — Analysis Plan & Data 
 | Step | Code | Output |
 |---|---|---|
 | 1. Channel topics | `11_fetch_channel_topics_databricks.py` | `dev_sean.matt.yt_channel_topics` |
+| 1b. Language gap-fill (v2) | `01_language_openlid_v3_databricks.py` on the unlabelled channels | `dev_sean.matt.fig2_und_lid_v1_channel_language` |
 | 2. Classify + aggregate | `12_fig2_platform_map_databricks.py` | `dev_sean.matt.fig2_map_{channels,cells,lang_cat,blocks,coverage}_<version>` |
 | 3. Render locally | `../scripts/render_fig2_local.py` | `../figs/fig2/*.png`, `*.pdf`, and CSV source data |
 
@@ -26,8 +27,11 @@ optional `api_key` job parameter as the Figure 1 fetchers.
     with ≥10k subscribers on 2026-10-05.
   - Weekly views are the 2026-09-28 → 2026-10-05 delta. Channels without a prior snapshot count as 0.
 - **Language:**
-  - Source: `channel_language` from the LID v3 silver table (ISO 639-3).
-  - `und`, or no row, is shown as "Unknown language".
+  - Source: `channel_language` (ISO 639-3), taking the first non-`und` label from, in order: the LID v3
+    silver table; `yt_dual_sample_20260717_v1_channel_language_current` (LID v3 + DeepSeek, dual
+    sample); `fig2_und_lid_v1_channel_language` (the v2 gap-fill LID run, see below). Set by the
+    `language_table` and `fallback_language_tables` widgets of step 2.
+  - `und` in every source, or no row, is shown as "Unknown language".
   - The map shows the 8 largest languages by weekly views; the rest pool into "Other languages".
 - **Category:** YouTube's own topic hierarchy, read from `topicDetails.topicCategories`.
   - Every topic maps to one of YouTube's seven parent topics: Music, Gaming, Entertainment, Lifestyle,
@@ -52,30 +56,39 @@ optional `api_key` job parameter as the Figure 1 fetchers.
     and compared with the view-weighted JSD of each traffic block's mix from its own language's mix.
   - Unclassified views are excluded from this comparison.
 
-## Results (v1, 2026-10-14)
+## Results (v2, 2026-10-15)
+
+v2 differs from v1 only in the language source. Weekly views, universe, topics and categories are unchanged.
 
 **Label coverage**
-- YouTube returned topics for 4,703,168 of 4,990,312 channels; 6,630 were not found. Category covers
-  98.1% of weekly views, up from 93.1% with the June `channel_category` snapshot.
-- Language covers 87.0% of weekly views. "Unknown language" (`und` or not in the LID v3 crawl)
-  holds 13.0%. Of that, 94% comes from 280,752 channels missing from the 2026-06-23 LID v3 crawl. The
-  rest comes from 150,696 crawled channels labelled `und`.
+- Category covers 98.1% of weekly views (unchanged; Unclassified is 1.9%).
+- Language covers 98.3% of weekly views, up from 87.0% in v1. "Unknown language" holds 1.7%, down
+  from 13.0%.
+- Where the v1 gap was filled (the 280,752 ≥10k channels missing from the June crawl):
+  - 173,345 were already labelled in the dual-sample table (171,539 with a real label);
+  - 107,407 had no label anywhere and were run through LID v3 for this figure: 90,938 labelled
+    (89,693 consensus, 1,245 ISO/script-variant agreement), 16,469 left `und` (models disagree or too
+    little text).
+- The new labels also fill some channels the June crawl labelled `und`, which is why Unknown falls
+  further than the 94% share attributed to missing channels would predict.
 
 **Panel a: where weekly views go**
 
 | Language | Share of views | | Category | Share of views |
 |---|---|---|---|---|
-| English | 43.1% | | Entertainment | 32.6% |
-| Other languages | 15.8% | | Lifestyle | 32.6% |
-| Unknown | 13.0% | | Music | 13.0% |
-| Spanish | 5.7% | | Society | 8.2% |
-| Hindi | 5.3% | | Gaming | 7.2% |
-| Indonesian | 4.8% | | Sports | 3.2% |
-| Portuguese | 3.8% | | Unclassified | 1.6% |
-| Arabic | 3.7% | | Knowledge | 1.3% |
-| Korean | 2.5% | | | |
-| Japanese | 2.3% | | | |
+| English | 49.3% | | Entertainment | 32.6% |
+| Other languages | 17.9% | | Lifestyle | 32.6% |
+| Spanish | 6.2% | | Music | 13.0% |
+| Hindi | 5.9% | | Society | 8.2% |
+| Indonesian | 5.3% | | Gaming | 7.2% |
+| Portuguese | 4.2% | | Sports | 3.2% |
+| Arabic | 4.1% | | Unclassified | 1.9% |
+| Korean | 2.8% | | Knowledge | 1.3% |
+| Japanese | 2.6% | | | |
+| Unknown | 1.7% | | | |
 
+- The language ranking is unchanged from v1 except that Unknown drops from third to last; English
+  gains most (43.1% → 49.3%).
 - No single channel dominates:
   - only 127 channels hold ≥0.02% of weekly views each, together 5.1% of all views;
   - only 7 channels hold ≥0.1%.
@@ -86,9 +99,12 @@ optional `api_key` job parameter as the Figure 1 fetchers.
 
 **Panel c: one platform or many**
 - Category mixes differ more between languages than across traffic blocks within a language:
-  - between languages: mean JSD 0.039 bits over the 28 pairs of the top 8 languages;
-  - within a language: mean JSD 0.019 bits for English, Spanish and Hindi.
-- The closest pair is English–Spanish (0.009 bits), and the furthest is Hindi–Japanese (0.145 bits).
+  - between languages: mean JSD 0.038 bits over the 28 pairs of the top 8 languages;
+  - within a language: mean JSD 0.016 bits for English, Spanish and Hindi.
+- The closest pair is English–Spanish (0.007 bits), and the furthest is Hindi–Japanese (0.144 bits).
+
+v1 (language from silver only) had Unknown at 13.0%, English 43.1%, between-language JSD 0.039 and
+within-language 0.019; its outputs remain as `fig2_map_*_v1`.
 
 ## Run log
 
@@ -97,11 +113,14 @@ optional `api_key` job parameter as the Figure 1 fetchers.
 | 2026-10-14 | Channel topics | 1026080439438038 | 4,983,682 ok (4,703,168 with topics), 6,630 not found (~100k quota units) |
 | 2026-10-14 | Fig 2 v1 | 397226955466533 | Success; label threshold 0.1% gave only 7 named channels |
 | 2026-10-14 | Fig 2 v1 (overwrite) | 710882764670948 | Success; label threshold lowered to 0.02% (127 channels) |
+| 2026-10-15 | LID v3 gap-fill (`run_id=fig2_und_20261014`) | 980202936593843 | Success; 107,407 channels, 1,309,535 valid segments, about 3 h on `sean-research-medium-compute`; outputs `fig2_und_lid_v1_lid_*` |
+| 2026-10-15 | Fig 2 v2 | (job run of `12_…`, `version=v2`) | Success; Unknown language 13.0% → 1.7% |
 
 ## Rerunning
 
 1. Optional: run `11_…` to fetch topics for channels not yet in `yt_channel_topics`. It is resumable.
-2. Run `12_…` with a new `version` (or `overwrite=true`).
+2. Run `12_…` with a new `version` (or `overwrite=true`). Language labels come from the three tables
+   described under Definitions; add new label tables to `fallback_language_tables`.
 3. Render locally:
 
    ```bash
@@ -116,8 +135,13 @@ optional `api_key` job parameter as the Figure 1 fetchers.
   - 35% of Lifestyle's views come from channels whose only topic is the generic "Lifestyle
     (sociology)".
   - The same holds for 22% of Entertainment's views and 13% of Society's.
-- **Unknown language is large (13% of views).** Most of it is channels the June LID v3 crawl never saw.
-  Labelling them needs a LID v3 run on those 280,752 channels.
+- **Unknown language is now 1.7% of views.** It is channels where LID v3 had too little text or the
+  two models disagreed (16,469 of the gap-fill channels, plus residual `und` in the other sources).
+  The gap-fill run did not use the DeepSeek fallback that the dual-sample table did, so its disagreement
+  cases stay `und` rather than being adjudicated.
+- **Gap-fill labels are LID consensus only.** The new run reuses `01_language_openlid_v3_databricks.py`
+  unchanged, on scratch inputs `fig2_und_lid_v1_{targets,channels,videos}` built from
+  `yt_channel_descriptions` and the 10 most recent videos in `yt_channel_videos`.
 - **Topic channels are kept.** " - Topic" channels (0.8% of views) are real attention to auto-generated
   music uploads, so the map includes them; Figure 1's active variants drop them.
 - **Panel c uses the three largest named languages.** Other languages and Unknown are not shown there.
