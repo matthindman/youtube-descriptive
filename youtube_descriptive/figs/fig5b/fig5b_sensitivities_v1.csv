@@ -1,0 +1,20 @@
+metric,value
+anchor: speaker total used (billions),9.516986971
+anchor: world population (billions),8.062273015
+anchor: factor on every index if world population is the base,0.8471455345654271
+"English index, as drawn",2.692672209890968
+"English index, world-population anchor",2.281085238657554
+"Thai index, as drawn",2.005974612060464
+"Thai index, world-population anchor",1.6993524350586369
+"Chinese index, as drawn",0.0785990510215186
+"Chinese speakers, as drawn (M)",1325.125815395
+Chinese speakers excluding PRC (M),50.689815395000004
+Chinese index excluding PRC (speaker total reduced too),1.779573271874266
+Chinese index excluding PRC (speaker total unchanged),2.054725011947667
+"Hindi+Urdu pooled: speakers, max per territory (M)",822.528497955
+Hindi+Urdu pooled index (max per territory),0.7354317274066395
+Hindi+Urdu pooled index (plain sum of speakers),0.6821634164872986
+"Indonesian+Malay pooled: speakers, max per territory (M)",207.74513272
+Indonesian+Malay pooled index (max per territory),2.5751500788857062
+Indonesian+Malay pooled index (plain sum of speakers),2.464190598622951
+CLDR share of Indonesia speaking Indonesian (%),64.0
