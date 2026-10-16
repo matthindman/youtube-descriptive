@@ -39,11 +39,12 @@ RENDER_SPECS = [("abc", "abc"), ("ab", "ab")]
 
 def _numeric(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
+    flags = ("is_headline", "tail_is_finite", "tail_ordering_ok")
     for c in df.columns:
-        if c not in ("tier", "status", "model"):
+        if c in flags:
+            df[c] = df[c].astype(str).str.lower() == "true"
+        elif c not in ("tier", "status", "model"):
             df[c] = pd.to_numeric(df[c], errors="coerce")
-    if "is_headline" in df.columns:
-        df["is_headline"] = df["is_headline"].astype(str).str.lower() == "true"
     return df
 
 
@@ -53,6 +54,15 @@ def _fmt_count(v, _pos=None) -> str:
             x = v / div
             return f"{x:g}{suf}" if x < 10 or x == int(x) else f"{x:.0f}{suf}"
     return f"{v:g}"
+
+
+def _pct(v: float) -> str:
+    """Percent with enough digits for small shares (0.0008% rather than 0.00%)."""
+    if v <= 0:
+        return "0%"
+    pct = 100 * v
+    digits = 0 if pct >= 10 else max(0, int(np.ceil(-np.log10(pct))) + 1)
+    return f"{pct:.{digits}f}%"
 
 
 def _spines(ax):
@@ -79,7 +89,7 @@ def headline(tail: pd.DataFrame) -> pd.Series:
 
 def missing_bounds(tail: pd.DataFrame) -> tuple[float, float]:
     """(headline missing mass, largest finite missing mass over every r0 x model)."""
-    fin = tail[tail.tail_is_finite.astype(str).str.lower() == "true"]
+    fin = tail[tail.tail_is_finite]
     return float(headline(tail).missing_mass), float(fin.missing_mass.max())
 
 
@@ -130,13 +140,14 @@ def plot_fig4(vbins, sbins, thresholds, status, tail, panels: str = "abc", path=
     _logx(ax)
     _spines(ax)
     ax.set_xlim(1, x.max() * 1.5)
+    ax.xaxis.set_major_locator(LogLocator(base=100, numticks=8))
     ax.set_ylim(0, 1.02)
     ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _p: f"{v:.0%}"))
     ax.grid(True, which="major", color=GRID, linewidth=0.5, zorder=0)
     ax.set_xlabel("Channels ranked by weekly views", fontsize=8, color=INK)
     ax.set_ylabel("Cumulative share of weekly views", fontsize=8, color=INK)
     ax.legend(title="Subscribers", fontsize=6, title_fontsize=6, frameon=True, framealpha=0.9,
-              edgecolor="none", loc="lower right", handlelength=1.2, borderaxespad=0.2)
+              edgecolor="none", loc="upper left", handlelength=1.2, borderaxespad=0.2)
 
     # b: share of channels and of weekly views at or above each subscriber threshold.
     ax = axes["b"]
@@ -145,7 +156,7 @@ def plot_fig4(vbins, sbins, thresholds, status, tail, panels: str = "abc", path=
     tc = threshold_curves(sbins, n_all, wv_all)
     tc = tc[(tc.subs_lo >= 10) & (tc.subs_lo <= 3e8)]
     ax.plot(tc.subs_lo, tc.share_channels, color=CHANNELS, lw=1.4, label="Channels")
-    ax.plot(tc.subs_lo, tc.share_views * wv_all / total, color=VIEWS, lw=1.4, label="Weekly views")
+    ax.plot(tc.subs_lo, tc.share_views * wv_all / total, color=VIEWS, lw=1.4, label="Views")
     for _, r in thr[thr.threshold.isin(MARKED)].iterrows():
         sv = r.wv_ge / total
         ax.plot([r.threshold] * 2, [r.share_channels, sv], color=MUTED, lw=0.5, zorder=1)
@@ -154,18 +165,21 @@ def plot_fig4(vbins, sbins, thresholds, status, tail, panels: str = "abc", path=
         ax.annotate(f"{sv:.0%}", (r.threshold, sv), textcoords="offset points", xytext=(3, 3),
                     fontsize=6, color=VIEWS)
         ch = r.share_channels
-        ax.annotate(f"{ch:.1%}" if ch < 0.1 else f"{ch:.0%}", (r.threshold, ch),
-                    textcoords="offset points", xytext=(3, -8), fontsize=6, color=CHANNELS)
+        ax.annotate(_pct(ch), (r.threshold, ch), textcoords="offset points", xytext=(-4, -2),
+                    ha="right", va="top", fontsize=6, color=CHANNELS)
     _logx(ax)
     _spines(ax)
-    ax.set_ylim(0, 1.02)
-    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _p: f"{v:.0%}"))
+    ax.set_yscale("log")
+    ax.set_ylim(2e-4, 1.6)
+    ax.yaxis.set_major_locator(LogLocator(base=10, numticks=6))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _p: _pct(v)))
+    ax.yaxis.set_minor_formatter(NullFormatter())
     ax.grid(True, which="major", color=GRID, linewidth=0.5, zorder=0)
     ax.set_xlabel("Subscriber threshold", fontsize=8, color=INK)
     ax.set_ylabel("Share at or above threshold", fontsize=8, color=INK)
     ax.set_xlim(10, 3e8)
     ax.xaxis.set_major_locator(LogLocator(base=100, numticks=8))
-    ax.legend(fontsize=6, frameon=False, loc="center right", handlelength=1.2)
+    ax.legend(fontsize=6, frameon=False, loc="lower left", handlelength=1.0, borderaxespad=0.2)
 
     # c: composition of channels and of weekly views by tier, with the modelled missing mass.
     if "c" in axes:
@@ -193,8 +207,8 @@ def plot_fig4(vbins, sbins, thresholds, status, tail, panels: str = "abc", path=
         ax.spines["left"].set_visible(False)
         ax.tick_params(axis="y", length=0, labelsize=7)
         ax.set_xlabel("Share of total", fontsize=8, color=INK)
-        note = (f"Modelled missing views: {miss_head / total:.2%} (headline);\n"
-                f"≤{miss_max / (float(h.obs_total_all) + miss_max):.2%} under any fit")
+        note = (f"Modelled missing views: {_pct(miss_head / total)} (headline fit);\n"
+                f"at most {_pct(miss_max / (float(h.obs_total_all) + miss_max))} under any fit")
         ax.set_title(note, fontsize=6, color=MUTED, loc="left", pad=4)
 
     for k, ax in axes.items():

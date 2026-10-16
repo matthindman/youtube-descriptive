@@ -1,0 +1,6 @@
+what,n
+fig1 universe missing from snapshot_end,0
+stats >=10k measurable (zero/positive),4770835
+stats >=10k not in fig1 universe,0
+stats >=10k on snapshot_end,4990312
+fig1 universe,4990312
