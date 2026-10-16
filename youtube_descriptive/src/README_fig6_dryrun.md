@@ -1,6 +1,6 @@
 # Figure 6 dry run (notebook 17)
 
-Status 2026-10-16: **code revised after review; no collection yet.** The smoke run (job run 394512642345342) stopped on its first API call: the key in `youtube/api-key` was rejected (HTTP 400). 1 unit was spent. See `PLAN_fig6_collection.md` for the plan and quota math.
+Status 2026-10-16: **dry run complete** (1,000 channels, 1,991 units in total). The first smoke run (394512642345342) was stopped by a rejected key in `youtube/api-key` (1 unit); the key from `youtube-llm-keys/youtube-api-key` then ran clean. See `PLAN_fig6_collection.md` for the plan and quota math.
 
 ## Design
 
@@ -44,6 +44,17 @@ Status 2026-10-16: **code revised after review; no collection yet.** The smoke r
 
 | Run | Parameters | Result |
 |---|---|---|
-| 394512642345342 (smoke) | sample_n=20, max_units=200, suffix=smoke | googleapis.com reachable (unauthenticated discovery call, 0 quota). Sample of 20 saved. The canary `playlistItems` call returned HTTP 400 and the run stopped: 1 unit attempted, 19 channels logged `skipped`, one `error` row in `channels_smoke`. |
+| 394512642345342 (smoke, old secret) | sample_n=20, max_units=200, suffix=smoke | Key rejected on the canary call (HTTP 400); stopped. 1 unit. |
+| 383858104778152 (smoke2) | sample_n=20, max_units=100, suffix=smoke2 | 27 Pass A + 11 Pass B calls, all HTTP 200; 38 units; 538 uploads and 538 video rows. |
+| 983494926244636 (main) | sample_n=1000, max_units=4800, suffix=v1 | 1,372 Pass A units (4 were 404 playlistNotFound), 580 Pass B units, all other calls 200; 1,952 units; 126 s job time; no censored channel, no cap or quota stop. |
 
-Units spent so far: 1 of 5,000 (seeded into the ledger on its first start). Tables `fig6_dryrun_{sample,calls,channels,queue}_smoke` exist from that run (`uploads_smoke` and `video_stats_smoke` were never created because there was nothing to append).
+Ledger total: 1 + 38 + 1,952 = **1,991 units** of 5,000.
+
+## Results (v1, 1,000 channels, 100 per weekly-views decile)
+
+- Pages per channel: mean 1.37; median 1, p90 2, p99 9, max 17. 858 channels need 1 page. Censored: 0.
+- Channels with at least one window upload: 62.4%. Window videos per channel: mean 21.6, median 3, p90 57, p99 284, max 634. 21,572 window videos plus 7,340 after 2026-10-05 (28,912 recorded; every one got stats; no duplicates).
+- Countable window videos: 69.95% last 180 s or less (53.4% 60 s or less); 56.5% have `defaultAudioLanguage`; `defaultLanguage` is set on 100%. Top audio languages (all recorded videos): hi 3,730, en 2,922, en-US 1,389, ar 711, th 697, vi 654, es-419 589, bn 585, pt-BR 402, ja 393.
+- Views at collection by video age (weeks): median 1.8k-2.5k and p90 about 44k at every age 1-6 weeks, i.e. no visible growth with age in this snapshot; p10 about 110-150.
+- Rate: 1,952 calls in 1.68 min, about 1,160 calls/min (below the 2,000 cap; 16 threads were the limit).
+- Stratified extrapolation to 3,469,842 channels (95%): Pass A 4.76M units (4.49-5.03M); window videos 74.9M (64.2-85.5M); Pass B 1.50M units (1.28-1.71M) for window videos only, 2.01M (1.73-2.29M) if after-window videos are fetched too.
