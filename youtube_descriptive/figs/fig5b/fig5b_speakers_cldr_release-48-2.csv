@@ -1,0 +1,174 @@
+analysis_code,name,speakers,n_territories,top_territory,top_territory_share,cldr_codes_matched,combine
+eng,English,1728473504,152,US,0.19,en|en_Shaw,max
+spa,Spanish,507599381,39,MX,0.214,es,max
+hin,Hindi,580318483,6,IN,0.996,hi|hi_Latn,max
+ind,Indonesian,180519583,2,ID,0.998,id,max
+por,Portuguese,249463919,16,BR,0.803,pt,max
+ara,Arabic,398218893,38,EG,0.263,aeb|apc|apd|ar|arq|ars|ary|arz,max
+kor,Korean,79278717,7,KR,0.657,ko,max
+jpn,Japanese,117608755,3,JP,0.995,ja,max
+rus,Russian,201151469,24,RU,0.658,ru,max
+tur,Turkish,82419542,12,TR,0.949,tr,max
+vie,Vietnamese,92370781,4,VN,0.985,vi,max
+ben,Bengali,279893704,5,BD,0.591,bn,max
+tha,Thai,55936800,1,TH,1.0,th,max
+cmn,Chinese (Mandarin),1325125815,20,CN,0.962,zh|zh_Hant,max
+tam,Tamil,90608137,8,IN,0.918,ta,max
+fra,French,332956351,64,FR,0.199,fr,max
+tel,Telugu,101457360,1,IN,1.0,te,max
+mal,Malayalam,45922589,7,IN,0.982,ml,max
+deu,German,141873197,27,DE,0.54,de,max
+ita,Italian,70475319,15,IT,0.822,it,max
+mar,Marathi,98639100,1,IN,1.0,mr,max
+pol,Polish,41500501,9,PL,0.896,pl,max
+uzb,Uzbek,33452882,5,UZ,0.928,uz|uz_Arab|uz_Cyrl,max
+guj,Gujarati,65626183,4,IN,0.966,gu,max
+urd,Urdu,313093257,5,PK,0.766,ur,max
+ukr,Ukrainian,24080585,6,UA,0.963,uk,max
+kan,Kannada,52137810,1,IN,1.0,kn,max
+fil,Filipino (Tagalog),73198318,4,PH,0.97,fil,max
+fas,Persian,89208446,9,IR,0.743,fa,max
+ron,Romanian,20043507,8,RO,0.815,ro,max
+pan,Punjabi (Gurmukhi),42948380,5,IN,0.919,pa,max
+ory,Odia,45092160,1,IN,1.0,or,max
+sin,Sinhala,14948168,1,LK,1.0,si,max
+zsm,Malay,36798658,5,MY,0.704,ms|ms_Arab,max
+mya,Burmese,37171608,2,MM,0.99,my,max
+ell,Greek,12249402,10,GR,0.845,el,max
+khm,Khmer,15186693,1,KH,1.0,km,max
+bho,Bhojpuri,34639016,3,IN,0.936,bho,max
+ces,Czech,13236058,2,CZ,0.802,cs,max
+nld,Dutch,32854898,10,NL,0.541,nl,max
+kaz,Kazakh,14411915,6,KZ,0.9,kk|kk_Arab,max
+aze,Azerbaijani,10232126,4,AZ,0.926,az|az_Cyrl,max
+amh,Amharic,39176975,2,ET,0.999,am,max
+heb,Hebrew,9402620,1,IL,1.0,he,max
+hun,Hungarian,12313192,9,HU,0.8,hu,max
+nep,Nepali,21735357,3,NP,0.63,ne,max
+sqi,Albanian,6798944,7,AL,0.457,aln|sq,max
+mlt,Maltese,469730,1,MT,1.0,mt,max
+hbs,"Serbo-Croatian (Serbian, Croatian, Bosnian)",17661862,14,RS,0.377,bs|bs_Cyrl|hr|sr|sr_Latn,sum
+som,Somali,18630626,6,SO,0.545,so,max
+swa,Swahili,194102079,9,TZ,0.313,sw,max
+asm,Assamese,18318690,1,IN,1.0,as,max
+bul,Bulgarian,7684020,6,BG,0.883,bg,max
+hye,Armenian,5443505,8,AM,0.541,hy,max
+jav,Javanese,96145858,2,ID,0.996,jv,max
+kin,Kinyarwanda,11963415,3,RW,0.877,rw,max
+swe,Swedish,13338377,4,SE,0.754,sv,max
+kir,Kyrgyz,3445239,3,KG,0.86,ky|ky_Arab|ky_Latn,max
+fin,Finnish,5789395,4,FI,0.914,fi,max
+hat,Haitian Creole,9520659,1,HT,1.0,ht,max
+pnb,Western Punjabi,176690028,2,PK,1.0,lah|pa_Arab,max
+ast,Asturian,614645,1,ES,1.0,ast,max
+slk,Slovak,6809720,4,SK,0.735,sk,max
+kat,Georgian,4324687,3,GE,0.975,ka,max
+hne,Chhattisgarhi,15500430,1,IN,1.0,hne,max
+tgk,Tajik,11226901,2,TJ,0.926,tg|tg_Arab,max
+sco,Scots,1711478,1,GB,1.0,sco,max
+sun,Sundanese,33787440,1,ID,1.0,su,max
+mon,Mongolian,6735779,3,CN,0.547,mn|mn_Mong,max
+lus,Mizo,0,0,,,,max
+yue,Cantonese,81532220,4,CN,0.903,yue|yue_Hans,max
+ckb,Central Kurdish,5606845,2,IQ,0.901,ckb,max
+slv,Slovenian,1967013,4,SI,0.928,sl,max
+dan,Danish,7247744,4,DK,0.766,da,max
+est,Estonian,853780,2,EE,0.993,et,max
+kmr,Northern Kurdish,12075882,10,TR,0.383,ku|ku_Arab|ku_Cyrl,max
+wol,Wolof,13203204,2,SN,0.999,wo,max
+tir,Tigrinya,10929719,3,ET,0.651,ti,max
+hau,Hausa,42826888,5,NG,0.719,ha|ha_Arab,max
+mai,Maithili,20333024,2,IN,0.832,mai,max
+pus,Pashto,58062881,4,PK,0.695,ps,max
+lit,Lithuanian,2405298,3,LT,0.94,lt,max
+mag,Magahi,16909560,1,IN,1.0,mag,max
+min,Minangkabau,8446860,1,ID,1.0,min,max
+ceb,Cebuano,28386480,1,PH,1.0,ceb,max
+kha,Khasi,1127304,1,IN,1.0,kha,max
+zul,Zulu,14969091,5,ZA,0.969,zu,max
+sat,Santali,7750215,1,IN,1.0,sat,max
+mni,Meiteilon (Manipuri),1568600,2,IN,0.988,mni,max
+glg,Galician,3323918,2,ES,0.996,gl,max
+raj,Rajasthani,1409130,1,IN,1.0,raj,max
+bug,Buginese,4532298,2,ID,0.994,bug,max
+lao,Lao,5487956,1,LA,1.0,lo,max
+nor,Norwegian,5511223,3,NO,1.0,nb|nn|no,max
+cat,Catalan,8218781,4,ES,0.978,ca,max
+nap,Neapolitan,591360,1,IT,1.0,nap,max
+orm,Oromo,38264431,3,ET,0.991,om,max
+bjn,Banjar,4228269,2,ID,0.999,bjn,max
+snd,Sindhi,41518338,2,PK,0.912,sd|sd_Deva,max
+lim,Limburgish,977482,1,NL,1.0,li,max
+lat,Latin,820,1,VA,1.0,la,max
+run,Rundi,8561763,1,BI,1.0,rn,max
+lin,Lingala,3986653,4,CD,0.897,ln,max
+afr,Afrikaans,9966165,3,ZA,0.788,af,max
+srd,Sardinian,1036403,1,IT,1.0,sc,max
+lug,Ganda,6406790,1,UG,1.0,lg,max
+lav,Latvian,1098762,1,LV,1.0,lv,max
+tuk,Turkmen,7177805,3,TM,0.56,tk,max
+szl,Silesian,503702,1,PL,1.0,szl,max
+bel,Belarusian,2991098,3,BY,0.826,be,max
+mwr,Marwari,16909560,1,IN,1.0,mwr,max
+grn,Guarani,6095531,3,PY,0.987,gn,max
+sna,Shona,13891824,1,ZW,1.0,sn,max
+nya,Chichewa,18855692,4,MW,0.727,ny,max
+xho,Xhosa,10901721,2,ZA,0.998,xh,max
+yor,Yoruba,31761816,2,NG,0.969,yo,max
+crh,Crimean Tatar,199706,1,UA,1.0,crh,max
+eus,Basque,1034495,2,ES,0.914,eu,max
+nan,Min Nan,40377925,3,CN,0.666,nan|nan_Hant,max
+kas,Kashmiri,5951564,2,IN,0.971,ks,max
+mkd,Macedonian,1612846,3,MK,0.887,mk,max
+ace,Acehnese,3941868,1,ID,1.0,ace,max
+awa,Awadhi,27458163,2,IN,0.975,awa,max
+kab,Kabyle,3667755,1,DZ,1.0,kab,max
+kik,Kikuyu,9901888,1,KE,1.0,ki,max
+tat,Tatar,1971494,1,RU,1.0,tt,max
+shn,Shan,3748859,2,MM,0.982,shn,max
+ssw,Swati,2345504,3,ZA,0.696,ss,max
+tcy,Tulu,2113695,1,IN,1.0,tcy,max
+san,Sanskrit,16910,1,IN,1.0,sa,max
+bam,Bambara,10115676,1,ML,1.0,bm|bm_Nkoo,max
+che,Chechen,929419,1,RU,1.0,ce,max
+tsn,Tswana,6529140,4,ZA,0.759,tn,max
+scn,Sicilian,499912,1,IT,1.0,scn,max
+ilo,Ilocano,11354592,1,PH,1.0,ilo,max
+tet,Tetum,889077,1,TL,1.0,tet,max
+pap,Papiamento,216653,3,CW,0.573,pap,max
+skr,Saraiki,30283680,1,PK,1.0,skr,max
+vec,Venetian,1381574,5,IT,0.574,vec,max
+bal,Baluchi,8751140,4,PK,0.75,bal,max
+mlg,Malagasy,26507430,1,MG,1.0,mg,max
+bem,Bemba,7071694,1,ZM,1.0,bem,max
+mri,Maori,144514,1,NZ,1.0,mi,max
+fur,Friulian,36579,1,IT,1.0,fur,max
+fij,Fijian,371128,1,FJ,1.0,fj,max
+pcm,Nigerian Pidgin,49716870,1,NG,1.0,pcm,max
+gle,Irish,1254050,2,IE,0.918,ga,max
+sot,Southern Sotho,6957964,2,ZA,0.686,st,max
+smo,Samoan,252638,3,WS,0.827,sm,max
+bod,Tibetan,3061778,3,CN,0.925,bo,max
+cym,Welsh,920985,2,GB,0.966,cy,max
+ibo,Igbo,30777110,1,NG,1.0,ig,max
+kok,Konkani,4509216,1,IN,1.0,kok,max
+oci,Occitan,2055966,2,FR,0.998,oc,max
+uig,Uyghur,8197414,4,CN,0.95,ug|ug_Cyrl,max
+gsw,Swiss German,8439156,4,CH,0.693,gsw,max
+azb,South Azerbaijani,22517134,3,IR,0.942,az_Arab,max
+war,Waray,3434688,2,PH,0.999,war,max
+hil,Hiligaynon,9935268,1,PH,1.0,hil,max
+isl,Icelandic,364036,1,IS,1.0,is,max
+fao,Faroese,72984,2,FO,0.689,fo,max
+ltz,Luxembourgish,449740,1,LU,1.0,lb,max
+yid,Yiddish,916209,4,UA,0.506,yi,max
+fry,Western Frisian,764213,1,NL,1.0,fy,max
+div,Dhivehi,385308,2,MV,0.989,dv,max
+ful,Fula,8955865,12,SN,0.442,ff|ff_Adlm,max
+twi,Twi,13489749,1,GH,1.0,ak,max
+ewe,Ewe,5320859,2,GH,0.715,ee,max
+hmn,Hmong,2412896,10,VN,0.614,hnj|mww,max
+ton,Tongan,99645,1,TO,1.0,to,max
+tah,Tahitian,94097,1,PF,1.0,ty,max
+haw,Hawaiian,30435,1,US,1.0,haw,max
+epo,Esperanto,298,1,SM,1.0,eo,max

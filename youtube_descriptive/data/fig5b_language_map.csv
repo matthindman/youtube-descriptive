@@ -1,0 +1,174 @@
+analysis_code,name,labels,cldr_codes,combine
+eng,English,eng,en,max
+spa,Spanish,spa,es,max
+hin,Hindi,hin,hi,max
+ind,Indonesian,ind,id,max
+por,Portuguese,por,pt,max
+ara,Arabic,"ara,arb,aao,acm,aeb,apc,apd,arq,ars,ary,arz,shu","ar,aeb,apc,apd,arq,ars,ary,arz",max
+kor,Korean,kor,ko,max
+jpn,Japanese,jpn,ja,max
+rus,Russian,rus,ru,max
+tur,Turkish,tur,tr,max
+vie,Vietnamese,vie,vi,max
+ben,Bengali,ben,bn,max
+tha,Thai,tha,th,max
+cmn,Chinese (Mandarin),"cmn,zho,chi",zh,max
+tam,Tamil,tam,ta,max
+fra,French,"fra,fre",fr,max
+tel,Telugu,tel,te,max
+mal,Malayalam,mal,ml,max
+deu,German,"deu,ger",de,max
+ita,Italian,ita,it,max
+mar,Marathi,mar,mr,max
+pol,Polish,pol,pl,max
+uzb,Uzbek,"uzb,uzn",uz,max
+guj,Gujarati,guj,gu,max
+urd,Urdu,urd,ur,max
+ukr,Ukrainian,ukr,uk,max
+kan,Kannada,kan,kn,max
+fil,Filipino (Tagalog),"fil,tgl",fil,max
+fas,Persian,"fas,pes,prs,per",fa,max
+ron,Romanian,"ron,rum",ro,max
+pan,Punjabi (Gurmukhi),pan,pa,max
+ory,Odia,"ory,odi",or,max
+sin,Sinhala,sin,si,max
+zsm,Malay,"zsm,zlm,msa,may",ms,max
+mya,Burmese,"mya,bur",my,max
+ell,Greek,"ell,gre",el,max
+khm,Khmer,khm,km,max
+bho,Bhojpuri,bho,bho,max
+ces,Czech,"ces,cze",cs,max
+nld,Dutch,"nld,dut",nl,max
+kaz,Kazakh,kaz,kk,max
+aze,Azerbaijani,"aze,azj",az,max
+amh,Amharic,amh,am,max
+heb,Hebrew,heb,he,max
+hun,Hungarian,hun,hu,max
+nep,Nepali,"nep,npi",ne,max
+sqi,Albanian,"sqi,als,alb","sq,aln",max
+mlt,Maltese,mlt,mt,max
+hbs,"Serbo-Croatian (Serbian, Croatian, Bosnian)","hbs,srp,hrv,bos,scc,cnr","sr,hr,bs,cnr",sum
+som,Somali,som,so,max
+swa,Swahili,"swa,swh",sw,max
+asm,Assamese,asm,as,max
+bul,Bulgarian,bul,bg,max
+hye,Armenian,"hye,arm",hy,max
+jav,Javanese,jav,jv,max
+kin,Kinyarwanda,kin,rw,max
+swe,Swedish,swe,sv,max
+kir,Kyrgyz,kir,ky,max
+fin,Finnish,fin,fi,max
+hat,Haitian Creole,hat,ht,max
+pnb,Western Punjabi,"pnb,lah","lah,pa_Arab",max
+ast,Asturian,ast,ast,max
+slk,Slovak,"slk,slo",sk,max
+kat,Georgian,"kat,geo",ka,max
+hne,Chhattisgarhi,hne,hne,max
+tgk,Tajik,tgk,tg,max
+sco,Scots,sco,sco,max
+sun,Sundanese,sun,su,max
+mon,Mongolian,"mon,khk",mn,max
+lus,Mizo,lus,lus,max
+yue,Cantonese,yue,yue,max
+ckb,Central Kurdish,ckb,ckb,max
+slv,Slovenian,slv,sl,max
+dan,Danish,dan,da,max
+est,Estonian,"est,ekk",et,max
+kmr,Northern Kurdish,"kmr,kur",ku,max
+wol,Wolof,wol,wo,max
+tir,Tigrinya,tir,ti,max
+hau,Hausa,hau,ha,max
+mai,Maithili,mai,mai,max
+pus,Pashto,"pus,pbt",ps,max
+lit,Lithuanian,lit,lt,max
+mag,Magahi,mag,mag,max
+min,Minangkabau,min,min,max
+ceb,Cebuano,ceb,ceb,max
+kha,Khasi,kha,kha,max
+zul,Zulu,zul,zu,max
+sat,Santali,sat,sat,max
+mni,Meiteilon (Manipuri),mni,mni,max
+glg,Galician,glg,gl,max
+raj,Rajasthani,raj,raj,max
+bug,Buginese,bug,bug,max
+lao,Lao,lao,lo,max
+nor,Norwegian,"nor,nob,nno","nb,nn,no",max
+cat,Catalan,cat,ca,max
+nap,Neapolitan,nap,nap,max
+orm,Oromo,"orm,gaz",om,max
+bjn,Banjar,bjn,bjn,max
+snd,Sindhi,snd,sd,max
+lim,Limburgish,lim,li,max
+lat,Latin,lat,la,max
+run,Rundi,run,rn,max
+lin,Lingala,lin,ln,max
+afr,Afrikaans,afr,af,max
+srd,Sardinian,srd,sc,max
+lug,Ganda,lug,lg,max
+lav,Latvian,"lav,lvs",lv,max
+tuk,Turkmen,tuk,tk,max
+szl,Silesian,szl,szl,max
+bel,Belarusian,bel,be,max
+mwr,Marwari,mwr,mwr,max
+grn,Guarani,"grn,gug",gn,max
+sna,Shona,sna,sn,max
+nya,Chichewa,nya,ny,max
+xho,Xhosa,xho,xh,max
+yor,Yoruba,yor,yo,max
+crh,Crimean Tatar,crh,crh,max
+eus,Basque,"eus,baq",eu,max
+nan,Min Nan,nan,nan,max
+kas,Kashmiri,kas,ks,max
+mkd,Macedonian,"mkd,mac",mk,max
+ace,Acehnese,ace,ace,max
+awa,Awadhi,awa,awa,max
+kab,Kabyle,kab,kab,max
+kik,Kikuyu,kik,ki,max
+tat,Tatar,tat,tt,max
+shn,Shan,shn,shn,max
+ssw,Swati,ssw,ss,max
+tcy,Tulu,tcy,tcy,max
+san,Sanskrit,san,sa,max
+bam,Bambara,bam,bm,max
+che,Chechen,che,ce,max
+tsn,Tswana,tsn,tn,max
+scn,Sicilian,scn,scn,max
+ilo,Ilocano,ilo,ilo,max
+tet,Tetum,tet,tet,max
+pap,Papiamento,pap,pap,max
+skr,Saraiki,skr,skr,max
+vec,Venetian,vec,vec,max
+bal,Baluchi,bal,bal,max
+mlg,Malagasy,"mlg,plt",mg,max
+bem,Bemba,bem,bem,max
+mri,Maori,mri,mi,max
+fur,Friulian,fur,fur,max
+fij,Fijian,fij,fj,max
+pcm,Nigerian Pidgin,pcm,pcm,max
+gle,Irish,gle,ga,max
+sot,Southern Sotho,sot,st,max
+smo,Samoan,smo,sm,max
+bod,Tibetan,"bod,tib",bo,max
+cym,Welsh,"cym,wel",cy,max
+ibo,Igbo,ibo,ig,max
+kok,Konkani,kok,kok,max
+oci,Occitan,oci,oc,max
+uig,Uyghur,uig,ug,max
+gsw,Swiss German,gsw,gsw,max
+azb,South Azerbaijani,azb,az_Arab,max
+war,Waray,war,war,max
+hil,Hiligaynon,hil,hil,max
+isl,Icelandic,"isl,ice",is,max
+fao,Faroese,fao,fo,max
+ltz,Luxembourgish,ltz,lb,max
+yid,Yiddish,yid,yi,max
+fry,Western Frisian,fry,fy,max
+div,Dhivehi,div,dv,max
+ful,Fula,"ful,fuv,fuc,fub,fuf",ff,max
+twi,Twi,"twi,aka",ak,max
+ewe,Ewe,ewe,ee,max
+hmn,Hmong,hmn,"hnj,mww",max
+ton,Tongan,ton,to,max
+tah,Tahitian,tah,ty,max
+haw,Hawaiian,haw,haw,max
+epo,Esperanto,epo,eo,max
