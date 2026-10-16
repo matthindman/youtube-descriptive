@@ -44,7 +44,8 @@ Quota safety (kept from 08, tightened)
   * Chunk-level resumability: a chunk is recorded in the queue table only if none of its calls was
     deferred / errored / skipped. Chunk assignment is frozen in the sample table.
 
-Key handling: read ONLY via dbutils.secrets.get("youtube", "api-key"); sent in the X-Goog-Api-Key
+Key handling: read ONLY via dbutils.secrets.get(secret_scope, secret_key) (widgets hold secret NAMES,
+defaults youtube-llm-keys / youtube-api-key, never a key value); sent in the X-Goog-Api-Key
 header, so no URL contains it. No api_key widget. Only structured codes are logged
 (HTTP status, error.errors[].reason, error.details[].reason, error.status) — never message text,
 exception text or response bodies. Key-fatal is decided from details reason API_KEY_INVALID or errors
@@ -119,6 +120,8 @@ CHUNK_SIZE   = int(_widget("chunk_size", "250"))
 SFX          = _widget("table_suffix", "v1")
 OVERWRITE    = _bool(_widget("overwrite", "false"))
 RESUME       = _bool(_widget("resume", "false"))
+SECRET_SCOPE = _widget("secret_scope", "youtube-llm-keys")   # names only, never a key value
+SECRET_KEY   = _widget("secret_key", "youtube-api-key")
 RUN_ID       = _widget("run_id", datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%S"))
 
 if not (10 <= RPM <= 2000):
@@ -607,7 +610,7 @@ def main():
     connectivity_check()
     preflight()
     cap = ensure_ledger_and_budget()
-    key = dbutils.secrets.get("youtube", "api-key")  # type: ignore[name-defined]  # noqa: F821
+    key = dbutils.secrets.get(SECRET_SCOPE, SECRET_KEY)  # type: ignore[name-defined]  # noqa: F821
     spark.sql(f"CREATE TABLE IF NOT EXISTS {T['queue']} (run_id STRING, chunk_id INT, completed_at TIMESTAMP) USING DELTA")
     build_sample()
 

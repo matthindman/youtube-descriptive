@@ -22,7 +22,7 @@ Status 2026-10-16: **code revised after review; no collection yet.** The smoke r
   - *Canary and breaker:* the first channel runs serially and must return ok or 404 before any concurrency. The run stops if more than 20 of the first 50 Pass A calls are not ok. A whole-batch Pass B failure is fatal.
   - *Chunk queue:* a chunk is marked done only if no call in it was deferred, errored or skipped.
   - *finally block:* call log flush, ledger write and the `units_used` print always run.
-- **Key:** `dbutils.secrets.get("youtube","api-key")`, sent in the `X-Goog-Api-Key` header, never in a URL. Only structured codes are logged: HTTP status, every `error.errors[].reason`, every `error.details[].reason`, `error.status`. Never message text, exception text or response bodies. A key rejection is recognised from `API_KEY_INVALID` / `keyInvalid` / `keyExpired`, not from message wording.
+- **Key:** `dbutils.secrets.get(secret_scope, secret_key)`; the two widgets hold names only (defaults `youtube-llm-keys` / `youtube-api-key`, the PI-designated working key; the old `youtube/api-key` was rejected). Sent in the `X-Goog-Api-Key` header, never in a URL. Only structured codes are logged: HTTP status, every `error.errors[].reason`, every `error.details[].reason`, `error.status`. Never message text, exception text or response bodies. A key rejection is recognised from `API_KEY_INVALID` / `keyInvalid` / `keyExpired`, not from message wording.
 - **Outputs** (`<sfx>` = table suffix): `fig6_dryrun_sample_<sfx>`, `_uploads_<sfx>`, `_video_stats_<sfx>`, `_calls_<sfx>` (one row per attempt), `_channels_<sfx>`, `_queue_<sfx>`, plus the shared ledger. Pre-flight refuses existing `<sfx>` tables unless `overwrite=true` (drops only those tables) or `resume=true`.
 - **Analysis rules:** de-duplicate uploads on `(channel_id, video_id)` and stats on `video_id`, keeping the latest `run_id`. Use `countable = true` and `after_window = false`. Weight by `stratum_n / n_h`.
 
@@ -34,7 +34,7 @@ Status 2026-10-16: **code revised after review; no collection yet.** The smoke r
 
 ## Re-run procedure
 
-1. A valid key must be in the `youtube/api-key` secret (renewed by someone with access).
+1. The key is read from secret `youtube-llm-keys` / `youtube-api-key` (widgets `secret_scope`, `secret_key`).
 2. Smoke: suffix `smoke2`, `overwrite=false`, `resume=false`, `sample_n=20`, `max_units=100`. Check the calls table (all `ok`, no `fatal`), the uploads and stats rows, and the ledger.
 3. Main: suffix `v1`, `sample_n=1000`, `max_units=4800`. The ledger enforces the 5,000 total across all runs.
 4. Do not run on a Monday (see plan §4).
