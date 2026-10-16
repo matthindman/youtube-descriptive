@@ -10,6 +10,14 @@ everything we collected.
 
 Unlike Figs 1–3 (≥10k universe), this figure covers **every collected channel** (~121M).
 
+**Observed directly, not sampled (decided 2026-10-16):**
+- The 1k–10k and <1k regions are measured for every collected channel. They are not estimated from a weighted sample, which replaces the paper's originally planned design-based stratum.
+- The only estimated quantity is the residual mass on channels not collected, bounded by the tail model.
+
+**Measurement note (paper decision D8, flagged and not rerun):**
+- Figs 1–2 use the single week 2026-09-28 → 10-05 and floor channels whose lifetime total fell at 0.
+- This figure, like Figs 3 and 5, uses the five-week window and excludes those channels.
+
 ## Pipeline
 
 | Step | Code | Output |
