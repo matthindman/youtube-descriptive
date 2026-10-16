@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Figure 5 - older channels dominate the highest-attention ranks
+# MAGIC # Figure 5 - recently founded channels capture a disproportionate share of attention
 # MAGIC
 # MAGIC Builds the aggregates behind Figure 5 of *Attention on YouTube* and writes them to
 # MAGIC `<output_prefix>_<name>_<version>`. Only aggregates leave the workspace; the channel-level frame
